@@ -1,9 +1,9 @@
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 class Playlist{
 
-    private List<Song> playlist = new ArrayList<Song>();
+    private List<Song> playlist = new ArrayList<>();
 
 
     public void addSong(Song song){
@@ -14,7 +14,7 @@ class Playlist{
         return playlist.remove(index);
     }
 
-    public getSong(int index){
+    public Song getSong(int index){
         return playlist.get(index);
     }
 }
