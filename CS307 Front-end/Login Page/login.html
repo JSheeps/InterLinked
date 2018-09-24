@@ -1,4 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <link rel="stylesheet" href="login.css">
+    <head>
+        <title>Login Page</title>
+         <link href="./login.css" type="text/css" rel="stylesheet">
+    </head>
+    
+    <body>
+        
+        
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,600' rel='stylesheet' type='text/css'>
+
+        <form method="post" action="index.html">
+            <div class="box">
+            <img src="./logo.png" alt="InterLinked Logo" class="logo">
+
+            <input type="username" name="username" value="username" onFocus="field_focus(this, 'username');" onblur="field_blur(this, 'username');" class="username" />
+
+            <input type="password" name="password" value="password" onFocus="field_focus(this, 'password');" onblur="field_blur(this, 'password');" class="password" />
+
+            <a><div id="loginbtn">Sign In</div></a> <!-- End Btn -->
+
+            <a><div id="signupbtn">Sign Up</div></a> <!-- End Btn2 -->
+
+            </div> <!-- End Box -->
+
+        </form>
+
+        <p>Forgot your password? <u style="color:#f1c40f;">Click Here!</u></p>
+
+        
+
+    </body>
+    
+    
 </html>
