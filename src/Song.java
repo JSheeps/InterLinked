@@ -5,7 +5,7 @@ public class Song{
     String title;
     String album;
 
-    // Song diration in milliseconds
+    // Song duration in milliseconds
     int duration;
 
     boolean explicit;
