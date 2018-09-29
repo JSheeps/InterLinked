@@ -17,15 +17,14 @@
 
         <form method="post" action="index.html">
             <div class="box">
-            <img src="./logo.png" alt="InterLinked Logo" class="logo">
+            <img src="../common/logo.png" alt="InterLinked Logo" class="logo">
+            <input type="username" id="userNameInput" name="username" placeholder="Username" onFocus="field_focus(this, 'username');" onblur="field_blur(this, 'username');" class="username" />
 
-            <input type="username" name="username" value="Enter Username" onFocus="field_focus(this, 'username');" onblur="field_blur(this, 'username');" class="username" />
+            <input type="password" id="passwordInput" name="password" placeholder="Password" onFocus="field_focus(this, 'password');" onblur="field_blur(this, 'password');" class="password" />
 
-            <input type="password" name="password" value="password" onFocus="field_focus(this, 'password');" onblur="field_blur(this, 'password');" class="password" />
+            <a><div id="loginbtn" onclick="login();">Sign In</div></a> <!-- End Btn -->
 
-            <a><div><button id="loginbtn">Sign In</button></div></a> <!-- End Btn -->
-
-            <a><div><button id="signupbtn">Sign Up</button></div></a> <!-- End Btn2 -->
+            <a><div id="signupbtn" onclick="signUp();">Sign Up</div></a> <!-- End Btn2 -->
 
             </div> <!-- End Box -->
 
