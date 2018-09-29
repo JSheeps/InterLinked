@@ -3,6 +3,13 @@
     <head>
         <title>Login Page</title>
         <link href="./login.css" type="text/css" rel="stylesheet">
+
+        <!-- JQuery API -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<!--<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		-->
+		
         <script src="./login.js"></script>
     </head>
     
@@ -15,13 +22,13 @@
             <div class="box">
             <img src="./logo.png" alt="InterLinked Logo" class="logo">
 
-            <input type="username" name="username" value="username" onFocus="field_focus(this, 'username');" onblur="field_blur(this, 'username');" class="username" />
+            <input type="username" id="userNameInput" name="username" placeholder="Username" onFocus="field_focus(this, 'username');" onblur="field_blur(this, 'username');" class="username" />
 
-            <input type="password" name="password" value="password" onFocus="field_focus(this, 'password');" onblur="field_blur(this, 'password');" class="password" />
+            <input type="password" id="passwordInput" name="password" placeholder="Password" onFocus="field_focus(this, 'password');" onblur="field_blur(this, 'password');" class="password" />
 
-            <a><div id="loginbtn">Sign In</div></a> <!-- End Btn -->
+            <a><div id="loginbtn" onclick="login();">Sign In</div></a> <!-- End Btn -->
 
-            <a><div id="signupbtn">Sign Up</div></a> <!-- End Btn2 -->
+            <a><div id="signupbtn" onclick="signUp();">Sign Up</div></a> <!-- End Btn2 -->
 
             </div> <!-- End Box -->
 
