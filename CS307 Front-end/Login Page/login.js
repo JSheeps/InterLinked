@@ -1,6 +1,6 @@
 "use strict";
 
-// Global variables to reduce CPU usage
+// Global variables to reduce Querying
 var userNameField;
 var passwordField;
 
