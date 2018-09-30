@@ -44,11 +44,4 @@ $(document).ready( () => {
 			$(this).trigger("enterPressed");
 		}
 	});
-	
-	
-	
-
-
-
-
 });
