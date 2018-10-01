@@ -45,7 +45,7 @@
 	position: relative;
 	transition: .5s ease;
 	margin: 5px auto;
-	top: 50%;
+	top: 70px;
 	float: center;
 	background: #2ecc71;
 	width: 125px;
@@ -66,6 +66,7 @@
 #signupbtn{
 	position: relative;
 	margin: 5px auto;
+    top: 90px;
 	float: center;
 	background: #3498db;
 	width: 125px; 
