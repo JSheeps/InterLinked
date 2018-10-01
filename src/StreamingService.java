@@ -10,6 +10,9 @@ public class StreamingService {
     public void exportPlaylist(){
 
     }
+    public void getPlaylists(){
+
+    }
     public void Login()
     {
 
