@@ -1,0 +1,13 @@
+.SpotifyConnect{
+    position: relative;
+    display: block;
+    margin-left: auto;
+	margin-right: auto;
+    width:300px;
+    top:300px;
+}
+
+.logout{
+    position: relative;
+    top: 800px;
+}
