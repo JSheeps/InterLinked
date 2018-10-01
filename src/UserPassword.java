@@ -3,6 +3,8 @@ import com.intellij.openapi.util.Pass;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class UserPassword {
 
@@ -31,7 +33,10 @@ public class UserPassword {
 
 		this.UserID = userID;
 
-		// TODO save to db
+		// Save to DB
+		SqlHelper helper = new SqlHelper();
+		String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + this.UserID + ", " + this.Salt + ", " + this.SaltedPassword + ")";
+		helper.ExecuteQuery(insertion);
 	}
 
 	private int UserID;
@@ -40,11 +45,22 @@ public class UserPassword {
 	
 	// Returns true on successful login, false on unsuccessful login
 	public static boolean IsPasswordCorrect(String userName, String password){
-        // TODO get UserPassword object associated with userName
+        // Get UserPassword object associated with userName
+		String upFetch = "SELECT * FROM UserPasswords JOIN UserPasswords on Users.ID = UserPasswords.UserID WHERE Users.UserName = " + userName;
+		SqlHelper helper = new SqlHelper();
+
+		ResultSet results = helper.ExecuteQuery(upFetch);
 
 		// Dummy values
-		String Salt = "saltyboi";
-		String SaltedPassword = "evensaltierboi";
+		String Salt = "";
+		String SaltedPassword = "";
+
+		try{
+			Salt = results.getString("Salt");
+			SaltedPassword = results.getString("SaltedPassword");
+		}catch(SQLException e){
+			// TODO
+		}
 
 		// Append salt to Password
 		String saltPlusPass = Salt + password;
