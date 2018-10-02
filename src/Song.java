@@ -2,6 +2,8 @@ import java.util.Objects;
 
 public class Song{
 
+    public int ID;
+
     String artist;
     String title;
     String album;
