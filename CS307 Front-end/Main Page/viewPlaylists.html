@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>InterLinked</title>
+		<!-- JQuery API -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		
+		<script src="../common/serverAccess.js"></script>
+		<link href="../common/common.css" type="text/css" rel="stylesheet">
+		<script src="./playlists.js"></script>
+		<script src="../common/common.js"></script>
+		<link href="./page.css" type="text/css" rel="stylesheet">
+	</head>
+	<body>
+		<div id="page">
+			<a class="hover" onclick="logoutRedirect()"><p>Logout</p></a>
+			<img src="./playlists button.png" title="View Playlists" class="icon" id="playlistButton" onclick="playlistRedirect()">
+			<img src="./import playlist.png" title="Import a Playlist" class="icon" id="importPlaylistButton" onclick="importRedirect()">
+			<img src="./export playlist.png" title="Export a Playlist" class="icon" id="exportPlaylistButton" onclick="exportRedirect()">
+			<img src="./merge playlists.png" title="Merge Playlists" class="icon" id="mergePlaylistsButton" onclick="mergeRedirect()">
+		</div>
+		<!-- temporary, just for demonstration -->
+		<p id="textStatus"></p>
+		<div id="mainContents">
+			<table id="playlistTable">
+				<tr> <th> Playlists </th> </tr>
+			</table>
+		</div>
+	</body>
+</html>

@@ -1,14 +1,23 @@
 body{
 	font-family: 'Open Sans', sans-serif;
+	float: center;
 	background: #3498db;
-	margin: 0 auto;	
-	width: 100%; 
+	margin: 0 auto;
 	text-align: center;
-	margin: 20px 0px;	 
+	margin: 20px 0px;	
+	width: auto;
 }
 
-p{
+a, p{
 	font-size: 12px;
 	text-decoration: none;
 	color: #ffffff;
+}
+
+a.hover{
+	text-decoration: none;
+}
+
+a.hover:hover{
+	text-decoration: underline;
 }

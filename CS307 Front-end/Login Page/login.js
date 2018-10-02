@@ -21,6 +21,11 @@ function login() {
 	
 	// TODO: Login to server here
 	console.log("Login");
+	
+	serverLogin(userName, password).done( (accessToken) => {
+		console.log(accessToken);
+		playlistRedirect();
+	});
 }
 
 $(document).ready( () => {

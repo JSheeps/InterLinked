@@ -18,12 +18,28 @@ Query Specifications
 		Key			Expected Values			Required		Return
 		===============================================================
 		get			playlists								An array of playlists owned by the user
+		
 		import		<platformID>							IF the playlist key is NOT present:
 																A list of playlists on the <platform> that the user can import.
 															IF the playlist key IS present:
 																The playlist.
+																
 		export		<platformID>			playlist		Returns which songs were NOT successfully exported, if any, as an array.
-		merge		<playlistID>			playlist1		Merges playlist1 and playlist2, returns the playlistID of the new playlist.
-											playlist2		
+		
+		merge		<playlistID>			playlist2		Merges <playlistID> and playlist2, returns the playlistID of the new playlist and all songs in each playlist that were lost in the merge.
+		
 		playlist	<playlistID>							Returns songs in list if used on its own.
 		
+		remove		<playlistID>							Removes the playlist from the user's database.
+		
+		login		<authToken>								IF the login is successful
+																return the token used to access server material for the user
+															ELSE
+																return a reason, e.g. "Email does not exist" or "Bad password"
+																
+		signup		<authToken>								IF the signup is successfuly
+																return the token used to access server material for the user
+															ELSE
+																return a reason, e.g. "Email taken" or "Password too short"
+		
+		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).
