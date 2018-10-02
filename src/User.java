@@ -1,5 +1,6 @@
 import com.sun.media.jfxmedia.events.PlayerStateListener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 
@@ -8,7 +9,7 @@ public class User {
     int ID;
     String userName;
     String email;
-    List<Playlist> playlistList;
+    List<Playlist> playlistList = new ArrayList<Playlist>();
 
     public User(int ID, String userName, String email){
         this.ID = ID;
@@ -41,5 +42,40 @@ public class User {
         }
 
         return UserPassword.CreateUserPassword(newUser.ID, password);
+    }
+
+    // Fetches playlists that are saved in the db for the current user object and saves them in the playlistList class object
+    // Also fetches each song in each playlist it finds
+    // Returns true on success, false on failure
+    public boolean FetchPlaylists(){
+        if(ID == 0){
+            // Not in db
+            return false;
+        }
+
+        String fetchQuery = "SELECT Playlists.* FROM Playlists WHERE UserID = "+ ID;
+
+        SqlHelper helper = new SqlHelper();
+        ResultSet resultSet = helper.ExecuteQuery(fetchQuery);
+
+        playlistList = new ArrayList<Playlist>();
+        try{
+            while(resultSet.next()){
+                Playlist playlist = new Playlist();
+
+                playlist.ID = resultSet.getInt("ID");
+                playlist.Name = resultSet.getString("Name");
+                playlist.UserID = resultSet.getInt("UserID");
+
+                playlist.FetchSongs();
+
+                playlistList.add(playlist);
+            }
+        }catch(SQLException e){
+            // TODO
+            return false;
+        }
+
+        return true;
     }
 }
