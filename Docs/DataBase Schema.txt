@@ -1,0 +1,48 @@
+CREATE TABLE dbo.Users(
+  ID int PRIMARY KEY IDENTITY(1,1),
+  UserName nvarchar(50) not null,
+  CreatedDate datetime not null,
+  Email nvarchar(100) not null
+)
+
+CREATE TABLE dbo.UserPasswords(
+  ID int PRIMARY KEY IDENTITY(1,1),
+  SaltedPassword nvarchar(200) not null,
+  Salt nvarchar(50) not null,
+  UserID int FOREIGN KEY REFERENCES Users(ID) not null
+)
+
+CREATE TABLE dbo.Playlists(
+  ID int PRIMARY KEY IDENTITY(1,1),
+  UserID int FOREIGN KEY REFERENCES Users(ID) not null,
+  Name nvarchar(100) not null
+)
+
+CREATE TABLE dbo.OriginHosts(
+	ID int PRIMARY KEY IDENTITY(1,1),
+	Name nvarchar(100) not null
+)
+
+INSERT INTO OriginHosts([Name]) VALUES('AMAZON')
+INSERT INTO OriginHosts([Name]) VALUES('ITUNES')
+INSERT INTO OriginHosts([Name]) VALUES('SPOTIFY')
+INSERT INTO OriginHosts([Name]) VALUES('YOUTUBE')
+
+CREATE TABLE dbo.Songs(
+  ID int PRIMARY KEY IDENTITY(1,1),
+  Title nvarchar(100) not null,
+  Artist nvarchar(50) not null,
+  Album nvarchar(50) null,
+  Duration int null,
+  Explicit bit not null default 0,
+  SpotifyID nvarchar(100) null,
+  SpotifyURI nvarchar(100) null
+  OriginHostID FOREIGN KEY REFERENCES OriginHosts(ID)
+)
+
+CREATE TABLE dbo.PlaylistSongs(
+  ID int PRIMARY KEY IDENTITY(1,1),
+  PlaylistID int FOREIGN KEY REFERENCES Playlists(ID) not null,
+  SongID int FOREIGN KEY REFERENCES Songs(ID) not null
+)
+
