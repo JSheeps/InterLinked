@@ -8,9 +8,17 @@ import java.sql.SQLException;
 
 public class UserPassword {
 
-	public UserPassword(int userID, String Password){
-		this.UserID = userID;
+	private int UserID;
+	private String Salt;
+	private String SaltedPassword;
 
+	public UserPassword(int userID, String salt, String saltedPassword){
+		UserID = userID;
+		Salt = salt;
+		SaltedPassword = saltedPassword;
+	}
+
+	public static boolean CreateUserPassword(int userID, String Password){
 		// Generate Salt
 		SecureRandom random = new SecureRandom();
 		byte[] salt = new byte[50];
@@ -25,24 +33,20 @@ public class UserPassword {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
 			byte[] saltedHash = digest.digest(saltPlusPass.getBytes());
 
-			this.Salt = saltString;
-			this.SaltedPassword = new String(saltedHash);
+			UserPassword up = new UserPassword(userID, saltString, new String(saltedHash));
+
+			// Save to DB
+			SqlHelper helper = new SqlHelper();
+			String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + up.UserID + ", " + up.Salt + ", " + up.SaltedPassword + ")";
+			helper.ExecuteQuery(insertion);
 		}catch(NoSuchAlgorithmException e) {
-			// This will never happen, but java is making me do this
+			// TODO
+			return false;
 		}
 
-		this.UserID = userID;
-
-		// Save to DB
-		SqlHelper helper = new SqlHelper();
-		String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + this.UserID + ", " + this.Salt + ", " + this.SaltedPassword + ")";
-		helper.ExecuteQuery(insertion);
+		return true;
 	}
 
-	private int UserID;
-	private String Salt;
-	private String SaltedPassword;
-	
 	// Returns true on successful login, false on unsuccessful login
 	public static boolean IsPasswordCorrect(String userName, String password){
         // Get UserPassword object associated with userName

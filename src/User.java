@@ -10,30 +10,36 @@ public class User {
     String email;
     List<Playlist> playlistList;
 
-    public User(String userName, String password, String email){
+    public User(int ID, String userName, String email){
+        this.ID = ID;
         this.userName = userName;
         this.email = email;
+    }
+
+    // Creates a new User, returns true on success and false on failure
+    public static boolean CreateUser(String userName, String password, String email){
+        User newUser = new User(0, userName, email);
 
         java.util.Date currentDate = new java.util.Date();
         Date sqlDate = new Date(currentDate.getTime());
 
         String insertion = "INSERT INTO Users([UserName], [Email], [CreatedDate])" +
-                           "VALUES(" + this.userName + ", " + this.email + ", " + sqlDate + ")";
+                           "VALUES(" + newUser.userName + ", " + newUser.email + ", " + sqlDate + ")";
 
         SqlHelper helper = new SqlHelper();
 
         helper.ExecuteQuery(insertion);
 
         // Fetch ID back, make UserPassword instance
-        String idFetchQuery = "SELECT ID FROM Users WHERE UserName = " + this.userName;
+        String idFetchQuery = "SELECT ID FROM Users WHERE UserName = " + newUser.userName;
         ResultSet results = helper.ExecuteQuery(idFetchQuery);
 
         try{
-            this.ID = results.getInt("ID");
+            newUser.ID = results.getInt("ID");
         }catch(SQLException e){
             // TODO
         }
 
-        UserPassword userPassword = new UserPassword(this.ID, password);
+        return UserPassword.CreateUserPassword(newUser.ID, password);
     }
 }
