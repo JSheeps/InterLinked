@@ -86,7 +86,7 @@ class DataHandler implements HttpHandler {
 
         HashMap list;
         try {
-             list = data.getList(listIndex);
+            list = data.getList(listIndex);
         } catch (IllegalArgumentException e) {
             throw new Exception("list index out of range");
         }
@@ -112,7 +112,7 @@ class DataHandler implements HttpHandler {
     void badQuery(HttpExchange t, String msg) throws IOException {
         System.out.println("Bad query: " + msg);
         t.sendResponseHeaders(UNPROCESSABLE_ENTITY, msg.length());
-        try (OutputStream os = t.getResponseBody()){
+        try (OutputStream os = t.getResponseBody()) {
             os.write(msg.getBytes());
         }
     }
@@ -165,5 +165,5 @@ class Data {
     }
 
     int maxIndex() { return data.size(); }
-    boolean validListIndex(int i) { return  (i >= 0 && i < maxIndex()); }
+    boolean validListIndex(int i) { return (i >= 0 && i < maxIndex()); }
 }
