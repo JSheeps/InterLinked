@@ -8,38 +8,47 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 public class JSONPServer {
-    public static void main(String[] args) throws Exception {
-        DataHandler.data = new Data();
+    public static void main(String[] args) {
+        try {
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
-        server.createContext("/data", new DataHandler());
-        server.setExecutor(new HttpThreadCreator());
-        server.start();
+            HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
+
+            server.createContext("/data", new DataHandler());
+
+            server.setExecutor(new HttpThreadCreator());
+
+            server.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }
 
 // Process the HTTP requests on a new thread
 class HttpThreadCreator implements Executor {
-    @Override public void execute(Runnable command) { new Thread(command).start(); }
+    @Override
+    public void execute(Runnable command) {
+        new Thread(command).start();
+    }
 }
 
 // How to handle calls to the /data endpoint
 class DataHandler implements HttpHandler {
-    public static final int UNPROCESSABLE_ENTITY = 422;
-    public static final int GOOD = 200;
 
-    public static Data data;
+    private static final int UNPROCESSABLE_ENTITY = 422;
+    private static final int GOOD = 200;
 
     public void handle(HttpExchange t) throws IOException {
-        // System.out.println(t.getRequestURI());
+        Headers headers = t.getResponseHeaders();
 
-        Headers h = t.getResponseHeaders();
         // Necessary for JSONP
-        h.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Origin", "*");
 
         URI uri = t.getRequestURI();
         QueryValues query = new QueryValues(uri.getQuery());
@@ -50,120 +59,68 @@ class DataHandler implements HttpHandler {
             return;
         }
 
-        JSONObject ret;
+        JSONObject jsonReturn;
+
+        // Process Query into JSON
         try {
-            ret = getStuff(query);
+            jsonReturn = commandRedirect(query);
         } catch (Exception e) {
             badQuery(t, e.getMessage());
             return;
         }
 
-        String response = getJSONPmessage(ret, callback);
+        // Format JSON into http response
+        String response = getJSONPMessage(jsonReturn, callback);
         t.sendResponseHeaders(GOOD, response.length());
 
         try (OutputStream os = t.getResponseBody()) {
             os.write(response.getBytes());
         }
+
         t.close();
     }
 
     // Expand this for queries
-    JSONObject getStuff(QueryValues query) throws Exception {
-        if (query.containsKey("list"))
-            return listQuery(query);
-        else
-            throw new Exception("Query has no meaning");
+    private JSONObject commandRedirect(QueryValues query) throws Exception {
+
+        //TODO Implement more query commands
+
+        if (query.containsKey("example")) {
+        } else if (query.containsKey("get")) {
+            return get(query);
+        }
+
+        throw new Exception("Query has no meaning");
     }
 
-    @SuppressWarnings("all")
-    JSONObject listQuery(QueryValues query) throws Exception {
-        int listIndex;
-        try {
-            listIndex = Integer.decode(query.get("list"));
-        } catch (NumberFormatException e) {
-            throw new Exception("list takes an integer");
-        }
+    @SuppressWarnings("unchecked")
+    private JSONObject get(QueryValues query) {
+        JSONObject json = new JSONObject();
 
-        HashMap list;
-        try {
-             list = data.getList(listIndex);
-        } catch (IllegalArgumentException e) {
-            throw new Exception("list index out of range");
-        }
+        List<String> playlists = new ArrayList<>();
 
-        JSONObject ret = new JSONObject();
-        if (query.containsKey("value")) {
-            String valueString = query.get("value");
-            if (list.containsKey(valueString)) {
-                ret.put("value", list.get(valueString));
-            } else
-                throw new Exception("value not found");
-        } else {
-            Iterator it = list.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry e = (Map.Entry) it.next();
-                ret.put(e.getKey(), e.getValue());
-            }
-        }
+        playlists.add("Example playlist 1");
+        playlists.add("Example playlist 2");
 
-        return ret;
+        json.put("playlists", playlists);
+
+        return json;
     }
 
-    void badQuery(HttpExchange t, String msg) throws IOException {
+
+    private void badQuery(HttpExchange t, String msg) throws IOException {
         System.out.println("Bad query: " + msg);
         t.sendResponseHeaders(UNPROCESSABLE_ENTITY, msg.length());
-        try (OutputStream os = t.getResponseBody()){
+        try (OutputStream os = t.getResponseBody()) {
             os.write(msg.getBytes());
         }
     }
 
-    static String getJSONPmessage(JSONObject j, String callback) {
-        StringBuilder sb = new StringBuilder();
+    private static String getJSONPMessage(JSONObject j, String callback) {
 
-        sb.append(callback).append('(');
-        sb.append(j.toJSONString());
-        sb.append(')');
+        return callback + '(' +
+                j.toJSONString() +
+                ')';
 
-        return sb.toString();
     }
-}
-
-
-// stub class that servers as Data access
-class Data {
-    private List<HashMap<String, String>> data;
-
-    Data() {
-        data = new ArrayList<>();
-
-        HashMap<String, String> list = new HashMap<>();
-        list.put("name", "test List");
-        list.put("contents", "various test data");
-        list.put("test", "test successful");
-        list.put("value", "hello");
-        list.put("hello", "hi");
-        list.put("hi", "hello");
-        data.add(list);
-
-        list = new HashMap<>();
-        list.put("name", "second List");
-        list.put("contents", "other stuff");
-        list.put("pi", "3.1415926");
-        list.put("root2", "1.41421");
-        data.add(list);
-    }
-
-    boolean hasUser(String s) {
-        return false;
-    }
-
-    HashMap<String, String> getList(int index) {
-        if (!validListIndex(index))
-            throw new IllegalArgumentException("List index out of range");
-
-        return data.get(index);
-    }
-
-    int maxIndex() { return data.size(); }
-    boolean validListIndex(int i) { return  (i >= 0 && i < maxIndex()); }
 }
