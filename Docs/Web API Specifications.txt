@@ -1,0 +1,45 @@
+Query Specifications
+
+1. URI
+	The server will receive requests in the form of <URL>/<endpoint>?<query>
+	This document will discuss the query section. The endpoint can be anything, but something like "data" or "api" is suitable. All calls to this endpoint must utilize JSONP, as shown in the example code, since this will be the API for the front end.
+	
+2. Query
+	All queries have a key=value structure, which can be extended to multiple key-value pairs with ampersands.
+	The query will be parsed automatically, simply by passing it into the QueryValues class, which extends the HashMap<String, String> class. All you must worry about are what pairs there are by seeing if the QueryValue instance .contains(<key>)
+	
+3. Expected Queries
+	In the Key section will be a literal. These never change, unless specified by us.
+	In the Expected Values section will be what will be after the = sign in the query. <>s mark representations i.e. <platform>, whereas the lack thereof represents a string literal.
+	The Required section denotes what other key-value pairs must be present when this query call is made. If the key-value pair is received without the other Required key-value pairs, return an error like in the example.
+	The Return section will say what you must convert into a JSON object before sending it through JSONP.
+
+	Here are some pairs we will use.
+		Key			Expected Values			Required		Return
+		===============================================================
+		get			playlists								An array of playlists owned by the user
+		
+		import		<platformID>							IF the playlist key is NOT present:
+																A list of playlists on the <platform> that the user can import.
+															IF the playlist key IS present:
+																The playlist.
+																
+		export		<platformID>			playlist		Returns which songs were NOT successfully exported, if any, as an array.
+		
+		merge		<playlistID>			playlist2		Merges <playlistID> and playlist2, returns the playlistID of the new playlist and all songs in each playlist that were lost in the merge.
+		
+		playlist	<playlistID>							Returns songs in list if used on its own.
+		
+		remove		<playlistID>							Removes the playlist from the user's database.
+		
+		login		<authToken>								IF the login is successful
+																return the token used to access server material for the user
+															ELSE
+																return a reason, e.g. "Email does not exist" or "Bad password"
+																
+		signup		<authToken>								IF the signup is successfuly
+																return the token used to access server material for the user
+															ELSE
+																return a reason, e.g. "Email taken" or "Password too short"
+		
+		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).
