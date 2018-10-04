@@ -32,14 +32,18 @@ Query Specifications
 		
 		remove		<playlistID>							Removes the playlist from the user's database.
 		
-		login		<authToken>								IF the login is successful
-																return the token used to access server material for the user
+		login		login					username,		IF the login is successful
+											password			return the token used to access server material for the user
 															ELSE
 																return a reason, e.g. "Email does not exist" or "Bad password"
 																
-		signup		<authToken>								IF the signup is successfuly
-																return the token used to access server material for the user
+		signup		signup					username,		IF the signup is successfuly
+											password			return the token used to access server material for the user
 															ELSE
 																return a reason, e.g. "Email taken" or "Password too short"
+																
+		username	<username>				password		Used with either login or signup.
+		
+		password	<password>				username		Used with either login or signup.
 		
 		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).
