@@ -15,13 +15,27 @@ public class User {
         this.email = email;
     }
 
-
-
     // Gets user data from database and creates new user object
     public static User getUserByUserName(String userName){
-        // TODO: Implement
+        String userQuery = "SELECT * FROM Users WHERE UserName = " + userName;
+        SqlHelper helper = new SqlHelper();
 
-        return null;
+        ResultSet resultSet = helper.ExecuteQuery(userQuery);
+
+        try{
+            if(resultSet.next()){
+                int id = resultSet.getInt("ID");
+                String usrrName = resultSet.getString("UserName");
+                String email = resultSet.getString("Email");
+
+                return new User(id, usrrName, email);
+            }else{
+                return null;
+            }
+        }catch (SQLException e){
+            // TODO
+            return null;
+        }
     }
 
     // Creates a new User, returns new user object, or null on failure
