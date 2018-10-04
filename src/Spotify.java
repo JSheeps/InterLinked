@@ -18,6 +18,7 @@ import com.wrapper.spotify.requests.authorization.client_credentials.ClientCrede
 import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
 import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
+import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
 import org.apache.http.HttpRequest;
@@ -31,16 +32,13 @@ public class Spotify extends StreamingService
     private static final String client_Secret = "69e5123c458b43fc94d5d380281aee15";
     private static final String scopes = "user-read-birthdate,user-read-email";
 
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost:15000/TESTPARAMETER");//temporary redirect uri until this functionality is implemented
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost:15000");//temporary redirect uri until this functionality is implemented
 
-    private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
+    private static SpotifyApi spotifyApi = new SpotifyApi.Builder()
             .setClientId(client_ID)
             .setClientSecret(client_Secret)
             .setRedirectUri(redirectURI)
             .build();
-
-    //Used for testing, possibly useful in the future for search functionality
-    //private static final ClientCredentialsRequest cCR = spotifyApi.clientCredentials().build();
 
     private static final AuthorizationCodeUriRequest aCUR = spotifyApi.authorizationCodeUri().scope(scopes).show_dialog(true).build();
 
@@ -53,27 +51,6 @@ public class Spotify extends StreamingService
     //Code retrieved from user authorization is passed, return value is a pair <accessToken, refreshToken>
     public Pair<String,String> Login(String code) {
         try {
-
-
-            /*ServerSocket ss = new ServerSocket(15000);
-            Socket client = ss.accept();
-            BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            String input = in.readLine();
-            System.out.println(input);
-            String code = input.split(" ")[1].substring(7);
-*/
-
-            /*/// Only for purposes of making sure program functions until
-            // a redirect URI can be set up, to test, copy the code from
-            // the current URI redirect into the GUI
-            JFrame frame = new JFrame();
-            JTextField text = new JTextField();
-            text.setEnabled(true);
-            text.setEditable(true);
-            frame.add(text);
-            frame.show();
-            Thread.sleep(20000); //waits for 20 seconds to give tester time to login and copy code into GUI
-            ///*/
 
             final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
             AuthorizationCodeCredentials c = authorizationcoderequest.execute();
@@ -92,20 +69,53 @@ public class Spotify extends StreamingService
         }
         return new Pair<String, String> ("error","error");
     }
+
+    //tokens are <accessToken, refreshToken>
     public Playlist[] getPlaylists(Pair<String, String> tokens)
     {
         try {
+            spotifyApi.setAccessToken(tokens.getKey());
+            GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
+            User user = getUserID.execute();
+            String userID = user.getId();
             final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
                     .getListOfCurrentUsersPlaylists()
                     .limit(10)
                     .offset(0)
                     .build();
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
-            PlaylistSimplified playlist_list[] = playlists.getItems();
+            PlaylistSimplified playlist_list[] = playlists.getItems();//contains playlist id's
             Playlist[] return_lists = new Playlist [playlists.getTotal()];
+            for (int i = 0; i<return_lists.length;i++){
+                return_lists[i].setName(playlist_list[i].getName());
+            }
+            for (int i=0; i<return_lists.length;i++){
+                GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,playlist_list[i].getId())
+                        .fields("description")
+                        .limit(20)
+                        .offset(0)
+                        .market(CountryCode.SE)
+                        .build();
+                Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
+                PlaylistTrack [] songs = new PlaylistTrack[tracks.getTotal()];
+                for (int j=0;j<tracks.getTotal();j++){
+
+                    Track thisSong = songs[j].getTrack();
+                    Song s = new Song(thisSong.getName());
+                    s.origin = Song.OriginHostName.SPOTIFY;
+                    s.setAlbum(thisSong.getAlbum().getName());
+                    s.setArtist(thisSong.getArtists()[0].getName());
+                    s.explicit = thisSong.getIsExplicit();
+                    s.spotifyURI = thisSong.getUri();
+                    s.spotfyID = thisSong.getId();
+                    return_lists[i].addSong(s);
+
+                }
+            }
+            return return_lists;
 
         } catch (Exception e) {e.printStackTrace();}
         return new Playlist[] {};
     }
-    
+
 }
