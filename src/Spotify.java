@@ -2,23 +2,24 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.util.*;
 import java.net.*;
+
 
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.*;
 import com.wrapper.spotify.exceptions.detailed.BadRequestException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.Album;
-import com.wrapper.spotify.model_objects.specification.Paging;
-import com.wrapper.spotify.model_objects.specification.PlaylistSimplified;
-import com.wrapper.spotify.model_objects.specification.User;
+import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
 import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
+import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
+import javafx.util.Pair;
 import org.apache.http.HttpRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 //import com.google.*;
@@ -30,7 +31,7 @@ public class Spotify extends StreamingService
     private static final String client_Secret = "69e5123c458b43fc94d5d380281aee15";
     private static final String scopes = "user-read-birthdate,user-read-email";
 
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("https://www.google.com/");//temporary redirect uri until this functionality is implemented
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost:15000/TESTPARAMETER");//temporary redirect uri until this functionality is implemented
 
     private static final SpotifyApi spotifyApi = new SpotifyApi.Builder()
             .setClientId(client_ID)
@@ -43,13 +44,26 @@ public class Spotify extends StreamingService
 
     private static final AuthorizationCodeUriRequest aCUR = spotifyApi.authorizationCodeUri().scope(scopes).show_dialog(true).build();
 
-    public void Login() {
-        try {
-            final URI temp = aCUR.execute();
-            System.out.println(temp.toString());//displays the url through which the user will authenticate our app
-            String code;
+    //URL the user is sent to so they can allow us to access their account
+    public String getAuthorizationURL(){
+        final URI temp = aCUR.execute();
+        return temp.toString();
+    }
 
-            //// Only for purposes of making sure program functions until
+    //Code retrieved from user authorization is passed, return value is a pair <accessToken, refreshToken>
+    public Pair<String,String> Login(String code) {
+        try {
+
+
+            /*ServerSocket ss = new ServerSocket(15000);
+            Socket client = ss.accept();
+            BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            String input = in.readLine();
+            System.out.println(input);
+            String code = input.split(" ")[1].substring(7);
+*/
+
+            /*/// Only for purposes of making sure program functions until
             // a redirect URI can be set up, to test, copy the code from
             // the current URI redirect into the GUI
             JFrame frame = new JFrame();
@@ -58,19 +72,15 @@ public class Spotify extends StreamingService
             text.setEditable(true);
             frame.add(text);
             frame.show();
-            Thread.sleep(30000); //waits for 30 seconds to give tester time to login and copy code into GUI
-            code = text.getText();
-            ////
+            Thread.sleep(20000); //waits for 20 seconds to give tester time to login and copy code into GUI
+            ///*/
 
             final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
             AuthorizationCodeCredentials c = authorizationcoderequest.execute();
-            spotifyApi.setAccessToken(c.getAccessToken());//access token for the current user
-            spotifyApi.setRefreshToken(c.getRefreshToken());
-            //getAlbum();
-            final GetCurrentUsersProfileRequest profReq = spotifyApi.getCurrentUsersProfile().build();
-            User user = profReq.execute();//Has user information
 
-            System.out.println(user.getDisplayName());
+            Pair<String, String> tokens = new Pair<String, String> (c.getAccessToken(),c.getRefreshToken());
+
+            return tokens;
         }
         catch (BadRequestException e){
             e.printStackTrace();
@@ -80,8 +90,9 @@ public class Spotify extends StreamingService
         {
             e.printStackTrace();
         }
+        return new Pair<String, String> ("error","error");
     }
-    public void getPlaylists()
+    public Playlist[] getPlaylists(Pair<String, String> tokens)
     {
         try {
             final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
@@ -91,9 +102,10 @@ public class Spotify extends StreamingService
                     .build();
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
             PlaylistSimplified playlist_list[] = playlists.getItems();
-            for (int i = 0; i < playlist_list.length; i++) {
-                System.out.println(playlist_list[i].getName());
-            }
+            Playlist[] return_lists = new Playlist [playlists.getTotal()];
+
         } catch (Exception e) {e.printStackTrace();}
+        return new Playlist[] {};
     }
+    
 }
