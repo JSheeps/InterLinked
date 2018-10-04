@@ -2,6 +2,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class JSONPServer {
 // Process the HTTP requests on a new thread
 class HttpThreadCreator implements Executor {
     @Override
-    public void execute(Runnable command) {
+    public void execute(@NotNull Runnable command) {
         new Thread(command).start();
     }
 }
@@ -43,10 +44,14 @@ class HttpThreadCreator implements Executor {
 class DataHandler implements HttpHandler {
 
     // List of currently logged in users and their socket addresses
-    HashMap<InetSocketAddress, User> activeUsers;
+    private HashMap<InetSocketAddress, User> activeUsers;
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
+
+    DataHandler() {
+        activeUsers = new HashMap<>();
+    }
 
     public void handle(HttpExchange t) throws IOException {
 
@@ -85,7 +90,7 @@ class DataHandler implements HttpHandler {
         t.close();
     }
 
-    // Expand this for queries
+    // Redirects queries
     private JSONObject commandRedirect(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
 
         //TODO Implement more query commands
@@ -93,8 +98,7 @@ class DataHandler implements HttpHandler {
         boolean isLoggedIn = activeUsers.containsKey(remoteAddress);
 
         if (query.containsKey("get")) {
-
-            if(isLoggedIn)
+            if (isLoggedIn)
                 return get(activeUsers.get(remoteAddress));
             else
                 throw new Exception("User needs to log in");
@@ -109,6 +113,7 @@ class DataHandler implements HttpHandler {
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
+    @SuppressWarnings("unchecked")
     private JSONObject signUp(QueryValues query) {
         JSONObject json = new JSONObject();
 
@@ -125,6 +130,7 @@ class DataHandler implements HttpHandler {
     }
 
     // Method to handle "login" query. Returns json with true on success and false on failure
+    @SuppressWarnings("unchecked")
     private JSONObject logIn(QueryValues query, InetSocketAddress remoteAddress) {
         JSONObject json = new JSONObject();
 
@@ -135,10 +141,10 @@ class DataHandler implements HttpHandler {
 
         boolean b = UserPassword.IsPasswordCorrect(info[0], info[1]);
 
-        if(b){
+        if (b) {
             User user = User.getUserByUserName(info[0]);
 
-            if(user != null)
+            if (user != null)
                 activeUsers.put(remoteAddress, user);
             else
                 b = false;
@@ -149,6 +155,7 @@ class DataHandler implements HttpHandler {
     }
 
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
+    @SuppressWarnings("unchecked")
     private JSONObject get(User user) {
         JSONObject json = new JSONObject();
 

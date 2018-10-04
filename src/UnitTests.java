@@ -1,5 +1,5 @@
-import org.junit.*;
-import org.junit.runner.JUnitCore;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class UnitTests {
 
@@ -13,7 +13,7 @@ public class UnitTests {
         String password = "testPassword";
         String email = "testEmail@test.com";
 
-        User user = new User(userName, password, email);
+        User user = User.CreateUser(userName, password, email);
 
         boolean actual = UserPassword.IsPasswordCorrect(userName, password);
 
