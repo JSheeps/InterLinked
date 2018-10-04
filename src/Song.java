@@ -1,3 +1,5 @@
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Objects;
 
 public class Song{
@@ -49,5 +51,34 @@ public class Song{
                 ", spotfyID='" + spotfyID + '\'' +
                 ", spotifyURI='" + spotifyURI + '\'' +
                 '}';
+    }
+
+    // Used to save to db, doesn't save if song already has an ID
+    // TODO add functionality for updating songs, possibly only for certain fields
+    // Returns true on success, false on failure
+    public boolean Save(){
+        if(ID != 0){
+            // Already in db, no need for action
+            return true;
+        }
+
+        String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) "+
+                             "VALUES("+ artist + ", "+ title + ", "+ album + ", "+ duration + ", "+ explicit + ", " + spotfyID + ", "+ spotifyURI + ")";
+
+        SqlHelper helper = new SqlHelper();
+        helper.ExecuteQuery(insertQuery);
+
+        // Get ID of thing we just inserted
+        String idQuery = "SELECT ID FROM Songs WHERE Artist = " + artist + " AND Title = " + title;
+        ResultSet resultSet = helper.ExecuteQuery(idQuery);
+
+        try{
+            ID = resultSet.getInt("ID");
+        }catch (SQLException e){
+            // TODO
+            return false;
+        }
+
+        return true;
     }
 }
