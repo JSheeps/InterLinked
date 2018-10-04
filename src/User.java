@@ -1,5 +1,3 @@
-import com.sun.media.jfxmedia.events.PlayerStateListener;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
@@ -9,7 +7,7 @@ public class User {
     int ID;
     String userName;
     String email;
-    List<Playlist> playlistList = new ArrayList<Playlist>();
+    List<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){
         this.ID = ID;
@@ -17,8 +15,17 @@ public class User {
         this.email = email;
     }
 
-    // Creates a new User, returns true on success and false on failure
-    public static boolean CreateUser(String userName, String password, String email){
+
+
+    // Gets user data from database and creates new user object
+    public static User getUserByUserName(String userName){
+        // TODO: Implement
+
+        return null;
+    }
+
+    // Creates a new User, returns new user object, or null on failure
+    public static User CreateUser(String userName, String password, String email){
         User newUser = new User(0, userName, email);
 
         java.util.Date currentDate = new java.util.Date();
@@ -41,7 +48,11 @@ public class User {
             // TODO
         }
 
-        return UserPassword.CreateUserPassword(newUser.ID, password);
+        if(UserPassword.CreateUserPassword(newUser.ID, password)){
+            return newUser;
+        }
+        else
+            return null;
     }
 
     // Fetches playlists that are saved in the db for the current user object and saves them in the playlistList class object
