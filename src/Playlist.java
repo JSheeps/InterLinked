@@ -1,7 +1,9 @@
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 class Playlist{
 
@@ -47,26 +49,26 @@ class Playlist{
         return newPlaylist;
     }
 
-    // Fetches songs that are saved in the db for the current playlist object and saves them in the playlist class object
-    // Returns true on success, false on failure
-    public boolean FetchSongs(){
-        if(ID == 0){
+    // Fetches songs that are saved in the db for the current playlist object
+    // Returns song list on success, null on failure
+    public List<Song> FetchSongs() {
+        if (ID == 0) {
             // Not in db
-            return false;
+            return null;
         }
 
-        String fetchQuery = "SELECT Songs.* "+
-                            "FROM Playlists "+
-                                "JOIN PlaylistSongs ON PlaylistSongs.PlaylistID = Playlists.ID "+
-                                "JOIN Songs ON Songs.ID = PlaylistSongs.SongID "+
-                            "WHERE Playlists.ID = "+ ID;
+        String fetchQuery = "SELECT Songs.* " +
+                "FROM Playlists " +
+                "JOIN PlaylistSongs ON PlaylistSongs.PlaylistID = Playlists.ID " +
+                "JOIN Songs ON Songs.ID = PlaylistSongs.SongID " +
+                "WHERE Playlists.ID = " + ID;
 
         SqlHelper helper = new SqlHelper();
         ResultSet resultSet = helper.ExecuteQuery(fetchQuery);
 
-        playlist = new ArrayList<Song>();
-        try{
-            while(resultSet.next()){
+        List<Song> songList = new ArrayList<Song>();
+        try {
+            while (resultSet.next()) {
                 Song song = new Song();
                 song.album = resultSet.getString("Album");
                 song.artist = resultSet.getString("Artist");
@@ -76,14 +78,14 @@ class Playlist{
                 song.spotfyID = resultSet.getString("SpotifyID");
                 song.spotifyURI = resultSet.getString("SpotifyURI");
 
-                playlist.add(song);
+                songList.add(song);
             }
-        }catch(SQLException e){
+        } catch (SQLException e) {
             // TODO
-            return false;
+            return null;
         }
 
-        return true;
+        return songList;
     }
 
     // Saves a playlist to the database, returns true on success and false on failure
@@ -107,10 +109,53 @@ class Playlist{
                 // TODO
                 return false;
             }
+
+            for (Song song : playlist){
+                PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
+                playlistSong.save();
+            }
         }
 
         // We've confirmed that the playlist has an ID at this point, so now we save the songs one by one
-        // TODO
+
+        // Get current state of playlist in db
+        List<Song> songList = this.FetchSongs();
+
+        // Find what songs were added, if any
+        Set<Song> songSet = new HashSet<Song>();
+        songSet.addAll(this.playlist);
+        songSet.addAll(songList);
+
+        List<Song> unionList = new ArrayList<Song>(songSet);
+        List<Song> addedList = new ArrayList<Song>();
+        for (Song song : unionList){
+            if(!playlist.contains(song)){
+                addedList.add(song);
+            }
+        }
+
+        // Find what songs were deleted, if any
+        List<Song> deletedList = new ArrayList<Song>();
+        for(Song song : unionList){
+            if(!songList.contains(song)){
+                deletedList.add(song);
+            }
+        }
+
+        // Add each song in addedList
+        for(Song song : addedList){
+            PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
+            boolean ret = playlistSong.save();
+            if(ret == false) return false;
+        }
+
+        // Delete each song in deletedList
+        for(Song song : deletedList){
+            PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
+            boolean ret = playlistSong.delete();
+            if(ret == false) return false;
+        }
+
         return true;
     }
 

@@ -34,4 +34,13 @@ public class PlaylistSong {
             }
         }
     }
+
+    public boolean delete(){
+        String deletionQuery = "DELETE FROM PlaylistSongs WHERE PlaylistID = " + PlaylistID + " AND SongID = " + SongID;
+        SqlHelper helper = new SqlHelper();
+
+        helper.ExecuteQuery(deletionQuery);
+
+        return true;
+    }
 }

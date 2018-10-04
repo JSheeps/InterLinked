@@ -56,7 +56,7 @@ public class Song{
     // Used to save to db, doesn't save if song already has an ID
     // TODO add functionality for updating songs, possibly only for certain fields
     // Returns true on success, false on failure
-    public boolean Save(){
+    public boolean save(){
         if(ID != 0){
             // Already in db, no need for action
             return true;
