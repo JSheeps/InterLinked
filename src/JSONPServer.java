@@ -2,15 +2,19 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.wrapper.spotify.model_objects.special.PlaylistTrackPosition;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executor;
 
 public class JSONPServer {
@@ -69,7 +73,7 @@ class DataHandler implements HttpHandler {
             return;
         }
 
-        JSONObject json;
+        JSONArray json;
 
         // Process Query into JSON
         try {
@@ -91,7 +95,7 @@ class DataHandler implements HttpHandler {
     }
 
     // Redirects queries
-    private JSONObject commandRedirect(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
+    private JSONArray commandRedirect(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
 
         //TODO Implement more query commands
 
@@ -109,12 +113,38 @@ class DataHandler implements HttpHandler {
         else if (query.containsKey("login"))
             return logIn(query, remoteAddress);
 
+        else if (query.containsKey("test"))
+            return test(query);
+
         throw new Exception("Query has no meaning");
+    }
+
+    private JSONArray test(QueryValues query) {
+        JSONArray jsonArray = new JSONArray();
+
+        List<Playlist> list = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < random.nextInt(20); i++) {
+            Playlist playlist = new Playlist();
+            playlist.Name = "playlist" + i;
+            playlist.ID = i;
+            list.add(playlist);
+        }
+
+        for(Playlist playlist : list){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("name", playlist.Name);
+            jsonObject.put("id", playlist.ID);
+            jsonArray.put(jsonObject);
+        }
+
+        return jsonArray;
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONObject signUp(QueryValues query) {
+    private JSONArray signUp(QueryValues query) {
+        JSONArray jsonArray = new JSONArray();
         JSONObject json = new JSONObject();
 
         String encodedName = query.get("signup");
@@ -126,12 +156,15 @@ class DataHandler implements HttpHandler {
 
         json.put("result", user != null);
 
-        return json;
+        jsonArray.put(json);
+
+        return jsonArray;
     }
 
     // Method to handle "login" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONObject logIn(QueryValues query, InetSocketAddress remoteAddress) {
+    private JSONArray logIn(QueryValues query, InetSocketAddress remoteAddress) {
+        JSONArray jsonArray = new JSONArray();
         JSONObject json = new JSONObject();
 
         String encodedName = query.get("login");
@@ -139,7 +172,10 @@ class DataHandler implements HttpHandler {
         // Expected format is "username:password"
         String[] info = encodedName.split(":", 2);
 
-        boolean b = UserPassword.IsPasswordCorrect(info[0], info[1]);
+        boolean b = false;
+        try {
+            b = UserPassword.IsPasswordCorrect(info[0], info[1]);
+        } catch (Exception ignored){}
 
         if (b) {
             User user = User.getUserByUserName(info[0]);
@@ -151,20 +187,27 @@ class DataHandler implements HttpHandler {
         }
 
         json.put("result", b);
-        return json;
+        jsonArray.put(json);
+        return jsonArray;
     }
 
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
     @SuppressWarnings("unchecked")
-    private JSONObject get(User user) {
-        JSONObject json = new JSONObject();
+    private JSONArray get(User user) {
+        JSONArray jsonArray = new JSONArray();
 
         user.FetchPlaylists();
         List<Playlist> playlists = user.playlistList;
 
-        json.put("playlists", playlists);
+        for(Playlist playlist : playlists){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("name", playlist.Name);
+            jsonObject.put("id", playlist.ID);
+            jsonArray.put(jsonObject);
+        }
 
-        return json;
+
+        return jsonArray;
     }
 
 
@@ -176,11 +219,17 @@ class DataHandler implements HttpHandler {
         }
     }
 
-    private static String getJSONPMessage(JSONObject j, String callback) {
+    private static String getJSONPMessage(JSONArray j, String callback) {
+        StringBuilder message = new StringBuilder();
+        message.append(callback);
+        message.append("(");
 
-        return callback + '(' +
-                j.toJSONString() +
-                ')';
+        message.append(j.toString());
 
+        message.append(")");
+
+        System.out.println(message);
+
+        return message.toString();
     }
 }
