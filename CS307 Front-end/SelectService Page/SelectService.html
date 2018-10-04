@@ -3,8 +3,8 @@
     <head>
         <title>Select Service Page</title>
 
-        <link href="../common/common.css" type="text/css" rel="stylesheet">
         <link href="./SelectService.css" type="text/css" rel="stylesheet">
+        <link href="../common/common.css" type="text/css" rel="stylesheet">
         
         <!-- JQuery API -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -18,10 +18,12 @@
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,600' rel='stylesheet' type='text/css'>
 
         <h1>Choose your Music Service</h1>
-        
-        <a href="https://accounts.spotify.com:443/authorize?client_id=150469a5b0d949a9b3693a73edc3b46d&response_type=code&redirect_uri=https%3A%2F%2Fwww.google.com%2F&scope=user-read-birthdate%2Cuser-read-email&show_dialog=true" class="SpotifyConnect">
-            <img src="./connect%20to%20spotify.png" alt="Connect to Spotify img" class="SpotifyConnect" onclick="sendToSpotify();">
+        <div>
+        <a href="https://accounts.spotify.com:443/authorize?client_id=150469a5b0d949a9b3693a73edc3b46d&response_type=code&redirect_uri=https%3A%2F%2Fwww.google.com%2F&scope=user-read-birthdate%2Cuser-read-email&show_dialog=true" class="picture">
+            <img src="./connect%20to%20spotify.png" alt="Connect to Spotify img" class="SpotifyConnect" onclick="sendToSpotify();"/>
         </a>
+        </div>
+        
         
         <a href="../Login Page/login.html" class="logout">Logout</a>
         
