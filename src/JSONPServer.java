@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -117,13 +118,65 @@ class DataHandler implements HttpHandler {
         else if (query.containsKey("login"))
             return logIn(query, remoteAddress);
 
+        else if (query.containsKey("import"))
+            return importQuery(activeUsers.get(remoteAddress), query);
+
         else if(query.containsKey("playlist"))
             return playlist(activeUsers.get(remoteAddress), query);
+
+        else if(query.containsKey("export"))
+            return exportQuery(activeUsers.get(remoteAddress), query);
 
         else if (query.containsKey("test"))
             return test(query);
 
+
         throw new Exception("Query has no meaning");
+    }
+
+    private JSONArray importQuery(User user, QueryValues query) throws Exception {
+        if(user.tokens == null){
+            throw new Exception("User needs to log in to service");
+        }
+
+        if(!query.containsKey("playlist")){
+            return get(user);
+        }
+
+        JSONArray jsonArray = new JSONArray();
+
+        Spotify spotify = new Spotify();
+        Playlist[] playlists = spotify.importPlaylists(user.tokens);
+
+        for(Playlist playlist : playlists){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("name", playlist.Name);
+            jsonObject.put("id", playlist.ID);
+            jsonArray.add(jsonObject);
+        }
+
+        return jsonArray;
+    }
+
+    private JSONArray exportQuery(User user, QueryValues query) throws Exception{
+        if(user.tokens == null){
+            throw new Exception("User needs to log in to service");
+        }
+        JSONArray jsonArray = new JSONArray();
+
+        String pid = query.get("export");
+        int id = Integer.parseInt(pid);
+
+        Playlist playlist = user.getPlaylistById(id);
+
+        if(playlist == null){
+            throw new Exception("Playlist not found");
+        }
+
+        Spotify spotify = new Spotify();
+        spotify.exportPlaylist(user.tokens, playlist); //TODO return failed songs
+
+        return jsonArray;
     }
 
     @SuppressWarnings("unchecked")
