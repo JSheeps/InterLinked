@@ -137,16 +137,20 @@ public class Song {
             return true;
         }
         String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
-                "VALUES(" + artist + ", " + title + ", " + album + ", " + duration + ", " + explicit + ", " + spotfyID + ", " + spotifyURI + ")";
+                "VALUES('" + artist + "', '" + title + "', '" + album + "', " + duration + ", " + explicit + ", '" + spotfyID + "', '" + spotifyURI + "')";
         SqlHelper helper = new SqlHelper();
         helper.ExecuteQuery(insertQuery);
         // Get ID of thing we just inserted
         String idQuery = "SELECT ID FROM Songs WHERE Artist = " + artist + " AND Title = " + title;
         ResultSet resultSet = helper.ExecuteQueryWithReturn(idQuery);
         try {
-            ID = resultSet.getInt("ID");
+            while(resultSet.next()){
+                ID = resultSet.getInt("ID");
+            }
+            helper.closeConnection();
         } catch (SQLException e) {
             // TODO
+            System.err.println(e);
             return false;
         }
         return true;

@@ -26,7 +26,10 @@ public class PlaylistSong {
             ResultSet resultSet = helper.ExecuteQueryWithReturn(findIDQuery);
 
             try{
-                ID = resultSet.getInt("ID");
+                while(resultSet.next()){
+                    ID = resultSet.getInt("ID");
+                }
+                helper.closeConnection();
                 return true;
             }catch (SQLException e){
                 // TODO
@@ -40,6 +43,8 @@ public class PlaylistSong {
         SqlHelper helper = new SqlHelper();
 
         helper.ExecuteQuery(deletionQuery);
+
+        helper.closeConnection();
 
         return true;
     }

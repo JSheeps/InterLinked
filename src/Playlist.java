@@ -86,14 +86,17 @@ class Playlist {
             // Playlist hasn't been saved to DB yet
             // TODO Get current user ID, this is a dummy value
             int currentUserID = 1;
-            String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", " + Name + ")";
+            String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", '" + Name + "')";
             SqlHelper helper = new SqlHelper();
             helper.ExecuteQuery(playlistInsertQuery);
             // Send query to find ID of playlist we just inserted
             String findIDQuery = "SELECT ID FROM Playlists WHERE Name = '" + Name + "'";
             ResultSet results = helper.ExecuteQueryWithReturn(findIDQuery);
             try {
-                ID = results.getInt("ID");
+                while(results.next()){
+                    ID = results.getInt("ID");
+                }
+                helper.closeConnection();
             } catch (SQLException e) {
                 // TODO
                 return false;

@@ -99,6 +99,7 @@ public class User {
 
                 playlistList.add(playlist);
             }
+            helper.closeConnection();
         }catch(SQLException e){
             // TODO
             return false;

@@ -42,9 +42,17 @@ public class SqlHelper {
 
         try{
             Statement statement = connection.createStatement();
-            statement.executeQuery(query);
-        }catch(SQLException e){
+            statement.execute(query);
+        }catch(SQLException e) {
             // TODO
+            System.err.println(e);
+        }
+    }
+
+    public void closeConnection(){
+        try{
+            connection.close();
+        }catch (SQLException e) {
             System.err.println(e);
         }
     }

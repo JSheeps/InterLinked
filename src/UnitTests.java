@@ -1,6 +1,9 @@
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 public class UnitTests {
 
     public static void main(String[] args){
@@ -17,15 +20,15 @@ public class UnitTests {
 
         boolean actual = UserPassword.IsPasswordCorrect(userName, password);
 
-        boolean expected = true;
-
         SqlHelper helper = new SqlHelper();
-        String deletionQuery = "DELETE FROM UserPasswords WHERE UserID = " + "'" + user.ID + "'";
-        String deletionQuery2 = "DELETE FROM Users WHERE ID = " + "'" + user.ID + "'";
+        String deletionQuery = "DELETE FROM UserPasswords WHERE UserID = '" + user.ID + "'";
+        String deletionQuery2 = "DELETE FROM Users WHERE ID = '" + user.ID + "'";
 
-        helper.ExecuteQuery(deletionQuery);
-        helper.ExecuteQuery(deletionQuery2);
+        //helper.ExecuteQuery(deletionQuery);
+        //helper.ExecuteQuery(deletionQuery2);
 
-        Assert.assertEquals(expected, actual);
+        helper.closeConnection();
+
+        Assert.assertEquals(true, actual);
     }
 }
