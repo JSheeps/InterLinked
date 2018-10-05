@@ -4,7 +4,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.wrapper.spotify.model_objects.special.PlaylistTrackPosition;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ class DataHandler implements HttpHandler {
 
         String callback = query.get("callback");
         if (callback == null) {
-            badQuery(t, "Need callback in query");
+            noCallback(t);
             return;
         }
 
@@ -79,7 +79,7 @@ class DataHandler implements HttpHandler {
         try {
             json = commandRedirect(query, t.getRemoteAddress());
         } catch (Exception e) {
-            badQuery(t, e.getMessage());
+            badQuery(t, callback, e.getMessage());
             return;
         }
 
@@ -119,6 +119,7 @@ class DataHandler implements HttpHandler {
         throw new Exception("Query has no meaning");
     }
 
+    @SuppressWarnings("unchecked")
     private JSONArray test(QueryValues query) {
         JSONArray jsonArray = new JSONArray();
 
@@ -135,7 +136,7 @@ class DataHandler implements HttpHandler {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("name", playlist.Name);
             jsonObject.put("id", playlist.ID);
-            jsonArray.put(jsonObject);
+            jsonArray.add(jsonObject);
         }
 
         return jsonArray;
@@ -156,7 +157,7 @@ class DataHandler implements HttpHandler {
 
         json.put("result", user != null);
 
-        jsonArray.put(json);
+        jsonArray.add(json);
 
         return jsonArray;
     }
@@ -187,7 +188,7 @@ class DataHandler implements HttpHandler {
         }
 
         json.put("result", b);
-        jsonArray.put(json);
+        jsonArray.add(json);
         return jsonArray;
     }
 
@@ -203,23 +204,39 @@ class DataHandler implements HttpHandler {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("name", playlist.Name);
             jsonObject.put("id", playlist.ID);
-            jsonArray.put(jsonObject);
+            jsonArray.add(jsonObject);
         }
 
 
         return jsonArray;
     }
 
-
-    private void badQuery(HttpExchange t, String msg) throws IOException {
+	
+    private void noCallback(HttpExchange t) throws IOException {
+        String msg = "Need callback in query";
         System.out.println("Bad query: " + msg);
-        t.sendResponseHeaders(UNPROCESSABLE_ENTITY, msg.length());
+
+        byte[] message = msg.getBytes();
+        t.sendResponseHeaders(UNPROCESSABLE_ENTITY, message.length);
         try (OutputStream os = t.getResponseBody()) {
-            os.write(msg.getBytes());
+            os.write(message);
+        }
+    }
+	
+    @SuppressWarnings("all")
+    void badQuery(HttpExchange t, String callback, String msg) throws IOException {
+        System.out.println("Bad query: " + msg);
+        JSONObject obj = new JSONObject();
+        obj.put("error", msg);
+
+        byte[] message = getJSONPMessage(obj, callback).getBytes();
+        t.sendResponseHeaders(200, message.length);
+        try (OutputStream os = t.getResponseBody()) {
+            os.write(message);
         }
     }
 
-    private static String getJSONPMessage(JSONArray j, String callback) {
+    private static String getJSONPMessage(Object j, String callback) {
         StringBuilder message = new StringBuilder();
         message.append(callback);
         message.append("(");

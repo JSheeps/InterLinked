@@ -19,12 +19,31 @@ function login() {
 	console.log(userName);
 	console.log(password);
 	
-	// TODO: Login to server here
-	console.log("Login");
-	
 	serverLogin(userName, password).done( (accessToken) => {
-		console.log(accessToken);
-		playlistRedirect();
+		console.log(accessToken.error);
+		if (accessToken.error) {
+			
+		} else {
+			console.log(accessToken);
+			createCookie("accessToken", accessToken);
+			playlistRedirect();
+		}
+	});
+}
+
+function signUp() {
+	var userName = userNameField[0].value;
+	var password = passwordField[0].value;
+	
+	console.log(userName);
+	console.log(password);
+	
+	serverSignup(userName, password).done( (accessToken) => {
+		if (accessToken.error) {
+		} else {
+			console.log(accessToken);
+			playlistRedirect();
+		}
 	});
 }
 
