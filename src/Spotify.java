@@ -1,37 +1,24 @@
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.Buffer;
 import java.util.*;
 import java.net.*;
+import java.util.List;
 
 
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.*;
 import com.wrapper.spotify.exceptions.detailed.BadRequestException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
-import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
-import com.wrapper.spotify.model_objects.specification.User;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
-import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
-import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
-import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
-import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
-import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
+import com.wrapper.spotify.requests.data.playlists.*;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
-import org.apache.http.HttpRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
-//import com.google.*;
-import javax.swing.*;
 
 public class Spotify extends StreamingService
 {
     private static final String client_ID = "150469a5b0d949a9b3693a73edc3b46d";
     private static final String client_Secret = "69e5123c458b43fc94d5d380281aee15";
-    private static final String scopes = "user-read-birthdate,user-read-email";
+    private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost:15000");//temporary redirect uri until this functionality is implemented
 
@@ -72,7 +59,7 @@ public class Spotify extends StreamingService
     }
 
     //tokens are <accessToken, refreshToken>
-    public Playlist[] getPlaylists(Pair<String, String> tokens)
+    public Playlist[] importPlaylists(Pair<String, String> tokens)
     {
         try {
             spotifyApi.setAccessToken(tokens.getKey());
@@ -85,23 +72,28 @@ public class Spotify extends StreamingService
                     .offset(0)
                     .build();
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
-            PlaylistSimplified playlist_list[] = playlists.getItems();//contains playlist id's
+            //PlaylistSimplified playlist_list[] = playlists.getItems();//contains playlist id's
             Playlist[] return_lists = new Playlist [playlists.getTotal()];
+            System.out.println("playlists total:" + playlists.getTotal());
             for (int i = 0; i<return_lists.length;i++){
-                return_lists[i].setName(playlist_list[i].getName());
+                return_lists[i] = new Playlist();
+                System.out.println(playlists.getItems()[i].getName());
+                return_lists[i].setName((playlists.getItems())[i].getName());
             }
             for (int i=0; i<return_lists.length;i++){
-                GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,playlist_list[i].getId())
-                        .fields("description")
+                GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,(playlists.getItems())[i].getId())
                         .limit(20)
                         .offset(0)
                         .market(CountryCode.SE)
                         .build();
-                Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
-                PlaylistTrack [] songs = new PlaylistTrack[tracks.getTotal()];
+                final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
+                //PlaylistTrack [] songs = (tracks.getItems()).clone();
+                System.out.println(tracks.getTotal());
+
                 for (int j=0;j<tracks.getTotal();j++){
 
-                    Track thisSong = songs[j].getTrack();
+                    Track thisSong = (tracks.getItems())[j].getTrack();
+
                     Song s = new Song(thisSong.getName());
                     s.origin = Song.OriginHostName.SPOTIFY;
                     s.setAlbum(thisSong.getAlbum().getName());
@@ -119,4 +111,43 @@ public class Spotify extends StreamingService
         return new Playlist[] {};
     }
 
+    public void exportPlaylist(Pair<String,String> tokens,Playlist playlist) {
+        List<String> uris = new ArrayList<>();
+
+        //
+        for (int i = 0; i < playlist.getNumSongs(); i++) {
+            if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY) {
+                uris.add(playlist.getSong(i).spotifyURI);
+            } else {
+                uris.add(findSong(playlist.getSong(i)));//TODO write this function
+            }
+        }
+        try {
+            spotifyApi.setAccessToken(tokens.getKey());
+            GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
+            User user = getUserID.execute();
+            String userID = user.getId();
+            CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.getName())
+                    .collaborative(false)
+                    .public_(false)
+                    .description("InterLinked custom Playlist")
+                    .build();
+            com.wrapper.spotify.model_objects.specification.Playlist playlist1 = createPlaylist.execute();
+            String playlistID = playlist1.getId();
+            String [] uri_array = new String [uris.size()];
+            uris.toArray(uri_array);
+            AddTracksToPlaylistRequest addTracks = spotifyApi.addTracksToPlaylist(userID,playlistID,uri_array)
+                    .position(0)
+                    .build();
+
+            addTracks.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //TODO
+    public String findSong(Song s){
+        return "";
+    }
 }
