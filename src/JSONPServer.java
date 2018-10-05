@@ -117,6 +117,9 @@ class DataHandler implements HttpHandler {
         else if (query.containsKey("login"))
             return logIn(query, remoteAddress);
 
+        else if(query.containsKey("playlist"))
+            return playlist(activeUsers.get(remoteAddress), query);
+
         else if (query.containsKey("test"))
             return test(query);
 
@@ -217,6 +220,38 @@ class DataHandler implements HttpHandler {
         return jsonArray;
     }
 
+    @SuppressWarnings("unchecked")
+    private JSONArray playlist(User user, QueryValues query) throws Exception {
+        JSONArray jsonArray = new JSONArray();
+        String pid = query.get("playlist");
+        int id = Integer.parseInt(pid);
+
+        user.FetchPlaylists();
+
+        Playlist playlist = null;
+
+        for(Playlist p : user.playlistList){
+            if(id == p.ID)
+                playlist = p;
+        }
+
+        if(playlist == null){
+            throw new Exception("Playlist ID not found");
+        }
+
+        for(Song song : playlist.getArrayList()){
+            JSONObject json = new JSONObject();
+            json.put("title", song.title);
+            json.put("artist", song.artist);
+            json.put("id", song.ID);
+            json.put("explicit", song.explicit);
+            json.put("album", song.album);
+            json.put("duration", song.duration);
+            jsonArray.add(json);
+        }
+
+        return jsonArray;
+    }
 	
     private void noCallback(HttpExchange t) throws IOException {
         String msg = "Need callback in query";

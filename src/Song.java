@@ -1,28 +1,99 @@
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Objects;
-
-public class Song{
-
+public class Song {
+    public int ID;
     String artist;
     String title;
     String album;
-    OriginHostName origin;
-
     // Song duration in milliseconds
     int duration;
-
-    public Song(String name){
-        this.title = name;
-    }
-
-    public void setArtist(String artist){this.artist = artist;}
-
-    public void setAlbum(String album){this.album = album;}
-
     boolean explicit;
     String spotfyID;
     String spotifyURI;
+    OriginHostName origin;
 
-    enum OriginHostName{
+    public Song(String title) {
+        this.title = title;
+    }
+
+    public Song() {
+
+    }
+
+    public void setAlbum(String name) {
+        this.title = name;
+    }
+
+    public void setArtist(String name) {
+        this.artist = name;
+    }
+
+    public int getID() {
+        return ID;
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public boolean isExplicit() {
+        return explicit;
+    }
+
+    public String getSpotfyID() {
+        return spotfyID;
+    }
+
+    public String getSpotifyURI() {
+        return spotifyURI;
+    }
+
+    public OriginHostName getOrigin() {
+        return origin;
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public void setExplicit(boolean explicit) {
+        this.explicit = explicit;
+    }
+
+    public void setSpotfyID(String spotfyID) {
+        this.spotfyID = spotfyID;
+    }
+
+    public void setSpotifyURI(String spotifyURI) {
+        this.spotifyURI = spotifyURI;
+    }
+
+    public void setOrigin(OriginHostName origin) {
+        this.origin = origin;
+    }
+
+    enum OriginHostName {
         AMAZON,
         ITUNES,
         SPOTIFY,
@@ -30,7 +101,6 @@ public class Song{
     }
 
     // Only compares song title and artist
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -56,5 +126,29 @@ public class Song{
                 ", spotfyID='" + spotfyID + '\'' +
                 ", spotifyURI='" + spotifyURI + '\'' +
                 '}';
+    }
+
+    // Used to save to db, doesn't save if song already has an ID
+    // TODO add functionality for updating songs, possibly only for certain fields
+    // Returns true on success, false on failure
+    public boolean save() {
+        if (ID != 0) {
+            // Already in db, no need for action
+            return true;
+        }
+        String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
+                "VALUES(" + artist + ", " + title + ", " + album + ", " + duration + ", " + explicit + ", " + spotfyID + ", " + spotifyURI + ")";
+        SqlHelper helper = new SqlHelper();
+        helper.ExecuteQuery(insertQuery);
+        // Get ID of thing we just inserted
+        String idQuery = "SELECT ID FROM Songs WHERE Artist = " + artist + " AND Title = " + title;
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(idQuery);
+        try {
+            ID = resultSet.getInt("ID");
+        } catch (SQLException e) {
+            // TODO
+            return false;
+        }
+        return true;
     }
 }
