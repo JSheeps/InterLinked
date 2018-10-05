@@ -21,7 +21,7 @@ public class UserPassword {
 		Salt = salt;
 		SaltedPassword = saltedPassword;
 	}
-	
+
 	public static boolean CreateUserPassword(int userID, String Password){
 		// Generate Salt
 		SecureRandom random = new SecureRandom();
