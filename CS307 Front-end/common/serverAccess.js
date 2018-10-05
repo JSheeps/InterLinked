@@ -12,11 +12,11 @@ var importList = [
 ];
 
 function serverLogin(username, password) {
-	return sendMessage({
+	/* return sendMessage({
 		login: "login",
 		username: username,
 		password: password
-	});
+	});*/
 	return simulateAjax({ accessToken: "nice" });
 }
 
@@ -76,7 +76,6 @@ function toAuthToken(uName, pWord) {
 
 // function to simulate ajax call.
 function simulateAjax(obj) {
-	console.log(obj);
 	return {
 		done: function(resolveFunction) { resolveFunction(obj); return this; },
 		error: function(errorFunction) { return this; }
