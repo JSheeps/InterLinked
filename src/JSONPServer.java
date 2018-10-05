@@ -59,6 +59,8 @@ class DataHandler implements HttpHandler {
 
     public void handle(HttpExchange t) throws IOException {
 
+        System.out.println("New Connection");
+
         Headers headers = t.getResponseHeaders();
 
         // Necessary for JSONP
@@ -96,6 +98,8 @@ class DataHandler implements HttpHandler {
 
     // Redirects queries
     private JSONArray commandRedirect(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
+
+        System.out.println("Query keys:" + query.keySet());
 
         //TODO Implement more query commands
 
@@ -153,7 +157,7 @@ class DataHandler implements HttpHandler {
         // Format expected is email:username:password
         String[] info = encodedName.split(":", 3);
 
-        User user = User.CreateUser(info[1], info[3], info[0]);
+        User user = User.CreateUser(info[1], info[2], info[0]);
 
         json.put("result", user != null);
 
@@ -164,7 +168,7 @@ class DataHandler implements HttpHandler {
 
     // Method to handle "login" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONArray logIn(QueryValues query, InetSocketAddress remoteAddress) {
+    private JSONArray logIn(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
         JSONArray jsonArray = new JSONArray();
         JSONObject json = new JSONObject();
 
@@ -176,7 +180,9 @@ class DataHandler implements HttpHandler {
         boolean b = false;
         try {
             b = UserPassword.IsPasswordCorrect(info[0], info[1]);
-        } catch (Exception ignored){}
+        } catch (Exception e){
+            throw new Exception(e.getMessage());
+        }
 
         if (b) {
             User user = User.getUserByUserName(info[0]);
@@ -225,6 +231,9 @@ class DataHandler implements HttpHandler {
 	
     @SuppressWarnings("all")
     void badQuery(HttpExchange t, String callback, String msg) throws IOException {
+        if(msg == null){
+            msg = "Server error";
+        }
         System.out.println("Bad query: " + msg);
         JSONObject obj = new JSONObject();
         obj.put("error", msg);
@@ -243,9 +252,9 @@ class DataHandler implements HttpHandler {
 
         message.append(j.toString());
 
-        message.append(")");
+        System.out.println("Response json:" + j.toString());
 
-        System.out.println(message);
+        message.append(")");
 
         return message.toString();
     }
