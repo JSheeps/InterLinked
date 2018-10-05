@@ -29,12 +29,19 @@ function redirect(URI) {
 }
 
 // Cookies
-function createCookie(name, value = "", expiration = new Date().getTime() + (60 * 60 * 1000), path = "/") {
-	var expires = "; expires=" + expiration.toGMTString();
-	document.cookie = name+"="+value+expires+"; path=" + path;
+function createCookie(name, value = "", expiration = -1, path = "/") {
+	console.log(expiration);
+	var expires = (expiration === -1) ?
+		"" :
+		"; expires=" + expiration.toGMTString();
+	var cookieString = name + "=" + value + expires + "; path=" + path;
+	console.log(cookieString.toString());
+	document.cookie = cookieString;
+	console.log(document.cookie);
 }
 
 function readCookie(name) {
+	console.log(document.cookie);
 	var nameEQ = name + "=";
 	var ca = document.cookie.split(';');
 	for (var i=0; i < ca.length; i++) {

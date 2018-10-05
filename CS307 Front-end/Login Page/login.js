@@ -15,17 +15,13 @@ function field_blur(field, defaultString) {
 function login() {
 	var userName = userNameField[0].value;
 	var password = passwordField[0].value;
-
-	console.log(userName);
-	console.log(password);
 	
 	serverLogin(userName, password).done( (accessToken) => {
-		console.log(accessToken.error);
 		if (accessToken.error) {
-			
+			console.log(accessToken.error);
 		} else {
-			console.log(accessToken);
-			createCookie("accessToken", accessToken);
+			console.log(accessToken.accessToken);
+			createCookie("accessToken", accessToken.accessToken);
 			playlistRedirect();
 		}
 	});
@@ -35,19 +31,22 @@ function signUp() {
 	var userName = userNameField[0].value;
 	var password = passwordField[0].value;
 	
-	console.log(userName);
-	console.log(password);
-	
 	serverSignup(userName, password).done( (accessToken) => {
 		if (accessToken.error) {
+			console.log(accessToken.error);
 		} else {
-			console.log(accessToken);
+			console.log(accessToken.accessToken);
 			playlistRedirect();
 		}
 	});
 }
 
 $(document).ready( () => {
+	// check if already has session token
+	var token = readCookie("accessToken");
+	if (token)
+		playlistRedirect();
+	
 	// initailize Field variables
 	userNameField = $("#userNameInput");
 	passwordField = $("#passwordInput");
@@ -68,4 +67,6 @@ $(document).ready( () => {
 			$(this).trigger("enterPressed");
 		}
 	});
+	
+	userNameField.focus();
 });
