@@ -35,7 +35,7 @@ public class UserPassword {
 
 			// Save to DB
 			SqlHelper helper = new SqlHelper();
-			String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + up.UserID + ", " + up.Salt + ", " + up.SaltedPassword + ")";
+			String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + up.UserID + ", '" + up.Salt.replaceAll("'","") + "', '" + up.SaltedPassword.replaceAll("'","") + "')";
 			helper.ExecuteQuery(insertion);
 		}catch(NoSuchAlgorithmException e) {
 			// TODO
@@ -48,20 +48,23 @@ public class UserPassword {
 	// Returns true on successful login, false on unsuccessful login
 	public static boolean IsPasswordCorrect(String userName, String password){
         // Get UserPassword object associated with userName
-		String upFetch = "SELECT * FROM UserPasswords JOIN UserPasswords on Users.ID = UserPasswords.UserID WHERE Users.UserName = " + userName;
+		String upFetch = "SELECT * FROM UserPasswords JOIN Users on Users.ID = UserPasswords.UserID WHERE Users.UserName = '" + userName +"'";
 		SqlHelper helper = new SqlHelper();
 
-		ResultSet results = helper.ExecuteQuery(upFetch);
+		ResultSet results = helper.ExecuteQueryWithReturn(upFetch);
 
 		// Dummy values
 		String Salt = "";
 		String SaltedPassword = "";
 
 		try{
-			Salt = results.getString("Salt");
-			SaltedPassword = results.getString("SaltedPassword");
+			while(results.next()){
+				Salt = results.getString("Salt");
+				SaltedPassword = results.getString("SaltedPassword");
+			}
 		}catch(SQLException e){
 			// TODO
+			System.err.println(e);
 		}
 
 		// Append salt to Password
@@ -80,7 +83,7 @@ public class UserPassword {
 			// This will never happen, but java is making me do this
 		}
 
-		if(userInputtedPasswordHashed.equals(SaltedPassword)){
+		if(userInputtedPasswordHashed.replaceAll("'","").equals(SaltedPassword)){
 			return true;
 		}else{
 			return false;

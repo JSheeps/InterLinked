@@ -20,7 +20,7 @@ public class User {
         String userQuery = "SELECT * FROM Users WHERE UserName = " + userName;
         SqlHelper helper = new SqlHelper();
 
-        ResultSet resultSet = helper.ExecuteQuery(userQuery);
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(userQuery);
 
         try{
             if(resultSet.next()){
@@ -45,21 +45,24 @@ public class User {
         java.util.Date currentDate = new java.util.Date();
         Date sqlDate = new Date(currentDate.getTime());
 
-        String insertion = "INSERT INTO Users([UserName], [Email], [CreatedDate])" +
-                           "VALUES(" + newUser.userName + ", " + newUser.email + ", " + sqlDate + ")";
+        String insertion = "INSERT INTO Users([UserName], [Email], [CreatedDate]) " +
+                           "VALUES(" + "'" + newUser.userName +"'" +  ", " +"'" +  newUser.email +"'" +  ", " + "'" + sqlDate + "'" + ")";
 
         SqlHelper helper = new SqlHelper();
 
         helper.ExecuteQuery(insertion);
 
         // Fetch ID back, make UserPassword instance
-        String idFetchQuery = "SELECT ID FROM Users WHERE UserName = " + newUser.userName;
-        ResultSet results = helper.ExecuteQuery(idFetchQuery);
+        String idFetchQuery = "SELECT ID FROM Users WHERE UserName = '" + newUser.userName + "'";
+        ResultSet results = helper.ExecuteQueryWithReturn(idFetchQuery);
 
         try{
-            newUser.ID = results.getInt("ID");
+            while(results.next()){
+                newUser.ID = results.getInt("ID");
+            }
         }catch(SQLException e){
             // TODO
+            System.err.println(e);
         }
 
         if(UserPassword.CreateUserPassword(newUser.ID, password)){
@@ -81,7 +84,7 @@ public class User {
         String fetchQuery = "SELECT Playlists.* FROM Playlists WHERE UserID = "+ ID;
 
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQuery(fetchQuery);
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(fetchQuery);
 
         playlistList = new ArrayList<Playlist>();
         try{

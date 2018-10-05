@@ -142,7 +142,7 @@ public class Song {
         helper.ExecuteQuery(insertQuery);
         // Get ID of thing we just inserted
         String idQuery = "SELECT ID FROM Songs WHERE Artist = " + artist + " AND Title = " + title;
-        ResultSet resultSet = helper.ExecuteQuery(idQuery);
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(idQuery);
         try {
             ID = resultSet.getInt("ID");
         } catch (SQLException e) {

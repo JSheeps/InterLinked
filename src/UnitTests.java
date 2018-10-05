@@ -20,8 +20,8 @@ public class UnitTests {
         boolean expected = true;
 
         SqlHelper helper = new SqlHelper();
-        String deletionQuery = "DELETE FROM UserPasswords WHERE UserID = " + user.ID;
-        String deletionQuery2 = "DELETE FROM Users WHERE ID = " + user.ID;
+        String deletionQuery = "DELETE FROM UserPasswords WHERE UserID = " + "'" + user.ID + "'";
+        String deletionQuery2 = "DELETE FROM Users WHERE ID = " + "'" + user.ID + "'";
 
         helper.ExecuteQuery(deletionQuery);
         helper.ExecuteQuery(deletionQuery2);

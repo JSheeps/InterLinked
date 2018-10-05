@@ -59,7 +59,7 @@ class Playlist {
                 "JOIN Songs ON Songs.ID = PlaylistSongs.SongID " +
                 "WHERE Playlists.ID = " + ID;
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQuery(fetchQuery);
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(fetchQuery);
         List<Song> songList = new ArrayList<Song>();
         try {
             while (resultSet.next()) {
@@ -91,7 +91,7 @@ class Playlist {
             helper.ExecuteQuery(playlistInsertQuery);
             // Send query to find ID of playlist we just inserted
             String findIDQuery = "SELECT ID FROM Playlists WHERE Name = '" + Name + "'";
-            ResultSet results = helper.ExecuteQuery(findIDQuery);
+            ResultSet results = helper.ExecuteQueryWithReturn(findIDQuery);
             try {
                 ID = results.getInt("ID");
             } catch (SQLException e) {

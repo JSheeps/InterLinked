@@ -23,7 +23,7 @@ public class PlaylistSong {
 
             // Find ID of thing we just inserted
             String findIDQuery = "SELECT ID FROM PlaylistSongs WHERE PlaylistID = " + PlaylistID + " AND SongID = " + SongID;
-            ResultSet resultSet = helper.ExecuteQuery(findIDQuery);
+            ResultSet resultSet = helper.ExecuteQueryWithReturn(findIDQuery);
 
             try{
                 ID = resultSet.getInt("ID");
