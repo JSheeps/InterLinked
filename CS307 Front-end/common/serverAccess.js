@@ -1,9 +1,9 @@
-const url = "127.0.0.1/";
+const url = "http://127.0.0.1/";
 
 // objects to simulate server output
 var playlists = [
-	{ name: "Playlist1" },
-	{ name: "Playlist2" }
+	{ name: "Playlist1", id: "id1" },
+	{ name: "Playlist2", id: "id2" }
 ];
 
 var importList = [
@@ -12,12 +12,20 @@ var importList = [
 ];
 
 function serverLogin(username, password) {
-	var authToken = toAuthToken(username, password);
-	console.log(authToken);
-	/* return sendMessage({
-		login: authToken
-	}); */
+	return sendMessage({
+		login: "login",
+		username: username,
+		password: password
+	});
 	return simulateAjax({ accessToken: "nice" });
+}
+
+function serverSignup(username, password) {
+	return sendMessage({
+		signup: "signup",
+		username: username,
+		password: password
+	});
 }
 
 function getPlaylistsFromServer() {
@@ -57,7 +65,8 @@ function mergeLists(platformID, playlistID1, playlistID2) {
 
 function sendMessage(myData) {
 	return $.ajax(url + "data", {
-		data: myData
+		data: myData,
+		dataType: "jsonp"
 	});
 }
 
@@ -67,6 +76,7 @@ function toAuthToken(uName, pWord) {
 
 // function to simulate ajax call.
 function simulateAjax(obj) {
+	console.log(obj);
 	return {
 		done: function(resolveFunction) { resolveFunction(obj); return this; },
 		error: function(errorFunction) { return this; }
