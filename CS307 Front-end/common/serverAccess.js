@@ -7,8 +7,8 @@ var playlists = [
 ];
 
 var importList = [
-	{ name: "Other list"	},
-	{ name: "Other other list" }
+	{ name: "Other list", id: "id3" },
+	{ name: "Other other list", id: "id4" }
 ];
 
 function serverLogin(username, password) {
@@ -33,7 +33,6 @@ function getPlaylistsFromServer() {
 		get: "playlists"
 	});
 	*/
-	console.log(playlists);
 	return simulateAjax(playlists);
 }
 

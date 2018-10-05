@@ -21,3 +21,8 @@ a.hover{
 a.hover:hover{
 	text-decoration: underline;
 }
+
+#logout{
+    position: relative;
+    top: 600px;
+}
