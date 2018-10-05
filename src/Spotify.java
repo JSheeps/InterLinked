@@ -1,18 +1,22 @@
-import java.util.*;
-import java.net.*;
-import java.util.List;
-
-
 import com.neovisionaries.i18n.CountryCode;
-import com.wrapper.spotify.*;
+import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.detailed.BadRequestException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
+import com.wrapper.spotify.model_objects.specification.User;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
-import com.wrapper.spotify.requests.data.playlists.*;
+import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
+import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
+import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
+import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
+import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
-import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Spotify extends StreamingService
 {
@@ -127,7 +131,7 @@ public class Spotify extends StreamingService
             GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
             User user = getUserID.execute();
             String userID = user.getId();
-            CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.getName())
+            CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.Name)
                     .collaborative(false)
                     .public_(false)
                     .description("InterLinked custom Playlist")
