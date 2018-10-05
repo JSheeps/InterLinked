@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
@@ -7,12 +9,23 @@ public class User {
     int ID;
     String userName;
     String email;
+    Pair<String, String> tokens;
     List<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){
         this.ID = ID;
         this.userName = userName;
         this.email = email;
+        tokens = null;
+    }
+
+    public Playlist getPlaylistById(int id){
+        for(Playlist p : playlistList){
+            if(p.ID == id)
+                return p;
+        }
+
+        return null;
     }
 
     // Gets user data from database and creates new user object

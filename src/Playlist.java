@@ -145,4 +145,7 @@ class Playlist {
     public void setName(String name) {
         this.Name = name;
     }
+
+    public int getNumSongs(){return playlist.size();}
+
 }
