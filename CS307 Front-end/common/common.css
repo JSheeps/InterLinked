@@ -14,11 +14,11 @@ a, p{
 	color: #ffffff;
 }
 
-a.hover{
+a{
 	text-decoration: none;
 }
 
-a.hover:hover{
+a:hover{
 	text-decoration: underline;
 }
 

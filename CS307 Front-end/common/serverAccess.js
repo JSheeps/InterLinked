@@ -6,7 +6,7 @@ var playlists = [
 	{ name: "Playlist2", id: "id2" }
 ];
 
-var importList = [
+var importListData = [
 	{ name: "Other list", id: "id3" },
 	{ name: "Other other list", id: "id4" }
 ];
@@ -41,7 +41,7 @@ function getImportListFromServer(platformID) {
 		import: platformID;
 	});
 	*/
-	return simulateAjax(importList);
+	return simulateAjax(importListData);
 }
 
 function importList(platformID, playlistID) {
