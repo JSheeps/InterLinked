@@ -16,13 +16,28 @@ a, p{
 
 a{
 	text-decoration: none;
+    text-align: center;
 }
 
-a:hover{
-	text-decoration: underline;
+
+.logout{
+    position: fixed;
+    cursor: pointer;
+    font-size: 12px;
+    top: 0;
+    right: 0;
+}
+.usernameDisplay{
+    position: fixed;
+    font-size: 12px;
+    top: 0;
+    left: 0;
 }
 
-#logout{
-    position: relative;
-    top: 600px;
+#displayUsername{
+    position: fixed;
+    color: white;
+    font-size: 12px;
+    top: 20px;
+    left: 0px;
 }

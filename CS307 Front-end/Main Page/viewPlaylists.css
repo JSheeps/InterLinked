@@ -1,0 +1,58 @@
+#playlistsWindow{
+    position: relative;
+    height: 600px;
+    width: 700px;
+    border: 2px black solid;
+    margin: 0 auto;
+    margin-top: 100px;
+    
+}
+#mainContents{
+    position: relative;
+    height: 600px;
+    width: 700px;
+    overflow: scroll;
+    background-color: white;
+}
+th{
+    text-decoration: underline;
+}
+
+#importbtn{
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+#importbtn:hover{
+    cursor: pointer;
+}
+
+#exportbtn{
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+#exportbtn:hover{
+    cursor: pointer;
+}
+
+#mergebtn{
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+#mergebtn:hover{
+    cursor: pointer;
+}

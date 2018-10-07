@@ -60,6 +60,7 @@
 }
 
 #loginbtn:hover{
+    cursor : pointer;
 	background: #2CC06B; 
 }
 
@@ -81,5 +82,6 @@
 }
 
 #signupbtn:hover{ 
+    cursor: pointer;
 	background: #3594D2; 
 }

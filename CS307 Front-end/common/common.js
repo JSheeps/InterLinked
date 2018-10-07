@@ -1,7 +1,8 @@
+"use strict";
 // Page redirects
 function logoutRedirect() {
 	eraseCookie("auth");
-	redirect("../index.html");
+	redirect("../Login Page/login.html");
 }
 
 function loginRedirect() {
