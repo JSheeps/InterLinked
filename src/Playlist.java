@@ -74,7 +74,7 @@ class Playlist {
                 songList.add(song);
             }
         } catch (SQLException e) {
-            // TODO
+            System.err.println(e);
             return null;
         }
         return songList;
@@ -98,13 +98,22 @@ class Playlist {
                 }
                 helper.closeConnection();
             } catch (SQLException e) {
-                // TODO
+                System.err.println(e);
                 return false;
             }
             for (Song song : playlist) {
+                song.save();
                 PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
                 playlistSong.save();
             }
+        }else{
+            // Send update query that may or may not actually do anything
+            String updateQuery = "UPDATE Playlists "+
+                                 "SET Name = '"+ Name + "'"+
+                                 "WHERE ID = " + ID;
+            SqlHelper helper = new SqlHelper();
+            helper.ExecuteQuery(updateQuery);
+            helper.closeConnection();
         }
         // We've confirmed that the playlist has an ID at this point, so now we save the songs one by one
         // Get current state of playlist in db
@@ -129,17 +138,35 @@ class Playlist {
         }
         // Add each song in addedList
         for (Song song : addedList) {
+            song.save();
             PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
             boolean ret = playlistSong.save();
             if (ret == false) return false;
         }
         // Delete each song in deletedList
         for (Song song : deletedList) {
+            song.save();
             PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
             boolean ret = playlistSong.delete();
             if (ret == false) return false;
         }
         return true;
+    }
+
+    public boolean delete(){
+        if(ID == 0){
+            return true;
+        }else{
+            String deletionQuery1 = "DELETE FROM PlaylistSongs WHERE PlaylistID = "+ ID;
+            String deletionQuery2 = "DELETE FROM Playlists WHERE ID ="+ ID;
+
+            SqlHelper helper = new SqlHelper();
+            helper.ExecuteQuery(deletionQuery1);
+            helper.ExecuteQuery(deletionQuery2);
+            helper.closeConnection();
+
+            return true;
+        }
     }
 
     public void setName(String name) {

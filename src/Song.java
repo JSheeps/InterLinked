@@ -149,7 +149,6 @@ public class Song {
             }
             helper.closeConnection();
         } catch (SQLException e) {
-            // TODO
             System.err.println(e);
             return false;
         }
