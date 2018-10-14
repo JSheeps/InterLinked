@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 public class Http implements HttpHandler {
     private Path httpDocs;
-    String defaultExpand;
+    private String defaultExpand;
 
     public Http(String httpDocs, String defaultRootFolder, String defaultFirstPage) {
         this.httpDocs = Paths.get(httpDocs).normalize();
@@ -20,7 +20,7 @@ public class Http implements HttpHandler {
             System.exit(1);
         }
 
-        defaultExpand = "/" + defaultRootFolder + "/" + defaultFirstPage;
+        defaultExpand = Paths.get(defaultRootFolder, defaultFirstPage).toString();
     }
 
     public Http(String httpDocs) {
@@ -48,6 +48,7 @@ public class Http implements HttpHandler {
         headers.add("Access-Control-Allow-Origin", "*");
 
         Path resourcePath = getResourcePath(requestURI);
+        System.out.println(resourcePath);
         try {
             String type = Files.probeContentType(resourcePath);
 
