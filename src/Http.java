@@ -9,11 +9,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Http implements HttpHandler {
-    Path httpDocs;
+    private Path httpDocs;
+    String defaultExpand;
+
+    public Http(String httpDocs, String defaultRootFolder, String defaultFirstPage) {
+        this.httpDocs = Paths.get(httpDocs).normalize();
+        Path test = this.httpDocs.resolve(defaultRootFolder).resolve(defaultFirstPage).toAbsolutePath();
+        if (!test.toFile().exists()) {
+            System.err.println("Error: could not find " + test);
+            System.exit(1);
+        }
+
+        defaultExpand = "/" + defaultRootFolder + "/" + defaultFirstPage;
+    }
 
     public Http(String httpDocs) {
-        this.httpDocs = Paths.get(httpDocs).normalize();
-        // System.out.println("httpDocs\\ = " + httpDocs);
+        this(httpDocs, ".", "index.html");
     }
 
     @Override
@@ -96,7 +107,7 @@ public class Http implements HttpHandler {
     public Path getResourcePath(URI uri) {
         String path = uri.getPath();
         if (path.equals("/"))
-            path = "/Login Page/login.html";
+            path = defaultExpand;
 
         if (path.charAt(0) == '/')
             path = path.substring(1);
