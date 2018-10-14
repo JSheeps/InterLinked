@@ -8,7 +8,7 @@ function displayUsername(){
 // Page redirects
 function logoutRedirect() {
 	eraseCookie("accessToken");
-	redirect("/Login Page/login.html");
+	redirect("/");
 }
 
 function loginRedirect() {
