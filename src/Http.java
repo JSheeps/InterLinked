@@ -22,35 +22,49 @@ public class Http implements HttpHandler {
         URI requestURI = httpExchange.getRequestURI().normalize();
         // System.out.println(requestURI);
 
-        String path = requestURI.getPath();
+        String method = httpExchange.getRequestMethod();
+        // Check if method supported
+        switch (method) {
+            case "GET":
+            case "HEAD":
+                break;
+
+            default:
+                send(httpExchange, 501, "Not implemented");
+        }
+
+        Headers headers =  httpExchange.getResponseHeaders();
+        headers.add("Access-Control-Allow-Origin", "*");
+
+        Path resourcePath = getResourcePath(requestURI);
         try {
-            if (path.equals("/"))
-                path = "/Login Page/login.html";
-
-            if (path.charAt(0) == '/')
-                path = path.substring(1);
-
-            Path resourcePath = httpDocs.resolve(path);
-            // System.out.println(resourcePath);
-
-            byte[] data = Files.readAllBytes(resourcePath);
             String type = Files.probeContentType(resourcePath);
 
-            Headers headers =  httpExchange.getResponseHeaders();
             headers.add("Content-Type", type);
 
-            httpExchange.sendResponseHeaders(200, data.length);
-            try(
-                    OutputStream os = httpExchange.getResponseBody()
-            ) {
-                os.write(data);
+            // Reply to the method's request
+            assert (method.equals("GET") || method.equals("HEAD"));
+            switch (method) {
+                case "GET":
+                    byte[] data = Files.readAllBytes(resourcePath);
+                    send(httpExchange, 200, data);
+                    break;
+
+                case "HEAD":
+                    send(httpExchange, 200);
+                    break;
+
+                default:
+                    assert false : "This shouldn't happen, since unsupported methods are screened out in the previous switch.";
             }
+
+
         } catch (Exception e) {
             // URI not found
-            System.out.println("Not found: " + path);
-            System.out.println(" from URI: " + requestURI);
+            System.out.println("Not found URI: " + requestURI);
             System.out.println(" Error msg: " + e.getMessage());
             byte[] response = ("\"" + requestURI + "\" not found").getBytes();
+            send(httpExchange, 404, "\"" + requestURI + "\" not found");
             httpExchange.sendResponseHeaders(404, response.length);
 
             try (OutputStream os = httpExchange.getResponseBody()) {
@@ -58,6 +72,35 @@ public class Http implements HttpHandler {
             }
         }
 
-        httpExchange.close();
+    }
+
+    static void send(HttpExchange t, int status, String data) throws IOException {
+        send(t, status, data.getBytes());
+    }
+
+    static void send(HttpExchange t, int status, byte[] data) throws IOException {
+        t.sendResponseHeaders(status, data.length);
+
+        try (OutputStream os = t.getResponseBody()) {
+            os.write(data);
+        }
+
+        t.close();
+    }
+
+    static void send(HttpExchange t, int status) throws IOException {
+        t.sendResponseHeaders(status, -1);
+        t.close();
+    }
+
+    public Path getResourcePath(URI uri) {
+        String path = uri.getPath();
+        if (path.equals("/"))
+            path = "/Login Page/login.html";
+
+        if (path.charAt(0) == '/')
+            path = path.substring(1);
+
+        return httpDocs.resolve(path);
     }
 }
