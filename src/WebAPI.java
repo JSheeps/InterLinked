@@ -94,11 +94,34 @@ class WebAPI implements HttpHandler {
         else if(query.containsKey("export"))
             return exportQuery(activeUsers.get(remoteAddress), query);
 
+        else if(query.containsKey("search"))
+            return search(query);
+
         else if (query.containsKey("test"))
             return test(query);
 
 
         throw new Exception("Query has no meaning");
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray search(QueryValues query) {
+
+        //TODO Update with implementation of Spotify.findsong
+
+        Song song = new Song();
+
+        song.title = query.get("search");
+
+        Spotify spotify = new Spotify();
+        String songString = spotify.findSong(song);
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("result", songString);
+        jsonArray.add(jsonObject);
+
+        return jsonArray;
     }
 
     private JSONArray importQuery(User user, QueryValues query) throws Exception {
@@ -200,7 +223,7 @@ class WebAPI implements HttpHandler {
         // Expected format is "username:password"
         String[] info = encodedName.split(":", 2);
 
-        boolean b = false;
+        boolean b;
         try {
             b = UserPassword.IsPasswordCorrect(info[0], info[1]);
         } catch (Exception e){
