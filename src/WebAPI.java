@@ -1,13 +1,9 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import com.wrapper.spotify.model_objects.special.PlaylistTrackPosition;
-import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -16,45 +12,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Executor;
-
-public class JSONPServer {
-    public static void main(String[] args) {
-        try {
-
-            HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
-
-            server.createContext("/data", new DataHandler());
-
-            server.setExecutor(new HttpThreadCreator());
-
-            server.start();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-}
-
-// Process the HTTP requests on a new thread
-class HttpThreadCreator implements Executor {
-    @Override
-    public void execute(@NotNull Runnable command) {
-        new Thread(command).start();
-    }
-}
 
 // How to handle calls to the /data endpoint
-class DataHandler implements HttpHandler {
-
+class WebAPI implements HttpHandler {
     // List of currently logged in users and their socket addresses
     private HashMap<InetSocketAddress, User> activeUsers;
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
 
-    DataHandler() {
+    WebAPI() {
         activeUsers = new HashMap<>();
     }
 
@@ -87,11 +54,11 @@ class DataHandler implements HttpHandler {
         }
 
         // Format JSON into http response
-        String response = getJSONPMessage(json, callback);
-        t.sendResponseHeaders(GOOD, response.length());
+        byte[] response = getJSONPMessage(json, callback).getBytes();
+        t.sendResponseHeaders(GOOD, response.length);
 
         try (OutputStream os = t.getResponseBody()) {
-            os.write(response.getBytes());
+            os.write(response);
         }
 
         t.close();
@@ -305,7 +272,7 @@ class DataHandler implements HttpHandler {
 
         return jsonArray;
     }
-	
+
     private void noCallback(HttpExchange t) throws IOException {
         String msg = "Need callback in query";
         System.out.println("Bad query: " + msg);
@@ -316,7 +283,7 @@ class DataHandler implements HttpHandler {
             os.write(message);
         }
     }
-	
+
     @SuppressWarnings("all")
     void badQuery(HttpExchange t, String callback, String msg) throws IOException {
         if(msg == null){

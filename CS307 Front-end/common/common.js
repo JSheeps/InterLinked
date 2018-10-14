@@ -1,28 +1,34 @@
 "use strict";
+
+
+function displayUsername(){
+	$("#displayUsername").html(sessionStorage.getItem("username"));
+}
+
 // Page redirects
 function logoutRedirect() {
-	eraseCookie("auth");
-	redirect("../Login Page/login.html");
+	eraseCookie("accessToken");
+	redirect("/Login Page/login.html");
 }
 
 function loginRedirect() {
-	redirect("../Main Page/viewPlaylists.html");
+	redirect("/Main Page/viewPlaylists.html");
 }
 
 function playlistRedirect() {
-	redirect("../Main Page/viewPlaylists.html");
+	redirect("/Main Page/viewPlaylists.html");
 }
 
 function importRedirect() {
-	redirect("../Main Page/import.html");
+	redirect("/Main Page/import.html");
 }
 
 function exportRedirect() {
-	redirect("../Main Page/export.html");
+	redirect("/Main Page/export.html");
 }
 
 function mergeRedirect() {
-	redirect("../Main Page/merge.html");
+	redirect("/Main Page/merge.html");
 }
 
 function redirect(URI) {
@@ -42,7 +48,7 @@ function createCookie(name, value = "", expiration = -1, path = "/") {
 }
 
 function readCookie(name) {
-	console.log(document.cookie);
+	// console.log(document.cookie);
 	var nameEQ = name + "=";
 	var ca = document.cookie.split(';');
 	for (var i=0; i < ca.length; i++) {
