@@ -26,7 +26,7 @@ public class SpotifyTest {
         } catch (Exception e) {e.printStackTrace();}
         //<accessToken,refreshToken>
         final Pair<String,String> tokens = s.Login(code);
-        Playlist [] lists = s.importPlaylists(tokens);
+        Playlist [] lists = s.importAllPlaylists(tokens);
         Playlist mergedlist = lists[0].merge(lists[1]);
         mergedlist.setName("MergedList");
         s.exportPlaylist(tokens,mergedlist);

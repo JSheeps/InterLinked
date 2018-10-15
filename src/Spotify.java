@@ -1,4 +1,3 @@
-import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.exceptions.detailed.BadRequestException;
@@ -11,6 +10,7 @@ import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
+import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
 
@@ -62,8 +62,70 @@ public class Spotify extends StreamingService
         return new Pair<String, String> ("error","error");
     }
 
+    public String[] getPlaylistNames(Pair<String, String> tokens){
+        String [] playlist_names = {};
+        try {
+            spotifyApi.setAccessToken(tokens.getKey());
+            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                    .getListOfCurrentUsersPlaylists()
+                    .limit(10)
+                    .offset(0)
+                    .build();
+            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+            playlist_names = new String[playlists.getTotal()];
+            for (int i=0;i<playlists.getTotal(); i++){
+                playlist_names[i] = (playlists.getItems()[i]).getName();
+            }
+        } catch (Exception e) {e.printStackTrace();}
+        return playlist_names;
+    }
+
+    public Playlist importPlaylist(Pair<String, String> tokens, String playlistName){
+        Playlist return_list = new Playlist();
+        try{
+            spotifyApi.setAccessToken(tokens.getKey());
+            GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
+            User user = getUserID.execute();
+            String userID = user.getId();
+            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                    .getListOfCurrentUsersPlaylists()
+                    .limit(10)
+                    .offset(0)
+                    .build();
+            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+            for (int i=0; i<playlists.getTotal(); i++){
+                if ((playlists.getItems()[i].getName()).equals(playlistName)){
+                    GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,(playlists.getItems())[i].getId())
+                            .limit(20)
+                            .offset(0)
+                            .build();
+                    final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
+                    return_list.setName(playlistName);
+
+                    for (int j=0;j<tracks.getTotal();j++){
+
+                        Track thisSong = (tracks.getItems())[j].getTrack();
+
+                        Song s = new Song(thisSong.getName());
+                        s.origin = Song.OriginHostName.SPOTIFY;
+                        s.setAlbum(thisSong.getAlbum().getName());
+                        s.setArtist(thisSong.getArtists()[0].getName());
+                        s.explicit = thisSong.getIsExplicit();
+                        s.spotifyURI = thisSong.getUri();
+                        s.spotfyID = thisSong.getId();
+
+                        return_list.addSong(s);
+                    }
+                }
+            }
+        }catch (Exception e){
+
+        }
+        return return_list;
+    }
+
     //tokens are <accessToken, refreshToken>
-    public Playlist[] importPlaylists(Pair<String, String> tokens)
+    public Playlist[] importAllPlaylists(Pair<String, String> tokens)
     {
         try {
             spotifyApi.setAccessToken(tokens.getKey());
@@ -76,9 +138,7 @@ public class Spotify extends StreamingService
                     .offset(0)
                     .build();
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
-            //PlaylistSimplified playlist_list[] = playlists.getItems();//contains playlist id's
             Playlist[] return_lists = new Playlist [playlists.getTotal()];
-            System.out.println("playlists total:" + playlists.getTotal());
             for (int i = 0; i<return_lists.length;i++){
                 return_lists[i] = new Playlist();
                 System.out.println(playlists.getItems()[i].getName());
@@ -88,7 +148,6 @@ public class Spotify extends StreamingService
                 GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,(playlists.getItems())[i].getId())
                         .limit(20)
                         .offset(0)
-                        .market(CountryCode.SE)
                         .build();
                 final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
                 //PlaylistTrack [] songs = (tracks.getItems()).clone();
@@ -123,7 +182,7 @@ public class Spotify extends StreamingService
             if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY) {
                 uris.add(playlist.getSong(i).spotifyURI);
             } else {
-                uris.add(findSong(playlist.getSong(i)));//TODO write this function
+                uris.add(findSong(playlist.getSong(i)).getSpotifyURI());//TODO write this function
             }
         }
         try {
@@ -150,8 +209,46 @@ public class Spotify extends StreamingService
         }
     }
 
-    //TODO
-    public String findSong(Song s){
+
+    public String search(String query){
+        SearchTracksRequest searchTracksRequest = spotifyApi.searchTracks(query)
+                .limit(10)
+                .offset(0)
+                .build();
         return "";
     }
+
+    //attempts to match the provided song object with the correct Spotify URI based on given information
+    public Song findSong(Song s) {
+        try{
+            //If the URI is known then the song does not need to be matched
+            if (s.getSpotifyURI() != null) return s;
+
+            Track match = new Track.Builder().build();
+            if (s.getTitle() != null) {
+                SearchTracksRequest searchRequest = spotifyApi.searchTracks(s.getTitle())
+                        .limit(10)
+                        .offset(0)
+                        .build();
+                Paging<Track> results = searchRequest.execute();
+                int TEMPINTNAMECHANGETHISLATER = closestMatch(s,results);
+                match = results.getItems()[TEMPINTNAMECHANGETHISLATER];
+            }
+            s.spotifyURI = match.getUri();
+            if (s.getAlbum() == null) s.setAlbum(match.getAlbum().getName());
+            if (s.getArtist() == null) s.setArtist(match.getArtists()[0].getName());
+            s.setExplicit(match.getIsExplicit());
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return s;
+    }
+
+    private int closestMatch(Song s, Paging<Track> results){
+        return 0;
+    }
+
+    //may be used if initial search results are unsatisfactory
+    public String search_with_offset(String query, int offset){return "";}
 }
