@@ -1,5 +1,3 @@
-import com.intellij.openapi.vcs.history.VcsRevisionNumber;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -77,11 +75,10 @@ class Playlist {
     }
 
     // Saves a playlist to the database, returns true on success and false on failure
-    public boolean save() {
+    public boolean save(User currentUser) {
         if (ID == 0) {
             // Playlist hasn't been saved to DB yet
-            // TODO Get current user ID, this is a dummy value
-            int currentUserID = 1;
+            int currentUserID = currentUser.ID;
             String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", '" + Name + "')";
             SqlHelper helper = new SqlHelper();
             helper.ExecuteQuery(playlistInsertQuery);
@@ -176,14 +173,13 @@ class Playlist {
 
     // Adds the generated playlist to the User's saved playlists. Fetch playlists again to get the new playlist
     // Returns true on success and false on failure
-    public boolean generateSharedPlaylist(String shareToken){
+    public boolean generateSharedPlaylist(String shareToken, User currentUser){
         String[] bigSplit = shareToken.split(";");
 
         if(bigSplit.length != 2) return false;
 
         Playlist newPlaylist = new Playlist();
-        // TODO get current user
-        newPlaylist.UserID = 1;
+        newPlaylist.UserID = currentUser.ID;
         newPlaylist.Name = bigSplit[0];
         newPlaylist.playlist = new ArrayList<Song>();
 
@@ -200,7 +196,7 @@ class Playlist {
             newPlaylist.playlist.add(song);
         }
 
-        return newPlaylist.save();
+        return newPlaylist.save(currentUser);
     }
 
     public void setName(String name) {

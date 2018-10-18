@@ -114,7 +114,7 @@ class WebAPI implements HttpHandler {
         song.title = query.get("search");
 
         Spotify spotify = new Spotify();
-        String songString = spotify.findSong(song);
+        Song songString = spotify.findSong(song);
 
         JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
@@ -136,14 +136,12 @@ class WebAPI implements HttpHandler {
         JSONArray jsonArray = new JSONArray();
 
         Spotify spotify = new Spotify();
-        Playlist[] playlists = spotify.importPlaylists(user.tokens);
+        Playlist playlist = spotify.importPlaylist(user.tokens, query.get("playlist"));
 
-        for(Playlist playlist : playlists){
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("name", playlist.Name);
-            jsonObject.put("id", playlist.ID);
-            jsonArray.add(jsonObject);
-        }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", playlist.Name);
+        jsonObject.put("id", playlist.ID);
+        jsonArray.add(jsonObject);
 
         return jsonArray;
     }
