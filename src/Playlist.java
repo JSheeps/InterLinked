@@ -1,3 +1,5 @@
+import com.intellij.openapi.vcs.history.VcsRevisionNumber;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -63,14 +65,8 @@ class Playlist {
         List<Song> songList = new ArrayList<Song>();
         try {
             while (resultSet.next()) {
-                Song song = new Song();
-                song.album = resultSet.getString("Album");
-                song.artist = resultSet.getString("Artist");
-                song.duration = resultSet.getInt("Duration");
-                song.explicit = resultSet.getBoolean("Explicit");
-                song.ID = resultSet.getInt("ID");
-                song.spotfyID = resultSet.getString("SpotifyID");
-                song.spotifyURI = resultSet.getString("SpotifyURI");
+                Song song = new Song(resultSet);
+
                 songList.add(song);
             }
         } catch (SQLException e) {
@@ -167,6 +163,44 @@ class Playlist {
 
             return true;
         }
+    }
+
+    public String generateShareToken(){
+        String token = "";
+        token += Name + ";";
+        for(Song song : playlist){
+            token += song.ID + ",";
+        }
+        return token;
+    }
+
+    // Adds the generated playlist to the User's saved playlists. Fetch playlists again to get the new playlist
+    // Returns true on success and false on failure
+    public boolean generateSharedPlaylist(String shareToken){
+        String[] bigSplit = shareToken.split(";");
+
+        if(bigSplit.length != 2) return false;
+
+        Playlist newPlaylist = new Playlist();
+        // TODO get current user
+        newPlaylist.UserID = 1;
+        newPlaylist.Name = bigSplit[0];
+        newPlaylist.playlist = new ArrayList<Song>();
+
+        String[] songIDStrings = bigSplit[1].split(",");
+        int[] songIDs = new int[songIDStrings.length];
+
+        for(int i=0;i<songIDStrings.length;i++){
+            songIDs[i] = Integer.parseInt(songIDStrings[i]);
+        }
+
+        for(int songID : songIDs){
+            Song song = Song.fetchSongByID(songID);
+            if(song == null) return false;
+            newPlaylist.playlist.add(song);
+        }
+
+        return newPlaylist.save();
     }
 
     public void setName(String name) {

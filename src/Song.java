@@ -100,6 +100,20 @@ public class Song {
         YOUTUBE
     }
 
+    public Song(ResultSet resultSet){
+        try {
+            album = resultSet.getString("Album");
+            artist = resultSet.getString("Artist");
+            duration = resultSet.getInt("Duration");
+            explicit = resultSet.getBoolean("Explicit");
+            ID = resultSet.getInt("ID");
+            spotfyID = resultSet.getString("SpotifyID");
+            spotifyURI = resultSet.getString("SpotifyURI");
+        }catch(SQLException e){
+            System.err.println(e);
+        }
+    }
+
     // Only compares song title and artist
     @Override
     public boolean equals(Object o) {
@@ -153,5 +167,23 @@ public class Song {
             return false;
         }
         return true;
+    }
+
+    public static Song fetchSongByID(int songID){
+        String query = "SELECT * FROM Songs WHERE ID=" + songID;
+
+        SqlHelper helper = new SqlHelper();
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(query);
+
+        try{
+            while(resultSet.next()){
+                return new Song(resultSet);
+            }
+        }catch (SQLException e){
+            System.err.println(e);
+            return null;
+        }
+
+        return null;
     }
 }
