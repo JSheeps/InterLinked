@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 // How to handle calls to the /data endpoint
 class WebAPI implements HttpHandler {
@@ -122,18 +125,15 @@ class WebAPI implements HttpHandler {
     @SuppressWarnings("unchecked")
     private JSONArray search(QueryValues query) {
 
-        //TODO Update with implementation of Spotify.findsong
-
-        Song song = new Song();
-
-        song.title = query.get("search");
+        String search = query.get("search");
 
         Spotify spotify = new Spotify();
-        Song songString = spotify.findSong(song);
+        Song song = spotify.findSong(search);
 
         JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("result", songString);
+
+        jsonObject.put("result", song.getSpotifyURI());
         jsonArray.add(jsonObject);
 
         return jsonArray;
