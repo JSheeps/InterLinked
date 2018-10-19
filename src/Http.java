@@ -24,8 +24,9 @@ public class Http implements HttpHandler {
     }
 
     public Http(String httpDocs) {
-        this(httpDocs, ".", "index.html");
+        this(httpDocs, ".");
     }
+    public Http(String httpDocs, String defaultRootFolder) { this(httpDocs, defaultRootFolder, "index.html"); }
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
@@ -48,7 +49,7 @@ public class Http implements HttpHandler {
         headers.add("Access-Control-Allow-Origin", "*");
 
         Path resourcePath = getResourcePath(requestURI);
-        System.out.println(resourcePath);
+        // System.out.println(resourcePath);
         try {
             String type = Files.probeContentType(resourcePath);
 

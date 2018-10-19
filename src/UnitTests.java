@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UnitTests {
-
     public static void main(String[] args){
         UserCreationTest1();
         PlaylistTest();
@@ -54,11 +53,13 @@ public class UnitTests {
         playlist.Name = "Test Playlist";
         playlist.addSong(song);
         playlist.addSong(song2);
-        playlist.save();
 
         // Fetch User
         User user = User.getUserByUserName("testUserName");
         user.FetchPlaylists();
+
+        playlist.save(user);
+
 
         Playlist userPlaylist = user.playlistList.get(0);
 
