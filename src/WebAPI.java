@@ -129,7 +129,7 @@ class WebAPI implements HttpHandler {
             throw new Exception("User needs to log in to service");
         }
 
-        if(!query.containsKey("playlist")){
+        if(!query.containsKey("playlist")) {
             return get(user);
         }
 

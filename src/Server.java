@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executor;
 
 public class Server {
-    public final static int defaultPort = 80;
+    public final static int defaultPort = 81;
     public final static String defaultHttpDocs = "CS307 Front-end";
 
     private static void usage(int exitStatus) {
@@ -51,8 +51,8 @@ public class Server {
         }
 
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
-            server.createContext("/", new Http(httpDocs, "Login Page", "login.html"));
+            HttpServer server = HttpServer.create(new InetSocketAddress(defaultPort), 0);
+            server.createContext("/", new Http(httpDocs));
             server.createContext("/data", new WebAPI());
             server.setExecutor(new HttpThreadCreator());
 
