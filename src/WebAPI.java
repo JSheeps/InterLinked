@@ -6,23 +6,25 @@ import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.security.SecureRandom;
+import java.util.*;
 
 // How to handle calls to the /data endpoint
 class WebAPI implements HttpHandler {
     // List of currently logged in users and their socket addresses
-    private HashMap<InetSocketAddress, User> activeUsers;
+    private HashMap<String, User> userAuthTokens;
+    private User currentUser;
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
+    private static final int UNAUTHORIZED = 401;
+    private static final int BAD_REQUEST = 400;
+    private static final int INTERNAL_SERVER_ERROR = 500;
+
 
     WebAPI() {
-        activeUsers = new HashMap<>();
+        userAuthTokens = new HashMap<>();
     }
 
     public void handle(HttpExchange t) throws IOException {
@@ -43,13 +45,29 @@ class WebAPI implements HttpHandler {
             return;
         }
 
+        authenticate(query);
+
+        if(currentUser != null)
+            System.out.println("User: " + currentUser.userName);
+        else
+            System.out.println("User not logged in");
+
         JSONArray json;
 
         // Process Query into JSON
         try {
-            json = commandRedirect(query, t.getRemoteAddress());
+            json = commandRedirect(query);
+        } catch (BadQueryException e) {
+            exceptionHandler(t, callback, e.getMessage(), BAD_REQUEST);
+            return;
+        } catch (UnauthenticatedException e) {
+            exceptionHandler(t, callback, e.getMessage(), UNAUTHORIZED);
+            return;
+        } catch (ServerErrorException e){
+            exceptionHandler(t,callback, e.getMessage(), INTERNAL_SERVER_ERROR);
+            return;
         } catch (Exception e) {
-            badQuery(t, callback, e.getMessage());
+            exceptionHandler(t,callback, "Unknown Error: " + e.getMessage(), INTERNAL_SERVER_ERROR);
             return;
         }
 
@@ -65,34 +83,29 @@ class WebAPI implements HttpHandler {
     }
 
     // Redirects queries
-    private JSONArray commandRedirect(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
+    private JSONArray commandRedirect(QueryValues query) throws Exception {
 
         System.out.println("Query keys:" + query.keySet());
 
         //TODO Implement more query commands
 
-        boolean isLoggedIn = activeUsers.containsKey(remoteAddress);
+        if (query.containsKey("get"))
+            return get(query);
 
-        if (query.containsKey("get")) {
-            if (isLoggedIn)
-                return get(activeUsers.get(remoteAddress));
-            else
-                throw new Exception("User needs to log in");
-
-        } else if (query.containsKey("signup"))
+        else if (query.containsKey("signup"))
             return signUp(query);
 
         else if (query.containsKey("login"))
-            return logIn(query, remoteAddress);
+            return logIn(query);
 
         else if (query.containsKey("import"))
-            return importQuery(activeUsers.get(remoteAddress), query);
+            return importQuery(query);
 
         else if(query.containsKey("playlist"))
-            return playlist(activeUsers.get(remoteAddress), query);
+            return playlist(query);
 
         else if(query.containsKey("export"))
-            return exportQuery(activeUsers.get(remoteAddress), query);
+            return exportQuery(query);
 
         else if(query.containsKey("search"))
             return search(query);
@@ -101,8 +114,10 @@ class WebAPI implements HttpHandler {
             return test(query);
 
 
-        throw new Exception("Query has no meaning");
+        throw new BadQueryException("Query has no meaning");
     }
+
+    // ----------------------------------------  Query Commands  ------------------------------------------------------
 
     @SuppressWarnings("unchecked")
     private JSONArray search(QueryValues query) {
@@ -124,19 +139,20 @@ class WebAPI implements HttpHandler {
         return jsonArray;
     }
 
-    private JSONArray importQuery(User user, QueryValues query) throws Exception {
-        if(user.tokens == null){
-            throw new Exception("User needs to log in to service");
+    @SuppressWarnings("unchecked")
+    private JSONArray importQuery(QueryValues query) throws Exception {
+        if(currentUser == null || currentUser.tokens == null){
+            throw new UnauthenticatedException("User needs to log in to service");
         }
 
         if(!query.containsKey("playlist")){
-            return get(user);
+            return get(query);
         }
 
         JSONArray jsonArray = new JSONArray();
 
         Spotify spotify = new Spotify();
-        Playlist playlist = spotify.importPlaylist(user.tokens, query.get("playlist"));
+        Playlist playlist = spotify.importPlaylist(currentUser.tokens, query.get("playlist"));
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);
@@ -146,23 +162,128 @@ class WebAPI implements HttpHandler {
         return jsonArray;
     }
 
-    private JSONArray exportQuery(User user, QueryValues query) throws Exception{
-        if(user.tokens == null){
-            throw new Exception("User needs to log in to service");
+    private JSONArray exportQuery(QueryValues query) throws Exception{
+        if(currentUser == null || currentUser.tokens == null){
+            throw new UnauthenticatedException("User needs to log in to service");
         }
         JSONArray jsonArray = new JSONArray();
 
         String pid = query.get("export");
         int id = Integer.parseInt(pid);
 
-        Playlist playlist = user.getPlaylistById(id);
+        Playlist playlist = currentUser.getPlaylistById(id);
 
         if(playlist == null){
-            throw new Exception("Playlist not found");
+            throw new ServerErrorException("Playlist not found");
         }
 
         Spotify spotify = new Spotify();
-        spotify.exportPlaylist(user.tokens, playlist); //TODO return failed songs
+        spotify.exportPlaylist(currentUser.tokens, playlist); //TODO return failed songs
+
+        return jsonArray;
+    }
+
+    // Method to handle "signup" query. Returns json with true on success and false on failure
+    @SuppressWarnings("unchecked")
+    private JSONArray signUp(QueryValues query) {
+        JSONArray jsonArray = new JSONArray();
+        JSONObject json = new JSONObject();
+
+        String encodedName = query.get("signup");
+
+        // Format expected is email:username:password
+        String[] info = encodedName.split(":", 3);
+
+        User user = User.CreateUser(info[1], info[2], info[0]);
+
+        json.put("result", user != null);
+
+        jsonArray.add(json);
+
+        return jsonArray;
+    }
+
+    // Method to handle "login" query. Returns json with true on success and false on failure
+    @SuppressWarnings("unchecked")
+    private JSONArray logIn(QueryValues query) throws Exception {
+        JSONArray jsonArray = new JSONArray();
+        JSONObject json = new JSONObject();
+
+        String encodedName = query.get("login");
+
+        // Expected format is "username:password"
+        String[] info = encodedName.split(":", 2);
+
+        boolean b;
+        try {
+            b = UserPassword.IsPasswordCorrect(info[0], info[1]);
+            if (b) {
+                User user = User.getUserByUserName(info[0]);
+
+                if (user != null) {
+                    String authString = generateAuthToken();
+                    userAuthTokens.put(authString, user);
+                    json.put("authenticate", authString);
+                }
+                else
+                    b = false;
+            }
+        } catch (Exception e){
+            throw new UnauthenticatedException(e.getMessage());
+        }
+
+        json.put("result", b);
+        jsonArray.add(json);
+        return jsonArray;
+    }
+
+    // Method to handle "get" query. Returns json with a list of playlist objects for current user
+    @SuppressWarnings("unchecked")
+    private JSONArray get(QueryValues query) {
+        JSONArray jsonArray = new JSONArray();
+
+        currentUser.FetchPlaylists();
+        List<Playlist> playlists = currentUser.playlistList;
+
+        for(Playlist playlist : playlists){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("name", playlist.Name);
+            jsonObject.put("id", playlist.ID);
+            jsonArray.add(jsonObject);
+        }
+
+        return jsonArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray playlist(QueryValues query) throws Exception {
+        JSONArray jsonArray = new JSONArray();
+        String pid = query.get("playlist");
+        int id = Integer.parseInt(pid);
+
+        currentUser.FetchPlaylists();
+
+        Playlist playlist = null;
+
+        for(Playlist p : currentUser.playlistList){
+            if(id == p.ID)
+                playlist = p;
+        }
+
+        if(playlist == null){
+            throw new ServerErrorException("Playlist ID not found");
+        }
+
+        for(Song song : playlist.getArrayList()){
+            JSONObject json = new JSONObject();
+            json.put("title", song.title);
+            json.put("artist", song.artist);
+            json.put("id", song.ID);
+            json.put("explicit", song.explicit);
+            json.put("album", song.album);
+            json.put("duration", song.duration);
+            jsonArray.add(json);
+        }
 
         return jsonArray;
     }
@@ -190,108 +311,44 @@ class WebAPI implements HttpHandler {
         return jsonArray;
     }
 
-    // Method to handle "signup" query. Returns json with true on success and false on failure
-    @SuppressWarnings("unchecked")
-    private JSONArray signUp(QueryValues query) {
-        JSONArray jsonArray = new JSONArray();
-        JSONObject json = new JSONObject();
 
-        String encodedName = query.get("signup");
+    // ----------------------------------------  Authentication  ------------------------------------------------------
 
-        // Format expected is email:username:password
-        String[] info = encodedName.split(":", 3);
-
-        User user = User.CreateUser(info[1], info[2], info[0]);
-
-        json.put("result", user != null);
-
-        jsonArray.add(json);
-
-        return jsonArray;
+    private void authenticate(QueryValues query) {
+        String authToken = query.get("authenticate");
+        if(authToken == null){
+            currentUser = null;
+            return;
+        }
+        currentUser = userAuthTokens.get(authToken);
     }
 
-    // Method to handle "login" query. Returns json with true on success and false on failure
-    @SuppressWarnings("unchecked")
-    private JSONArray logIn(QueryValues query, InetSocketAddress remoteAddress) throws Exception {
-        JSONArray jsonArray = new JSONArray();
-        JSONObject json = new JSONObject();
-
-        String encodedName = query.get("login");
-
-        // Expected format is "username:password"
-        String[] info = encodedName.split(":", 2);
-
-        boolean b;
-        try {
-            b = UserPassword.IsPasswordCorrect(info[0], info[1]);
-        } catch (Exception e){
-            throw new Exception(e.getMessage());
+    private String generateAuthToken() {
+        String s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i = 0; i < 10; i++){
+            stringBuilder.append(s.charAt(random.nextInt(s.length())));
         }
 
-        if (b) {
-            User user = User.getUserByUserName(info[0]);
-
-            if (user != null)
-                activeUsers.put(remoteAddress, user);
-            else
-                b = false;
-        }
-
-        json.put("result", b);
-        jsonArray.add(json);
-        return jsonArray;
+        System.out.println("Created token: " + stringBuilder.toString());
+        return stringBuilder.toString();
     }
 
-    // Method to handle "get" query. Returns json with a list of playlist objects for current user
-    @SuppressWarnings("unchecked")
-    private JSONArray get(User user) {
-        JSONArray jsonArray = new JSONArray();
 
-        user.FetchPlaylists();
-        List<Playlist> playlists = user.playlistList;
-
-        for(Playlist playlist : playlists){
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("name", playlist.Name);
-            jsonObject.put("id", playlist.ID);
-            jsonArray.add(jsonObject);
-        }
-
-
-        return jsonArray;
-    }
+    // ------------------------------------------  Responses  ---------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private JSONArray playlist(User user, QueryValues query) throws Exception {
-        JSONArray jsonArray = new JSONArray();
-        String pid = query.get("playlist");
-        int id = Integer.parseInt(pid);
+    private void exceptionHandler(HttpExchange t, String callback, String message, int code) throws IOException {
+        System.out.println(message);
+        JSONObject obj = new JSONObject();
+        obj.put("error", message);
 
-        user.FetchPlaylists();
-
-        Playlist playlist = null;
-
-        for(Playlist p : user.playlistList){
-            if(id == p.ID)
-                playlist = p;
+        byte[] responseMessage = getJSONPMessage(obj, callback).getBytes();
+        t.sendResponseHeaders(code, responseMessage.length);
+        try (OutputStream os = t.getResponseBody()) {
+            os.write(responseMessage);
         }
-
-        if(playlist == null){
-            throw new Exception("Playlist ID not found");
-        }
-
-        for(Song song : playlist.getArrayList()){
-            JSONObject json = new JSONObject();
-            json.put("title", song.title);
-            json.put("artist", song.artist);
-            json.put("id", song.ID);
-            json.put("explicit", song.explicit);
-            json.put("album", song.album);
-            json.put("duration", song.duration);
-            jsonArray.add(json);
-        }
-
-        return jsonArray;
     }
 
     private void noCallback(HttpExchange t) throws IOException {
@@ -300,22 +357,6 @@ class WebAPI implements HttpHandler {
 
         byte[] message = msg.getBytes();
         t.sendResponseHeaders(UNPROCESSABLE_ENTITY, message.length);
-        try (OutputStream os = t.getResponseBody()) {
-            os.write(message);
-        }
-    }
-
-    @SuppressWarnings("all")
-    void badQuery(HttpExchange t, String callback, String msg) throws IOException {
-        if(msg == null){
-            msg = "Server error";
-        }
-        System.out.println("Bad query: " + msg);
-        JSONObject obj = new JSONObject();
-        obj.put("error", msg);
-
-        byte[] message = getJSONPMessage(obj, callback).getBytes();
-        t.sendResponseHeaders(200, message.length);
         try (OutputStream os = t.getResponseBody()) {
             os.write(message);
         }
@@ -333,5 +374,26 @@ class WebAPI implements HttpHandler {
         message.append(")");
 
         return message.toString();
+    }
+
+}
+
+// --------------------------------------------  Exceptions  ------------------------------------------------------
+
+class BadQueryException extends Exception{
+    BadQueryException(String message) {
+        super("Bad Query: " + message);
+    }
+}
+
+class UnauthenticatedException extends Exception{
+    UnauthenticatedException(String message) {
+        super("Unauthenticated: " + message);
+    }
+}
+
+class ServerErrorException extends Exception{
+    ServerErrorException(String message) {
+        super("Server Error: " + message);
     }
 }
