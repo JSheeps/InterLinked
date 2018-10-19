@@ -182,7 +182,7 @@ public class Spotify extends StreamingService
             if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY) {
                 uris.add(playlist.getSong(i).spotifyURI);
             } else {
-                uris.add(findSong(playlist.getSong(i)).getSpotifyURI());//TODO write this function
+                //TODO write this function
             }
         }
         try {
@@ -219,25 +219,20 @@ public class Spotify extends StreamingService
     }
 
     //attempts to match the provided song object with the correct Spotify URI based on given information
-    public Song findSong(Song s) {
+    public Song findSong(String query) {
+        Song s = new Song();
         try{
             //If the URI is known then the song does not need to be matched
-            if (s.getSpotifyURI() != null) return s;
-
             Track match = new Track.Builder().build();
-            if (s.getTitle() != null) {
-                SearchTracksRequest searchRequest = spotifyApi.searchTracks(s.getTitle())
-                        .limit(10)
-                        .offset(0)
+            SearchTracksRequest searchRequest = spotifyApi.searchTracks(s.getTitle())
+                    .limit(10)
+                .offset(0)
                         .build();
                 Paging<Track> results = searchRequest.execute();
-                int TEMPINTNAMECHANGETHISLATER = closestMatch(s,results);
-                match = results.getItems()[TEMPINTNAMECHANGETHISLATER];
-            }
-            s.spotifyURI = match.getUri();
-            if (s.getAlbum() == null) s.setAlbum(match.getAlbum().getName());
-            if (s.getArtist() == null) s.setArtist(match.getArtists()[0].getName());
-            s.setExplicit(match.getIsExplicit());
+                //int TEMPINTNAMECHANGETHISLATER = closestMatch(s,results);
+                match = results.getItems()[0];
+                s.setAlbum(match.getAlbum().getName());
+            s = trackToSong(match);
 
         } catch (Exception e){
             e.printStackTrace();
@@ -249,6 +244,20 @@ public class Spotify extends StreamingService
         return 0;
     }
 
+    private static Song trackToSong(Track t){
+        Song s  = new Song();
+        s.setAlbum(t.getAlbum().getName());
+        s.setDuration(t.getDurationMs());
+        s.setExplicit(t.getIsExplicit());
+        s.spotifyURI=t.getUri();
+        s.origin = Song.OriginHostName.SPOTIFY;
+
+        return s;
+    }
+
+    public static String listenToSong(Song s){
+        return "";
+    }
     //may be used if initial search results are unsatisfactory
     public String search_with_offset(String query, int offset){return "";}
 }
