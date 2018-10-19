@@ -30,7 +30,7 @@ public class User {
 
     // Gets user data from database and creates new user object
     public static User getUserByUserName(String userName){
-        String userQuery = "SELECT * FROM Users WHERE UserName = " + userName;
+        String userQuery = "SELECT * FROM Users WHERE UserName = '" + userName + "'";
         SqlHelper helper = new SqlHelper();
 
         ResultSet resultSet = helper.ExecuteQueryWithReturn(userQuery);
@@ -47,6 +47,7 @@ public class User {
             }
         }catch (SQLException e){
             // TODO
+            System.err.println(e);
             return null;
         }
     }
