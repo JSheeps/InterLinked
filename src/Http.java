@@ -84,7 +84,6 @@ public class Http implements HttpHandler {
                 os.write(response);
             }
         }
-
     }
 
     static void send(HttpExchange t, int status, String data) throws IOException {

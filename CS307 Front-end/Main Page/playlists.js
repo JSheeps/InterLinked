@@ -15,7 +15,7 @@ function viewPlaylists(tableSelector) {
 			var str = "<tr><td>" + playlist.name + "</td></tr>";
 			table = table.after(str);
 		}
-	}).error( (error) => {
+	}).fail( (error) => {
 		console.log(error);
 	});
 }

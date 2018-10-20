@@ -11,6 +11,7 @@ public class SqlHelper {
     public SqlHelper(){
         // Opens a connection to the database
         try{
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
             connection = DriverManager.getConnection(url);
         }catch(SQLException e){
             // TODO

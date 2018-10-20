@@ -30,13 +30,11 @@ function login() {
 	var userName = getUserName();
 	var password = getPassword();
 	
-	console.log(userName.length);
 	if (userName.length == 0) {
 		userNameError("Need to input a username");
 		return;
 	}
 	
-	console.log(password.length);
 	if (password.length == 0) {
 		passWordError("Need to input a password");
 		return;
@@ -46,8 +44,9 @@ function login() {
 	sessionStorage.setItem("username", userName);
 	
 	serverLogin(userName, password).done( (accessToken) => {
+		debugger;
 		if (accessToken.error) {
-			console.log(accessToken.error);
+			console.log("Error: " + accessToken.error);
 		} else {
 			console.log(accessToken.accessToken);
 			createCookie("accessToken", accessToken.accessToken);

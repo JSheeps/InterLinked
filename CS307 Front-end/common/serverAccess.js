@@ -12,12 +12,11 @@ var importListData = [
 ];
 
 function serverLogin(username, password) {
-	/* return sendMessage({
+	return sendMessage({
 		login: "login",
 		username: username,
 		password: password
-	});*/
-	return simulateAjax({ accessToken: "nice" });
+	});
 }
 
 function serverSignup(username, password) {
@@ -29,37 +28,29 @@ function serverSignup(username, password) {
 }
 
 function getPlaylistsFromServer() {
-	/*	return sendMessage({
+	return sendMessage({
 		get: "playlists"
 	});
-	*/
-	return simulateAjax(playlists);
 }
 
 function getImportListFromServer(platformID) {
-	/* return sendMessage({
-		import: platformID;
+	return sendMessage({
+		import: platformID
 	});
-	*/
-	return simulateAjax(importListData);
 }
 
 function importList(platformID, playlistID) {
-	/* return sendMessage({
+	return sendMessage({
 		import: platformID,
-		playlist: playlistID;
+		playlist: playlistID
 	});
-	*/
-	return simulateAjax("success");
 }
 
 function mergeLists(platformID, playlistID1, playlistID2) {
-	/* return sendMessage({
+	return sendMessage({
 		merge: playlistID1,
 		playlist2: playlistID2
 	});
-	*/
-	return simulateAjax("success");
 }
 
 function sendMessage(myData) {
@@ -77,6 +68,6 @@ function toAuthToken(uName, pWord) {
 function simulateAjax(obj) {
 	return {
 		done: function(resolveFunction) { resolveFunction(obj); return this; },
-		error: function(errorFunction) { return this; }
+		fail: function(errorFunction) { return this; }
 	};
 }

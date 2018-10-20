@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ class WebAPI implements HttpHandler {
     private static final int UNAUTHORIZED = 401;
     private static final int BAD_REQUEST = 400;
     private static final int INTERNAL_SERVER_ERROR = 500;
-
 
     WebAPI() {
         userAuthTokens = new HashMap<>();
@@ -55,7 +55,7 @@ class WebAPI implements HttpHandler {
         else
             System.out.println("User not logged in");
 
-        JSONArray json;
+        Object json;
 
         // Process Query into JSON
         try {
@@ -86,7 +86,7 @@ class WebAPI implements HttpHandler {
     }
 
     // Redirects queries
-    private JSONArray commandRedirect(QueryValues query) throws Exception {
+    private Object commandRedirect(QueryValues query) throws Exception {
 
         System.out.println("Query keys:" + query.keySet());
 
@@ -205,20 +205,17 @@ class WebAPI implements HttpHandler {
 
     // Method to handle "login" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONArray logIn(QueryValues query) throws Exception {
-        JSONArray jsonArray = new JSONArray();
+    private JSONObject logIn(QueryValues query) throws Exception {
         JSONObject json = new JSONObject();
 
-        String encodedName = query.get("login");
-
-        // Expected format is "username:password"
-        String[] info = encodedName.split(":", 2);
+        String username = query.get("username");
+        String password = query.get("password");
 
         boolean b;
         try {
-            b = UserPassword.IsPasswordCorrect(info[0], info[1]);
+            b = UserPassword.IsPasswordCorrect(username, password);
             if (b) {
-                User user = User.getUserByUserName(info[0]);
+                User user = User.getUserByUserName(username);
 
                 if (user != null) {
                     String authString = generateAuthToken();
@@ -233,8 +230,7 @@ class WebAPI implements HttpHandler {
         }
 
         json.put("result", b);
-        jsonArray.add(json);
-        return jsonArray;
+        return json;
     }
 
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
@@ -251,6 +247,7 @@ class WebAPI implements HttpHandler {
             jsonObject.put("id", playlist.ID);
             jsonArray.add(jsonObject);
         }
+
 
         return jsonArray;
     }

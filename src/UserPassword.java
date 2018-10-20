@@ -65,8 +65,8 @@ public class UserPassword {
 	public static boolean IsPasswordCorrect(String userName, String password){
         // Get UserPassword object associated with userName
 		String upFetch = "SELECT UserPasswords.* FROM UserPasswords JOIN Users on Users.ID = UserPasswords.UserID WHERE Users.UserName = '" + userName +"'";
-		SqlHelper helper = new SqlHelper();
 
+		SqlHelper helper = new SqlHelper();
 		ResultSet results = helper.ExecuteQueryWithReturn(upFetch);
 
 		String Salt = "";
