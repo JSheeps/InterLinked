@@ -9,7 +9,7 @@ public class Song {
     // Song duration in milliseconds
     int duration;
     boolean explicit;
-    String spotfyID;
+    String spotifyID;
     String spotifyURI;
     OriginHostName origin;
 
@@ -54,7 +54,7 @@ public class Song {
     }
 
     public String getSpotfyID() {
-        return spotfyID;
+        return spotifyID;
     }
 
     public String getSpotifyURI() {
@@ -81,8 +81,8 @@ public class Song {
         this.explicit = explicit;
     }
 
-    public void setSpotfyID(String spotfyID) {
-        this.spotfyID = spotfyID;
+    public void setSpotifyID(String spotfyID) {
+        this.spotifyID = spotifyID;
     }
 
     public void setSpotifyURI(String spotifyURI) {
@@ -107,7 +107,7 @@ public class Song {
             duration = resultSet.getInt("Duration");
             explicit = resultSet.getBoolean("Explicit");
             ID = resultSet.getInt("ID");
-            spotfyID = resultSet.getString("SpotifyID");
+            spotifyID = resultSet.getString("SpotifyID");
             spotifyURI = resultSet.getString("SpotifyURI");
         }catch(SQLException e){
             System.err.println(e);
@@ -137,7 +137,7 @@ public class Song {
                 ", album='" + album + '\'' +
                 ", duration=" + duration +
                 ", explicit=" + explicit +
-                ", spotfyID='" + spotfyID + '\'' +
+                ", spotfyID='" + spotifyID + '\'' +
                 ", spotifyURI='" + spotifyURI + '\'' +
                 '}';
     }
@@ -151,7 +151,7 @@ public class Song {
             return true;
         }
         String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
-                "VALUES('" + artist + "', '" + title + "', '" + album + "', " + duration + ", " + explicit + ", '" + spotfyID + "', '" + spotifyURI + "')";
+                "VALUES('" + artist + "', '" + title + "', '" + album + "', " + duration + ", " + explicit + ", '" + spotifyID + "', '" + spotifyURI + "')";
         SqlHelper helper = new SqlHelper();
         helper.ExecuteQuery(insertQuery);
         // Get ID of thing we just inserted
