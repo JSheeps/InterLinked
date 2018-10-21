@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Signup Page</title>
+		<link href="/common/common.css" type="text/css" rel="stylesheet">
+		<link href="/Login Page/login.css" type="text/css" rel="stylesheet">
+		
+		<!-- JQuery API -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		
+		<script src="/common/serverAccess.js"></script>
+		<script src="/common/common.js"></script>
+		<script src="/Login Page/signup.js"></script>
+	</head>
+	
+	<body>
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans:700,600' rel='stylesheet' type='text/css'>
+
+		<form method="post" action="index.html">
+			<div class="box">
+			<img src="/common/logo.png" alt="InterLinked Logo" class="logo">
+			<input type="username" id="userNameInput" placeholder="Username" class="username" required />
+			<input type="email" id="emailInput" placeholder="email" class="email" required />
+			<input type="password" id="passwordInput" placeholder="Password" class="password" required />
+
+			<a><div id="loginbtn" onclick="login();" class="btnRef">Sign In</div></a> <!-- End Btn -->
+			<a><div id="signupbtn" onclick="signUp();" class="btnRef">Sign Up</div></a> <!-- End Btn2 -->
+
+			</div> <!-- End Box -->
+
+		</form>
+
+		<p><a href="/Login Page/forgotpassword.html">Forgot your password? Click Here!</a></p>
+	</body>
+</html>

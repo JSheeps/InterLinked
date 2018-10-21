@@ -67,10 +67,10 @@ class WebAPI implements HttpHandler {
             exceptionHandler(t, callback, e.getMessage(), UNAUTHORIZED);
             return;
         } catch (ServerErrorException e){
-            exceptionHandler(t,callback, e.getMessage(), INTERNAL_SERVER_ERROR);
+            exceptionHandler(t, callback, e.getMessage(), INTERNAL_SERVER_ERROR);
             return;
         } catch (Exception e) {
-            exceptionHandler(t,callback, "Unknown Error: " + e.getMessage(), INTERNAL_SERVER_ERROR);
+            exceptionHandler(t, callback, "Unknown Error: " + e.getMessage(), INTERNAL_SERVER_ERROR);
             return;
         }
 
@@ -185,22 +185,20 @@ class WebAPI implements HttpHandler {
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONArray signUp(QueryValues query) {
-        JSONArray jsonArray = new JSONArray();
+    private JSONObject signUp(QueryValues query) {
         JSONObject json = new JSONObject();
 
         String encodedName = query.get("signup");
 
-        // Format expected is email:username:password
-        String[] info = encodedName.split(":", 3);
+        String username = query.get("username");
+        String password = query.get("password");
+        String email = query.get("email");
 
-        User user = User.CreateUser(info[1], info[2], info[0]);
+        User user = User.CreateUser(username, password, email);
 
         json.put("result", user != null);
 
-        jsonArray.add(json);
-
-        return jsonArray;
+        return json;
     }
 
     // Method to handle "login" query. Returns json with true on success and false on failure

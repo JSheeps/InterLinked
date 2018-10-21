@@ -38,8 +38,8 @@ Query Specifications
 																return a reason, e.g. "Email does not exist" or "Bad password"
 																
 		signup		signup					username,		IF the signup is successfuly
-											password			return the token used to access server material for the user
-															ELSE
+											password,			return the token used to access server material for the user
+											email			ELSE
 																return a reason, e.g. "Email taken" or "Password too short"
 																
 		username	<username>				password		Used with either login or signup.

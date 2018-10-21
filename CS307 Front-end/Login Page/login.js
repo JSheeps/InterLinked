@@ -13,9 +13,11 @@ function field_blur(field, defaultString) {
 }
 
 function userNameError(msg) {
+	alert(msg);
 }
 
 function passWordError(msg) {
+	alert(msg);
 }
 
 function getUserName() {
@@ -44,9 +46,8 @@ function login() {
 	sessionStorage.setItem("username", userName);
 	
 	serverLogin(userName, password).done( (accessToken) => {
-		debugger;
-		if (accessToken.error) {
-			console.log("Error: " + accessToken.error);
+		if (!accessToken.result) {
+			alert("Error: Invalid login");
 		} else {
 			console.log(accessToken.accessToken);
 			createCookie("accessToken", accessToken.accessToken);
@@ -56,18 +57,7 @@ function login() {
 }
 
 function signUp() {
-	var userName = userNameField[0].value;
-	var password = passwordField[0].value;
-	
-	serverSignup(userName, password).done( (accessToken) => {
-		if (accessToken.error) {
-			console.log(accessToken.error);
-		} else {
-			console.log(accessToken.accessToken);
-			createCookie("accessToken", accessToken.accessToken);
-			playlistRedirect();
-		}
-	});
+	signupRedirect();
 }
 
 $(document).ready( () => {

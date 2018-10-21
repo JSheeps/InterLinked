@@ -19,11 +19,12 @@ function serverLogin(username, password) {
 	});
 }
 
-function serverSignup(username, password) {
+function serverSignup(username, password, email) {
 	return sendMessage({
 		signup: "signup",
 		username: username,
-		password: password
+		password: password,
+		email: email
 	});
 }
 

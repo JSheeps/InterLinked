@@ -1,6 +1,5 @@
 "use strict";
 
-
 function displayUsername(){
 	$("#displayUsername").html(sessionStorage.getItem("username"));
 }
@@ -13,6 +12,10 @@ function logoutRedirect() {
 
 function loginRedirect() {
 	redirect("/Main Page/viewPlaylists.html");
+}
+
+function  signupRedirect() {
+	redirect("/Login Page/signup.html");
 }
 
 function playlistRedirect() {
