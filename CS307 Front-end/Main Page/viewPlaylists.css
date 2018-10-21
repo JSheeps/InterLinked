@@ -56,3 +56,12 @@ th{
 #mergebtn:hover{
     cursor: pointer;
 }
+
+.search{
+    position: relative;
+    top: 75px;
+    
+}
+#searchbtn{
+    cursor: pointer;
+}
