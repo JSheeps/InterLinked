@@ -8,10 +8,7 @@ import com.wrapper.spotify.model_objects.specification.User;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
-import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
-import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
-import com.wrapper.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
-import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
+import com.wrapper.spotify.requests.data.playlists.*;
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
@@ -39,7 +36,7 @@ public class Spotify extends StreamingService
     private static final AuthorizationCodeUriRequest aCUR = spotifyApi.authorizationCodeUri().scope(scopes).show_dialog(true).build();
 
     //URL the user is sent to so they can allow us to access their account
-    public String getAuthorizationURL(){
+    public static String getAuthorizationURL(){
         final URI temp = aCUR.execute();
         return temp.toString();
     }
@@ -169,6 +166,11 @@ public class Spotify extends StreamingService
                     .position(0)
                     .build();
             addTracks.execute();
+            GetPlaylistRequest gpr = spotifyApi.getPlaylist(userID,playlist1.getId()).build();
+            com.wrapper.spotify.model_objects.specification.Playlist temp = gpr.execute();
+            if(temp.getTracks().getTotal() != playlist.getSize()){
+                //TODO error, not all songs added to playlist
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -179,13 +181,16 @@ public class Spotify extends StreamingService
         ClientCredentialsRequest ccr = spotifyApi.clientCredentials().grant_type("client_credentials").build();
         try {
             ClientCredentials cc = ccr.execute();
-
+            spotifyApi.setAccessToken(cc.getAccessToken());
+            SearchTracksRequest search = spotifyApi.searchTracks(s.getTitle()+" " + s.getArtist()+ " " + s.getAlbum()).build();
+            Paging<Track> tracks = search.execute();
+            return tracks.getItems()[0].getUri();
         } catch (Exception e){e.printStackTrace();}
         return "";
     }
 
     //Returns the top result from the query as a song object
-    public Song findSong(String query) {
+    public static Song findSong(String query) {
         Song s = new Song();
         ClientCredentials cc;
         ClientCredentialsRequest ccr;
@@ -207,10 +212,6 @@ public class Spotify extends StreamingService
             e.printStackTrace();
         }
         return s;
-    }
-
-    private int closestMatch(Song s, Paging<Track> results){
-        return 0;
     }
 
     //Helper function for making a Song object from the Spotify wrappers Track object
