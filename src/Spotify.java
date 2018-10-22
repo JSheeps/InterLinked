@@ -147,7 +147,7 @@ public class Spotify extends StreamingService
         }
         try {
             if (Arrays.asList(getPlaylistNames(tokens)).contains(playlist.Name)){
-                //TODO handle duplicate playlist names
+                 playlist.setName(playlist.Name+"(2)");
             }
             spotifyApi.setAccessToken(tokens.getKey());
             GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
