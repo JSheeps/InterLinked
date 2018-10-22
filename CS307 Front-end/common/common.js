@@ -34,6 +34,10 @@ function mergeRedirect() {
 	redirect("/Main Page/merge.html");
 }
 
+function grantServerAccessRedirect() {
+	redirect("/SelectService Page/SelectService.html");
+}
+
 function redirect(URI) {
 	window.location.href = URI;
 }

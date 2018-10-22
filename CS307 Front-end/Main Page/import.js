@@ -13,9 +13,11 @@ function viewImportList(tableSelector) {
 	table = pageContents.find(tableSelector + " tr:last");
 	
 	getImportListFromServer(platformID).done( (playlists) => {
-		console.log(playlists)
-		if (playlists.error) {
-			console.log(playlist.error);
+		console.log(playlists);
+		var error = playlists.error;
+		if (error) {
+			if (error == "Unknown Error: Unauthenticated: User needs to log in to service");
+			grantServerAccessRedirect();
 			return;
 		}
 		if (playlists.length == 0) {
@@ -34,8 +36,5 @@ function viewImportList(tableSelector) {
 			table = table.after(str);
 		}
 		
-		//table.after("<tr><th></th> <th> Importable Playlists </th> </tr>")
-	}).error( (error) => {
-		console.log(error);
 	});
 }

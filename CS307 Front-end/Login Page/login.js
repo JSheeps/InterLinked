@@ -49,8 +49,8 @@ function login() {
 		if (!accessToken.result) {
 			alert("Error: Invalid login");
 		} else {
-			console.log(accessToken.accessToken);
-			createCookie("accessToken", accessToken.accessToken);
+			var token = accessToken.authenticate;
+			setAuthToken(token);
 			playlistRedirect();
 		}
 	});
@@ -62,8 +62,7 @@ function signUp() {
 
 $(document).ready( () => {
 	// check if already has session token
-	document.cookie = "";
-	var token = readCookie("accessToken");
+	var token = getAuthToken();
 	if (token)
 		playlistRedirect();
 	

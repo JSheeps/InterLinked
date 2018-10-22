@@ -1,9 +1,6 @@
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 public class UnitTests {
     public static void main(String[] args){
         UserCreationTest1();
