@@ -241,7 +241,7 @@ class Playlist {
         if(historyID == 0) return false;
 
         for(Song song : playlist){
-            String playlistHistorySongInsert = "INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(" + ID + ", " + song.ID + ")";
+            String playlistHistorySongInsert = "INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(" + historyID + ", " + song.ID + ")";
 
             helper.ExecuteQuery(playlistHistorySongInsert);
         }
