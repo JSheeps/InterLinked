@@ -1,12 +1,12 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ class WebAPI implements HttpHandler {
     }
 
     public void handle(HttpExchange t) throws IOException {
-
         System.out.println("New Connection");
 
         Headers headers = t.getResponseHeaders();
@@ -60,17 +59,11 @@ class WebAPI implements HttpHandler {
         // Process Query into JSON
         try {
             json = commandRedirect(query);
-        } catch (BadQueryException e) {
-            exceptionHandler(t, callback, e.getMessage(), BAD_REQUEST);
-            return;
-        } catch (UnauthenticatedException e) {
-            exceptionHandler(t, callback, e.getMessage(), UNAUTHORIZED);
-            return;
-        } catch (ServerErrorException e){
-            exceptionHandler(t, callback, e.getMessage(), INTERNAL_SERVER_ERROR);
+        } catch (BadQueryException | UnauthorizedException | ServerErrorException e) {
+            exceptionHandler(t, callback, e.getMessage());
             return;
         } catch (Exception e) {
-            exceptionHandler(t, callback, "Unknown Error: " + e.getMessage(), INTERNAL_SERVER_ERROR);
+            exceptionHandler(t, callback, "Unknown Error: " + e.getMessage());
             return;
         }
 
@@ -334,13 +327,15 @@ class WebAPI implements HttpHandler {
     // ------------------------------------------  Responses  ---------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private void exceptionHandler(HttpExchange t, String callback, String message, int code) throws IOException {
+    private void exceptionHandler(HttpExchange t, String callback, String message) throws IOException {
         System.out.println(message);
         JSONObject obj = new JSONObject();
         obj.put("error", message);
 
         byte[] responseMessage = getJSONPMessage(obj, callback).getBytes();
-        t.sendResponseHeaders(code, responseMessage.length);
+
+        // With JSONP, ALWAYS respond with 200 unless there is not callback
+        t.sendResponseHeaders(GOOD, responseMessage.length);
         try (OutputStream os = t.getResponseBody()) {
             os.write(responseMessage);
         }

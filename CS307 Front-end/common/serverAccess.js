@@ -1,15 +1,12 @@
 const url = "/";
 
-// objects to simulate server output
-var playlists = [
-	{ name: "Playlist1", id: "id1" },
-	{ name: "Playlist2", id: "id2" }
-];
+function setAuthToken(token) {
+	createCookie("accessToken", token);
+}
 
-var importListData = [
-	{ name: "Other list", id: "id3" },
-	{ name: "Other other list", id: "id4" }
-];
+function getAuthToken() {
+	return readCookie("accessToken");
+}
 
 function serverLogin(username, password) {
 	return sendMessage({
@@ -55,14 +52,15 @@ function mergeLists(platformID, playlistID1, playlistID2) {
 }
 
 function sendMessage(myData) {
+	var authToken = getAuthToken();
+	if (authToken) {
+		myData.authenticate = authToken;
+	}
+	
 	return $.ajax(url + "data", {
 		data: myData,
 		dataType: "jsonp"
 	});
-}
-
-function toAuthToken(uName, pWord) {
-	return uName + ":" + pWord;
 }
 
 // function to simulate ajax call.

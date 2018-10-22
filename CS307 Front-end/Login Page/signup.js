@@ -70,8 +70,8 @@ function signUp() {
 				if (!accessToken.result) {
 					alert("Error: Invalid login");
 				} else {
-					console.log(accessToken.accessToken);
-					createCookie("accessToken", accessToken.accessToken);
+					var token = accessToken.authenticate;
+					setAuthToken(token);
 					playlistRedirect();
 				}
 			});
