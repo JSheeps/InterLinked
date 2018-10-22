@@ -1,5 +1,6 @@
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -129,6 +130,11 @@ class Playlist {
                 deletedList.add(song);
             }
         }
+
+        if(addedList.size() != 0 || deletedList.size() != 0){
+            savePlaylistState();
+        }
+
         // Add each song in addedList
         for (Song song : addedList) {
             song.save();
@@ -197,6 +203,52 @@ class Playlist {
         }
 
         return newPlaylist.save(currentUser);
+    }
+
+    public boolean savePlaylistState(){
+        List<Song> currentSongs = this.FetchSongs();
+
+        // Check to make sure all songs in playlist have IDs
+        for(Song song : playlist){
+            if(song.ID == 0){
+                System.err.println("Each song in playlist must be saved prior to calling savePlaylistState()");
+                return false;
+            }
+        }
+
+        String currentTime = LocalDateTime.now().toString();
+
+        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedDate) VALUES(" + this.ID + ", '" + currentTime + "')";
+
+        SqlHelper helper = new SqlHelper();
+        helper.ExecuteQuery(playlistHistoryInsert);
+
+        // Fetch ID of playlistHistory object
+        String idFetch = "SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = " + this.ID + " ORDER BY CreatedDate DESC";
+
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(idFetch);
+        int historyID = 0;
+        try{
+            while(resultSet.next()){
+                historyID = resultSet.getInt("ID");
+                break;
+            }
+        }catch(SQLException e){
+            System.err.println(e);
+            return false;
+        }
+
+        if(historyID == 0) return false;
+
+        for(Song song : playlist){
+            String playlistHistorySongInsert = "INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(" + ID + ", " + song.ID + ")";
+
+            helper.ExecuteQuery(playlistHistorySongInsert);
+        }
+
+        helper.closeConnection();
+
+        return true;
     }
 
     public void setName(String name) {

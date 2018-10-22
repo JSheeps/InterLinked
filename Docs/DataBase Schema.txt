@@ -46,3 +46,14 @@ CREATE TABLE dbo.PlaylistSongs(
   SongID int FOREIGN KEY REFERENCES Songs(ID) not null
 )
 
+CREATE TABLE dbo.PlaylistHistory(
+	ID int PRIMARY KEY IDENTITY(1,1),
+	PlaylistID int FOREIGN KEY REFERENCES(Playlist.ID) not null,
+	CreatedTime datetime not null
+)
+
+CREATE TABLE dbo.PlaylistHistorySongs(
+	ID int PRIMARY KEY IDENTITY(1,1),
+	PlaylistHistoryID int FOREIGN KEY REFERENCES(PlaylistHistory.ID) not null,
+	SongID int FOREIGN KEY REFERENCES(Songs.ID) not null
+)
