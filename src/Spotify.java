@@ -25,26 +25,30 @@ public class Spotify extends StreamingService
     private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     //This is the URL that the user will be sent to after authorizing us to access their account
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost:15000");
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("");
 
-    private static SpotifyApi spotifyApi = new SpotifyApi.Builder()
+    private static SpotifyApi.Builder build = new SpotifyApi.Builder()
             .setClientId(client_ID)
             .setClientSecret(client_Secret)
-            .setRedirectUri(redirectURI)
-            .build();
-
-    private static final AuthorizationCodeUriRequest aCUR = spotifyApi.authorizationCodeUri().scope(scopes).show_dialog(true).build();
+            .setRedirectUri(redirectURI);
 
     //URL the user is sent to so they can allow us to access their account
-    public static String getAuthorizationURL(){
-        final URI temp = aCUR.execute();
-        return temp.toString();
+    //State allows the callback to be matched to a user, because state is passed as a parameter with the GET request
+    public static String getAuthorizationURL(String state){
+        URI temp;
+        SpotifyApi spotifyApi = build.build();
+        try {
+            AuthorizationCodeUriRequest authorizationCodeReq = spotifyApi.authorizationCodeUri().state(state).scope(scopes).show_dialog(true).build();
+            temp = authorizationCodeReq.execute();
+            return temp.toString();
+        } catch (Exception e){e.printStackTrace();}
+        return "";
     }
 
     //Code retrieved at redirect_uri after user authorization has passed, return value is a pair <accessToken, refreshToken>
     public Pair<String,String> Login(String code) {
         try {
-
+            SpotifyApi spotifyApi = build.build();
             final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
             AuthorizationCodeCredentials c = authorizationcoderequest.execute();
 
@@ -66,6 +70,7 @@ public class Spotify extends StreamingService
     public String[] getPlaylistNames(Pair<String, String> tokens){
         String [] playlist_names = {};
         try {
+            SpotifyApi spotifyApi = build.build();
             //The access token must be set to ensure the correct user's playlists are being searched
             spotifyApi.setAccessToken(tokens.getKey());
 
@@ -87,9 +92,11 @@ public class Spotify extends StreamingService
         return playlist_names;
     }
 
+    //TODO add an exception for if a playlist hasnt been imported correctly
     public Playlist importPlaylist(Pair<String, String> tokens, String playlistName){
         Playlist return_list = new Playlist();
         try{
+            SpotifyApi spotifyApi = build.build();
             spotifyApi.setAccessToken(tokens.getKey());
 
             //UserID is needed to obtain playlist track information
@@ -137,7 +144,6 @@ public class Spotify extends StreamingService
     public void exportPlaylist(Pair<String,String> tokens,Playlist playlist) {
         List<String> uris = new ArrayList<>();
 
-        //
         for (int i = 0; i < playlist.getNumSongs(); i++) {
             if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY) {
                 uris.add(playlist.getSong(i).spotifyURI);
@@ -146,6 +152,7 @@ public class Spotify extends StreamingService
             }
         }
         try {
+            SpotifyApi spotifyApi = build.build();
             if (Arrays.asList(getPlaylistNames(tokens)).contains(playlist.Name)){
                  playlist.setName(playlist.Name+"(2)");
             }
@@ -178,6 +185,7 @@ public class Spotify extends StreamingService
 
 
     private static String findURI(Song s) {
+        SpotifyApi spotifyApi = build.build();
         ClientCredentialsRequest ccr = spotifyApi.clientCredentials().grant_type("client_credentials").build();
         try {
             ClientCredentials cc = ccr.execute();
@@ -194,6 +202,7 @@ public class Spotify extends StreamingService
         Song s = new Song();
         ClientCredentials cc;
         ClientCredentialsRequest ccr;
+        SpotifyApi spotifyApi = build.build();
         try{
             ccr = spotifyApi.clientCredentials().build();
             cc = ccr.execute();
@@ -229,6 +238,7 @@ public class Spotify extends StreamingService
 
     //returns a url that can be used to open the specified song in Spotify
     public static String listenToSong(Song s) {
+        SpotifyApi spotifyApi = build.build();
         ClientCredentialsRequest cc = spotifyApi.clientCredentials().grant_type("client_credentials").build();
         try {
             ClientCredentials tokens = cc.execute();
@@ -248,6 +258,7 @@ public class Spotify extends StreamingService
     //tokens are <accessToken, refreshToken>
     public Playlist[] importAllPlaylists(Pair<String, String> tokens)
     {
+        SpotifyApi spotifyApi = build.build();
         try {
             //Fetch a list of the users playlists
             //User ID is required in playlist requests, so that is obtained first

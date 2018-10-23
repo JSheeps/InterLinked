@@ -53,9 +53,11 @@ public class Http implements HttpHandler {
         // System.out.println(resourcePath);
         try {
             String type = Files.probeContentType(resourcePath);
-
-            headers.add("Content-Type", type);
-
+            if (type == null){
+                headers.add("Content-Type", ".js");
+            }else {
+                headers.add("Content-Type", type);
+            }
             // Reply to the method's request
             assert (method.equals("GET") || method.equals("HEAD"));
             switch (method) {
@@ -93,7 +95,6 @@ public class Http implements HttpHandler {
 
     static void send(HttpExchange t, int status, byte[] data) throws IOException {
         t.sendResponseHeaders(status, data.length);
-
         try (OutputStream os = t.getResponseBody()) {
             os.write(data);
         }
