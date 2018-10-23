@@ -9,29 +9,26 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 // How to handle calls to the /data endpoint
 class WebAPI implements HttpHandler {
     // List of currently logged in users and their socket addresses
     private HashMap<String, User> userAuthTokens;
     private User currentUser;
+    private Debug debug;
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
-    private static final int UNAUTHORIZED = 401;
-    private static final int BAD_REQUEST = 400;
-    private static final int INTERNAL_SERVER_ERROR = 500;
 
     WebAPI() {
         userAuthTokens = new HashMap<>();
+        debug = new Debug(true, false);
     }
 
     public void handle(HttpExchange t) throws IOException {
-        System.out.println("New Connection");
+        debug.log("------------------ Start new connection ------------------");
 
         Headers headers = t.getResponseHeaders();
 
@@ -50,20 +47,26 @@ class WebAPI implements HttpHandler {
         authenticate(query);
 
         if(currentUser != null)
-            System.out.println("User: " + currentUser.userName);
+            debug.log("Connected user is logged in. User: " + currentUser.userName);
         else
-            System.out.println("User not logged in");
+            debug.log("Connected user is not logged in.");
 
         Object json;
 
         // Process Query into JSON
         try {
             json = commandRedirect(query);
-        } catch (BadQueryException | UnauthorizedException | ServerErrorException e) {
+        } catch (BadQueryException | UnauthorizedException | ServerErrorException | UnauthenticatedException e) {
             exceptionHandler(t, callback, e.getMessage());
+            t.close();
+            debug.printStackTrace(e);
+            debug.log("------------------ Connection Completed ------------------");
             return;
         } catch (Exception e) {
             exceptionHandler(t, callback, "Unknown Error: " + e.getMessage());
+            t.close();
+            debug.printStackTrace(e);
+            debug.log("------------------ Connection Completed ------------------");
             return;
         }
 
@@ -76,14 +79,14 @@ class WebAPI implements HttpHandler {
         }
 
         t.close();
+
+        debug.log("------------------ Connection Completed ------------------");
     }
 
     // Redirects queries
     private Object commandRedirect(QueryValues query) throws Exception {
 
-        System.out.println("Query keys:" + query.keySet());
-
-        //TODO Implement more query commands
+        debug.log("Connection sent keys:" + query.keySet());
 
         if (query.containsKey("get"))
             return get(query);
@@ -106,10 +109,6 @@ class WebAPI implements HttpHandler {
         else if(query.containsKey("search"))
             return search(query);
 
-        else if (query.containsKey("test"))
-            return test(query);
-
-
         throw new BadQueryException("Query has no meaning");
     }
 
@@ -120,8 +119,7 @@ class WebAPI implements HttpHandler {
 
         String search = query.get("search");
 
-        Spotify spotify = new Spotify();
-        Song song = spotify.findSong(search);
+        Song song = Spotify.findSong(search);
 
         JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
@@ -134,9 +132,10 @@ class WebAPI implements HttpHandler {
 
     @SuppressWarnings("unchecked")
     private JSONArray importQuery(QueryValues query) throws Exception {
-        if(currentUser == null || currentUser.tokens == null){
-            throw new UnauthenticatedException("User needs to log in to service");
-        }
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+        if(currentUser.tokens == null)
+            throw new UnauthorizedException("User needs to log in to streaming service");
 
         if(!query.containsKey("playlist")){
             return get(query);
@@ -156,9 +155,11 @@ class WebAPI implements HttpHandler {
     }
 
     private JSONArray exportQuery(QueryValues query) throws Exception{
-        if(currentUser == null || currentUser.tokens == null){
-            throw new UnauthenticatedException("User needs to log in to service");
-        }
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+        if(currentUser.tokens == null)
+            throw new UnauthorizedException("User needs to log in to streaming service");
+
         JSONArray jsonArray = new JSONArray();
 
         String pid = query.get("export");
@@ -226,10 +227,17 @@ class WebAPI implements HttpHandler {
 
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
     @SuppressWarnings("unchecked")
-    private JSONArray get(QueryValues query) {
+    private JSONArray get(QueryValues query) throws Exception {
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+        if(currentUser.tokens == null)
+            throw new UnauthorizedException("User needs to log in to streaming service");
+
         JSONArray jsonArray = new JSONArray();
 
-        currentUser.FetchPlaylists();
+        boolean b = currentUser.FetchPlaylists();
+        debug.log("Result of user.FetchPlaylists(): " + b);
+
         List<Playlist> playlists = currentUser.playlistList;
 
         for(Playlist playlist : playlists){
@@ -239,28 +247,26 @@ class WebAPI implements HttpHandler {
             jsonArray.add(jsonObject);
         }
 
-
         return jsonArray;
     }
 
     @SuppressWarnings("unchecked")
     private JSONArray playlist(QueryValues query) throws Exception {
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+        if(currentUser.tokens == null)
+            throw new UnauthorizedException("User needs to log in to streaming service");
+
         JSONArray jsonArray = new JSONArray();
         String pid = query.get("playlist");
         int id = Integer.parseInt(pid);
 
         currentUser.FetchPlaylists();
 
-        Playlist playlist = null;
+        Playlist playlist = currentUser.getPlaylistById(id);
 
-        for(Playlist p : currentUser.playlistList){
-            if(id == p.ID)
-                playlist = p;
-        }
-
-        if(playlist == null){
+        if(playlist == null)
             throw new ServerErrorException("Playlist ID not found");
-        }
 
         for(Song song : playlist.getArrayList()){
             JSONObject json = new JSONObject();
@@ -275,30 +281,6 @@ class WebAPI implements HttpHandler {
 
         return jsonArray;
     }
-
-    @SuppressWarnings("unchecked")
-    private JSONArray test(QueryValues query) {
-        JSONArray jsonArray = new JSONArray();
-
-        List<Playlist> list = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < random.nextInt(20); i++) {
-            Playlist playlist = new Playlist();
-            playlist.Name = "playlist" + i;
-            playlist.ID = i;
-            list.add(playlist);
-        }
-
-        for(Playlist playlist : list){
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("name", playlist.Name);
-            jsonObject.put("id", playlist.ID);
-            jsonArray.add(jsonObject);
-        }
-
-        return jsonArray;
-    }
-
 
     // ----------------------------------------  Authentication  ------------------------------------------------------
 
@@ -319,7 +301,7 @@ class WebAPI implements HttpHandler {
             stringBuilder.append(s.charAt(random.nextInt(s.length())));
         }
 
-        System.out.println("Created token: " + stringBuilder.toString());
+        debug.log("Created token: " + stringBuilder.toString());
         return stringBuilder.toString();
     }
 
@@ -328,7 +310,7 @@ class WebAPI implements HttpHandler {
 
     @SuppressWarnings("unchecked")
     private void exceptionHandler(HttpExchange t, String callback, String message) throws IOException {
-        System.out.println(message);
+        debug.log("Exception caught: " + message);
         JSONObject obj = new JSONObject();
         obj.put("error", message);
 
@@ -343,7 +325,7 @@ class WebAPI implements HttpHandler {
 
     private void noCallback(HttpExchange t) throws IOException {
         String msg = "Need callback in query";
-        System.out.println("Bad query: " + msg);
+        debug.log("Bad query: " + msg);
 
         byte[] message = msg.getBytes();
         t.sendResponseHeaders(UNPROCESSABLE_ENTITY, message.length);
@@ -352,14 +334,14 @@ class WebAPI implements HttpHandler {
         }
     }
 
-    private static String getJSONPMessage(Object j, String callback) {
+    private String getJSONPMessage(Object j, String callback) {
         StringBuilder message = new StringBuilder();
         message.append(callback);
         message.append("(");
 
         message.append(j.toString());
 
-        System.out.println("Response json:" + j.toString());
+        debug.log("Response json:" + j.toString());
 
         message.append(")");
 
