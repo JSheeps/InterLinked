@@ -98,15 +98,13 @@ public class Http implements HttpHandler {
         }
 
         switch (extension.toLowerCase()) {
-            // Text-based formats
             case "html":
                 return "text/plain";
             case "css":
                 return "text/css";
             case "js":
-                return "text/javascript";
+                return "application/javascript";
 
-            // Image formats
             case "png":
                 return "image/png";
             case "jpeg":
