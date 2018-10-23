@@ -54,7 +54,7 @@ public class Http implements HttpHandler {
         try {
             String type = Files.probeContentType(resourcePath);
             if (type == null){
-                headers.add("Content-Type", ".js");
+                headers.add("Content-Type", getMIME(resourcePath.toString()));
             }else {
                 headers.add("Content-Type", type);
             }
@@ -86,6 +86,35 @@ public class Http implements HttpHandler {
             try (OutputStream os = httpExchange.getResponseBody()) {
                 os.write(response);
             }
+        }
+    }
+
+    static String getMIME(String filePath) {
+        String extension;
+        {
+            int dotIndex = filePath.lastIndexOf('.');
+            if (dotIndex < 0) return "application/octet-stream";
+            extension = filePath.substring(dotIndex + 1);
+        }
+
+        switch (extension.toLowerCase()) {
+            case "html":
+                return "text/plain";
+            case "css":
+                return "text/css";
+            case "js":
+                return "application/javascript";
+
+            case "png":
+                return "image/png";
+            case "jpeg":
+            case "jpg":
+                return "image/jpeg";
+            case "bmp":
+                return "image/bmp";
+
+            default:
+                return "application/octet-stream";
         }
     }
 
