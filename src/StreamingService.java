@@ -25,7 +25,7 @@ public class StreamingService {
 
     }
 
-    public Song findSong(String query){return new Song();}
+    public static Song findSong(String query){return new Song();}
 
     //Argument is the authorization code returned to the redirect URI after the user authorizes us to access their account
     //Returns an access token and a refresh token
