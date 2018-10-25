@@ -52,8 +52,9 @@ public class Server {
 
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext("/", new Http(httpDocs));
-            server.createContext("/data", new WebAPI());
+            server.createContext("/", new EndpointHandler(httpDocs));
+//            server.createContext("/", new Http(httpDocs));
+//            server.createContext("/data", new WebAPI());
             server.setExecutor(new HttpThreadCreator());
 
             server.start();

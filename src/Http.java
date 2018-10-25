@@ -1,6 +1,5 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Http implements HttpHandler {
+public class Http {
     private Path httpDocs;
     private String defaultExpand;
 
@@ -29,11 +28,8 @@ public class Http implements HttpHandler {
     }
     public Http(String httpDocs, String defaultRootFolder) { this(httpDocs, defaultRootFolder, "index.html"); }
 
-    @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        // System.out.println("HTTP: " + httpExchange.getRemoteAddress());
         URI requestURI = httpExchange.getRequestURI().normalize();
-        // System.out.println(requestURI);
 
         String method = httpExchange.getRequestMethod();
         // Check if method supported
@@ -50,7 +46,7 @@ public class Http implements HttpHandler {
         headers.add("Access-Control-Allow-Origin", "*");
 
         Path resourcePath = getResourcePath(requestURI);
-        // System.out.println(resourcePath);
+
         try {
             String type = Files.probeContentType(resourcePath);
             if (type == null){
@@ -138,7 +134,7 @@ public class Http implements HttpHandler {
 
     public Path getResourcePath(URI uri) {
         String path = uri.getPath();
-        if (path.equals("/"))
+        if (path.equals("/") || path.startsWith("/login"))
             path = defaultExpand;
 
         if (path.charAt(0) == '/')

@@ -1,6 +1,5 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -12,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 // How to handle calls to the /data endpoint
-class WebAPI implements HttpHandler {
+class WebAPI {
     // List of currently logged in users and their socket addresses
     private HashMap<String, User> userAuthTokens;
     private User currentUser;
@@ -27,7 +26,7 @@ class WebAPI implements HttpHandler {
     }
 
     public void handle(HttpExchange t) throws IOException {
-        debug.log("------------------ Start new connection ------------------");
+        debug.log("------------------ Start API Connection ------------------");
 
         Headers headers = t.getResponseHeaders();
 
@@ -82,7 +81,31 @@ class WebAPI implements HttpHandler {
         debug.log("------------------ Connection Completed ------------------");
     }
 
+    public void serviceLogIn(HttpExchange t) {
+        QueryValues query = new QueryValues(t.getRequestURI().getQuery());
+        String platfomID = query.get("platfomID");
+        String code = query.get("code");
+        String authToken = query.get("state");
+
+        debug.log("~~~User Logged In To: " + platfomID);
+        debug.log("Code: " + code);
+        debug.log("State: " + authToken);
+
+        User user = userAuthTokens.get(authToken);
+
+        debug.log("Associated user: " + user.userName);
+
+        //todo: I was getting errors here, maybe a dependency thing
+        Spotify spotify = new Spotify();
+        user.tokens = spotify.Login(code);
+
+        debug.log("Set user's tokens.");
+
+        debug.log("~~~Finished Login");
+    }
+
     // Redirects queries
+
     private Object commandRedirect(QueryValues query) throws Exception {
 
         debug.log("Connection sent keys{");
@@ -179,8 +202,8 @@ class WebAPI implements HttpHandler {
 
         return jsonArray;
     }
-
     // Method to handle "signup" query. Returns json with true on success and false on failure
+
     @SuppressWarnings("unchecked")
     private JSONObject signUp(QueryValues query) {
         JSONObject json = new JSONObject();
@@ -197,8 +220,8 @@ class WebAPI implements HttpHandler {
 
         return json;
     }
-
     // Method to handle "login" query. Returns json with true on success and false on failure
+
     @SuppressWarnings("unchecked")
     private JSONObject logIn(QueryValues query) throws Exception {
         JSONObject json = new JSONObject();
@@ -227,8 +250,8 @@ class WebAPI implements HttpHandler {
         json.put("result", b);
         return json;
     }
-
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
+
     @SuppressWarnings("unchecked")
     private JSONArray get(QueryValues query) throws Exception {
         if(currentUser == null)
@@ -350,7 +373,6 @@ class WebAPI implements HttpHandler {
 
         return message.toString();
     }
-
 }
 
 // --------------------------------------------  Exceptions  ------------------------------------------------------

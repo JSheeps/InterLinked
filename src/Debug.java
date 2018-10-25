@@ -12,6 +12,11 @@ class Debug {
             System.out.println(msg);
     }
 
+    void logVerbose(String msg){
+        if(isVerbose)
+            System.out.println(msg);
+    }
+
     void printStackTrace(Exception e) {
         if(isVerbose)
             e.printStackTrace();
