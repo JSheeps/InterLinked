@@ -251,6 +251,52 @@ class Playlist {
         return true;
     }
 
+    public List<Playlist> fetchPreviousStates(){
+
+        // Start by getting each playlistHistory ID
+        String playlistHistoryIDFetch = "SELECT * FROM PlaylistHistory WHERE PlaylistID =" + ID + " ORDER BY CreatedDate DESC";
+
+        SqlHelper helper = new SqlHelper();
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(playlistHistoryIDFetch);
+
+        List<Integer> playlistHistoryIDs = new ArrayList<>();
+
+        try{
+            while(resultSet.next()){
+                playlistHistoryIDs.add(resultSet.getInt("ID"));
+            }
+        }catch (SQLException e){
+            System.err.println(e);
+            return  null;
+        }
+
+        // Next, fetch the songs in each playlistHistory state and make a new playlist using them
+        List<Playlist> previousPlaylistStates = new ArrayList<>();
+        for(int historyID : playlistHistoryIDs){
+            String songFetch = "SELECT * FROM PlalistHistorySongs WHERE PlaylistHistoryID = " + historyID;
+
+            ResultSet resultSet1 = helper.ExecuteQueryWithReturn(songFetch);
+
+            Playlist previousState = new Playlist();
+            previousState.Name = this.Name;
+            previousState.ID = this.ID;
+
+            try{
+                while(resultSet.next()){
+                    int songID = resultSet.getInt("SongID");
+                    previousState.playlist.add(Song.fetchSongByID(songID));
+                }
+            }catch(SQLException e){
+                System.err.println(e);
+                return null;
+            }
+
+            previousPlaylistStates.add(previousState);
+        }
+
+        return previousPlaylistStates;
+    }
+
     public void setName(String name) {
         this.Name = name;
     }
