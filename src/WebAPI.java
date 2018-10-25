@@ -1,7 +1,6 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -56,7 +55,7 @@ class WebAPI implements HttpHandler {
         // Process Query into JSON
         try {
             json = commandRedirect(query);
-        } catch (BadQueryException | UnauthorizedException | ServerErrorException | UnauthenticatedException e) {
+        } catch (BadQueryException | NotLoggedInToService | ServerErrorException | UnauthenticatedException e) {
             exceptionHandler(t, callback, e.getMessage());
             t.close();
             debug.printStackTrace(e);
@@ -86,7 +85,11 @@ class WebAPI implements HttpHandler {
     // Redirects queries
     private Object commandRedirect(QueryValues query) throws Exception {
 
-        debug.log("Connection sent keys:" + query.keySet());
+        debug.log("Connection sent keys{");
+        for(String s : query.keySet()){
+            debug.log("\t" + s + ", " + query.get(s));
+        }
+        debug.log("}");
 
         if (query.containsKey("get"))
             return get(query);
@@ -135,7 +138,7 @@ class WebAPI implements HttpHandler {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
-            throw new UnauthorizedException("User needs to log in to streaming service");
+            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         if(!query.containsKey("playlist")){
             return get(query);
@@ -158,7 +161,7 @@ class WebAPI implements HttpHandler {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
-            throw new UnauthorizedException("User needs to log in to streaming service");
+            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
 
@@ -231,7 +234,7 @@ class WebAPI implements HttpHandler {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
-            throw new UnauthorizedException("User needs to log in to streaming service");
+            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
 
@@ -255,7 +258,7 @@ class WebAPI implements HttpHandler {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
-            throw new UnauthorizedException("User needs to log in to streaming service");
+            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
         String pid = query.get("playlist");
@@ -361,6 +364,12 @@ class BadQueryException extends Exception{
 class UnauthenticatedException extends Exception{
     UnauthenticatedException(String message) {
         super("Unauthenticated: " + message);
+    }
+}
+
+class NotLoggedInToService extends Exception{
+    NotLoggedInToService(String message) {
+        super("NotLoggedInToService: " + message);
     }
 }
 
