@@ -9,6 +9,7 @@ class Playlist {
     public int ID;
     public int UserID;
     public String Name;
+    public String spotifyId;
     private List<Song> playlist = new ArrayList<>();
 
     public void addSong(Song song) {
@@ -303,4 +304,31 @@ class Playlist {
 
     public int getNumSongs(){return playlist.size();}
 
+    public static Playlist getPlaylistById(int id){
+        String userQuery = "SELECT * FROM Playlists WHERE ID = '" + id + "'";
+        SqlHelper helper = new SqlHelper();
+
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(userQuery);
+
+        try{
+            if(resultSet.next()){
+                Playlist playlist = new Playlist();
+                playlist.ID = resultSet.getInt("ID");
+                playlist.Name = resultSet.getString("Name");
+                return playlist;
+            }else{
+                return null;
+            }
+        }catch (SQLException e){
+            // TODO
+            System.err.println(e);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Playlist playlist = (Playlist) obj;
+        return this.Name.equals(playlist.Name);
+    }
 }

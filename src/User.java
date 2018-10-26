@@ -4,7 +4,6 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class User {
 
@@ -12,7 +11,7 @@ public class User {
     String userName;
     String email;
     Pair<String, String> tokens;
-    List<Playlist> playlistList = new ArrayList<>();
+    ArrayList<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){
         this.ID = ID;

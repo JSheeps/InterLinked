@@ -25,7 +25,7 @@ public class Spotify extends StreamingService
     private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     //This is the URL that the user will be sent to after authorizing us to access their account
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("");
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/");
 
     private static SpotifyApi.Builder build = new SpotifyApi.Builder()
             .setClientId(client_ID)
@@ -69,6 +69,7 @@ public class Spotify extends StreamingService
 
     public String[] getPlaylistNames(Pair<String, String> tokens){
         String [] playlist_names = {};
+
         try {
             SpotifyApi spotifyApi = build.build();
             //The access token must be set to ensure the correct user's playlists are being searched
@@ -84,6 +85,7 @@ public class Spotify extends StreamingService
 
             //Parsing playlist names into a string array
             playlist_names = new String[playlists.getTotal()];
+
             for (int i=0;i<playlists.getTotal(); i++){
                 playlist_names[i] = (playlists.getItems()[i]).getName();
             }
@@ -298,4 +300,34 @@ public class Spotify extends StreamingService
         } catch (Exception e) {e.printStackTrace();}
         return new Playlist[] {};
     }
+
+    // Added this to get a list of playlists and their spotify id's
+    public static ArrayList<Playlist> getPlaylists(Pair<String, String> tokens){
+        ArrayList<Playlist> userPlaylists = new ArrayList<>();
+
+        try {
+            SpotifyApi spotifyApi = build.build();
+            //The access token must be set to ensure the correct user's playlists are being searched
+            spotifyApi.setAccessToken(tokens.getKey());
+
+            //Requesting playlist information from api
+            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                    .getListOfCurrentUsersPlaylists()
+                    .limit(10)
+                    .offset(0)
+                    .build();
+            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+
+            //Parsing playlist names into a string array
+            for (int i=0;i<playlists.getTotal(); i++){
+                Playlist playlist = new Playlist();
+                playlist.spotifyId = playlists.getItems()[i].getId();
+                playlist.Name = playlists.getItems()[i].getName();
+                userPlaylists.add(playlist);
+            }
+
+        } catch (Exception e) {e.printStackTrace();}
+        return userPlaylists;
+    }
+
 }

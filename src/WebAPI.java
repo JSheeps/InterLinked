@@ -1,14 +1,19 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 
 // How to handle calls to the /data endpoint
 class WebAPI {
@@ -16,12 +21,13 @@ class WebAPI {
     private HashMap<String, User> userAuthTokens;
     private User currentUser;
     private Debug debug;
+    String tokenFilePath = "data/tokens.txt";
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
 
     WebAPI() {
-        userAuthTokens = new HashMap<>();
+        userAuthTokens = getAuthTokens();
         debug = new Debug(true, false);
     }
 
@@ -88,24 +94,23 @@ class WebAPI {
         String authToken = query.get("state");
 
         debug.log("~~~User Logged In To: " + platfomID);
-        debug.log("Code: " + code);
-        debug.log("State: " + authToken);
+        debug.log("~~~Code: " + code);
+        debug.log("~~~State: " + authToken);
 
         User user = userAuthTokens.get(authToken);
 
-        debug.log("Associated user: " + user.userName);
+        debug.log("~~~Associated user: " + user.userName);
 
-        //todo: I was getting errors here, maybe a dependency thing
         Spotify spotify = new Spotify();
         user.tokens = spotify.Login(code);
 
-        debug.log("Set user's tokens.");
+        debug.log("~~~Set user's tokens: " + user.tokens.toString());
 
         debug.log("~~~Finished Login");
     }
 
-    // Redirects queries
 
+    // Redirects queries
     private Object commandRedirect(QueryValues query) throws Exception {
 
         debug.log("Connection sent keys{");
@@ -138,8 +143,8 @@ class WebAPI {
         throw new BadQueryException("Query has no meaning");
     }
 
-    // ----------------------------------------  Query Commands  ------------------------------------------------------
 
+    // ----------------------------------------  Query Commands  ------------------------------------------------------
     @SuppressWarnings("unchecked")
     private JSONArray search(QueryValues query) {
 
@@ -151,7 +156,7 @@ class WebAPI {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("result", song.getSpotifyURI());
-        jsonArray.add(jsonObject);
+        jsonArray.put(jsonObject);
 
         return jsonArray;
     }
@@ -163,19 +168,44 @@ class WebAPI {
         if(currentUser.tokens == null)
             throw new NotLoggedInToService("User needs to log in to streaming service");
 
-        if(!query.containsKey("playlist")){
-            return get(query);
-        }
-
         JSONArray jsonArray = new JSONArray();
 
+        if(!query.containsKey("playlist")){
+
+            ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
+            currentUser.FetchPlaylists();
+            for(Playlist spotifyPlaylist : playlists){
+                boolean newSpotifyPlaylist = true;
+                for(Playlist databasePlaylist : currentUser.playlistList){
+                    if(spotifyPlaylist.equals(databasePlaylist)){
+                        newSpotifyPlaylist = false;
+                    }
+                }
+                if(newSpotifyPlaylist){
+                    currentUser.playlistList.add(spotifyPlaylist);
+                }
+            }
+
+            for(Playlist playlist : currentUser.playlistList){
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("name", playlist.Name);
+                jsonObject.put("id", playlist.ID);
+                jsonArray.put(jsonObject);
+            }
+
+            return jsonArray;
+        }
+
+        int playlistId = Integer.parseInt(query.get("playlist"));
+        Playlist playlist = Playlist.getPlaylistById(playlistId);
+
         Spotify spotify = new Spotify();
-        Playlist playlist = spotify.importPlaylist(currentUser.tokens, query.get("playlist"));
+        Playlist importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);
         jsonObject.put("id", playlist.ID);
-        jsonArray.add(jsonObject);
+        jsonArray.put(jsonObject);
 
         return jsonArray;
     }
@@ -202,8 +232,8 @@ class WebAPI {
 
         return jsonArray;
     }
-    // Method to handle "signup" query. Returns json with true on success and false on failure
 
+    // Method to handle "signup" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
     private JSONObject signUp(QueryValues query) {
         JSONObject json = new JSONObject();
@@ -220,8 +250,8 @@ class WebAPI {
 
         return json;
     }
-    // Method to handle "login" query. Returns json with true on success and false on failure
 
+    // Method to handle "login" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
     private JSONObject logIn(QueryValues query) throws Exception {
         JSONObject json = new JSONObject();
@@ -236,8 +266,7 @@ class WebAPI {
                 User user = User.getUserByUserName(username);
 
                 if (user != null) {
-                    String authString = generateAuthToken();
-                    userAuthTokens.put(authString, user);
+                    String authString = generateAuthToken(user);
                     json.put("authenticate", authString);
                 }
                 else
@@ -250,8 +279,8 @@ class WebAPI {
         json.put("result", b);
         return json;
     }
-    // Method to handle "get" query. Returns json with a list of playlist objects for current user
 
+    // Method to handle "get" query. Returns json with a list of playlist objects for current user
     @SuppressWarnings("unchecked")
     private JSONArray get(QueryValues query) throws Exception {
         if(currentUser == null)
@@ -261,16 +290,17 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
 
+
         boolean b = currentUser.FetchPlaylists();
         debug.log("Result of user.FetchPlaylists(): " + b);
 
-        List<Playlist> playlists = currentUser.playlistList;
+        ArrayList<Playlist> playlists = currentUser.playlistList;
 
         for(Playlist playlist : playlists){
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("name", playlist.Name);
             jsonObject.put("id", playlist.ID);
-            jsonArray.add(jsonObject);
+            jsonArray.put(jsonObject);
         }
 
         return jsonArray;
@@ -302,14 +332,14 @@ class WebAPI {
             json.put("explicit", song.explicit);
             json.put("album", song.album);
             json.put("duration", song.duration);
-            jsonArray.add(json);
+            jsonArray.put(json);
         }
 
         return jsonArray;
     }
 
-    // ----------------------------------------  Authentication  ------------------------------------------------------
 
+    // ----------------------------------------  Authentication  ------------------------------------------------------
     private void authenticate(QueryValues query) {
         String authToken = query.get("authenticate");
         if(authToken == null){
@@ -319,16 +349,50 @@ class WebAPI {
         currentUser = userAuthTokens.get(authToken);
     }
 
-    private String generateAuthToken() {
+    private String generateAuthToken(User user) {
         String s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         SecureRandom random = new SecureRandom();
-        StringBuilder stringBuilder = new StringBuilder();
-        for(int i = 0; i < 10; i++){
-            stringBuilder.append(s.charAt(random.nextInt(s.length())));
+        String token;
+         do {
+             StringBuilder stringBuilder = new StringBuilder();
+             for (int i = 0; i < 10; i++) {
+                 stringBuilder.append(s.charAt(random.nextInt(s.length())));
+             }
+
+             token = stringBuilder.toString();
+         } while(userAuthTokens.containsKey(token));
+
+        debug.log("Created token: " + token);
+
+        userAuthTokens.put(token, user);
+        String save = token + "\t" + user.userName + "\n";
+
+        try {
+            Files.write(Paths.get(tokenFilePath), save.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        debug.log("Created token: " + stringBuilder.toString());
-        return stringBuilder.toString();
+        return token;
+    }
+
+    private HashMap<String, User> getAuthTokens() {
+        Scanner scanner = null;
+        List<String> strings = null;
+        try {
+            strings = Files.readAllLines(Paths.get(tokenFilePath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        HashMap<String,User> map = new HashMap<>();
+
+        for(String line : strings) {
+            String[] columns = line.split("\\s");
+            map.put(columns[0],User.getUserByUserName(columns[1]));
+        }
+
+        return map;
     }
 
 
