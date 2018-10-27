@@ -17,10 +17,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
 
-
-//TODO refresh token handling
 public class Spotify extends StreamingService
 {
     private static final String client_ID = "150469a5b0d949a9b3693a73edc3b46d";
@@ -29,7 +26,12 @@ public class Spotify extends StreamingService
 
     //This is the URL that the user will be sent to after authorizing us to access their account
     private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/");
-    private static final SpotifyApi.Builder build = new SpotifyApi.Builder().setClientId(client_ID).setClientSecret(client_Secret).setRedirectUri(redirectURI);
+
+    private static SpotifyApi.Builder build = new SpotifyApi.Builder()
+            .setClientId(client_ID)
+            .setClientSecret(client_Secret)
+            .setRedirectUri(redirectURI);
+
     //URL the user is sent to so they can allow us to access their account
     //State allows the callback to be matched to a user, because state is passed as a parameter with the GET request
     public static String getAuthorizationURL(String state){
@@ -44,24 +46,30 @@ public class Spotify extends StreamingService
     }
 
     //Code retrieved at redirect_uri after user authorization has passed, return value is a pair <accessToken, refreshToken>
-    public static Pair<String,String> Login(String code) {
-        Pair<String, String> tokens = new Pair<>("","");
+    public Pair<String,String> Login(String code) {
         try {
             SpotifyApi spotifyApi = build.build();
             final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
-            final AuthorizationCodeCredentials c = authorizationcoderequest.execute();
+            AuthorizationCodeCredentials c = authorizationcoderequest.execute();
 
-            tokens = new Pair<String, String> (c.getAccessToken(),c.getRefreshToken());
+            Pair<String, String> tokens = new Pair<String, String> (c.getAccessToken(),c.getRefreshToken());
+
+            return tokens;
+        }
+        catch (BadRequestException e){
+            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-        return tokens;
+        return new Pair<String, String> ("error","error");
     }
 
-    public static String[] getPlaylistNames(Pair<String, String> tokens){
+    public String[] getPlaylistNames(Pair<String, String> tokens){
         String [] playlist_names = {};
+
         try {
             SpotifyApi spotifyApi = build.build();
             //The access token must be set to ensure the correct user's playlists are being searched
@@ -77,6 +85,7 @@ public class Spotify extends StreamingService
 
             //Parsing playlist names into a string array
             playlist_names = new String[playlists.getTotal()];
+
             for (int i=0;i<playlists.getTotal(); i++){
                 playlist_names[i] = (playlists.getItems()[i]).getName();
             }
@@ -85,11 +94,9 @@ public class Spotify extends StreamingService
         return playlist_names;
     }
 
-    //TODO add an exception for if a playlist hasn't been imported correctly
-    public static Playlist importPlaylist(Pair<String, String> tokens, String playlistName) throws InterLinked_Import_Exception{
+    //TODO add an exception for if a playlist hasnt been imported correctly
+    public Playlist importPlaylist(Pair<String, String> tokens, String playlistName){
         Playlist return_list = new Playlist();
-        Vector<String> missingSongNames = new Vector<String>();
-        Boolean missingSongsFlag = false;
         try{
             SpotifyApi spotifyApi = build.build();
             spotifyApi.setAccessToken(tokens.getKey());
@@ -120,28 +127,23 @@ public class Spotify extends StreamingService
                         Track thisSong = (tracks.getItems())[j].getTrack();
                         Song s = trackToSong(thisSong);
                         return_list.addSong(s);
-                    }
-                    //check if local playlist has the same number of songs as the Spotify list
-                    if (return_list.getSize() != tracks.getTotal()){
-                        //TODO missing songs
-                        for (int j=0; j<tracks.getTotal(); j++){
+
+                        //check if local playlist has the same number of songs as the Spotify list
+                        if (return_list.getSize() != tracks.getTotal()){
+                            //TODO error during import, not all songs were added
                         }
-                        missingSongsFlag = true;
+
                     }
-                    break;
                 }
             }
 
         }catch (Exception e){
 
         }
-        if (missingSongsFlag){
-
-        }
         return return_list;
     }
 
-    public static void exportPlaylist(Pair<String,String> tokens,Playlist playlist) {
+    public void exportPlaylist(Pair<String,String> tokens,Playlist playlist) {
         List<String> uris = new ArrayList<>();
 
         for (int i = 0; i < playlist.getNumSongs(); i++) {
@@ -256,7 +258,7 @@ public class Spotify extends StreamingService
     }
 
     //tokens are <accessToken, refreshToken>
-    public static Playlist[] importAllPlaylists(Pair<String, String> tokens)
+    public Playlist[] importAllPlaylists(Pair<String, String> tokens)
     {
         SpotifyApi spotifyApi = build.build();
         try {
@@ -298,4 +300,34 @@ public class Spotify extends StreamingService
         } catch (Exception e) {e.printStackTrace();}
         return new Playlist[] {};
     }
+
+    // Added this to get a list of playlists and their spotify id's
+    public static ArrayList<Playlist> getPlaylists(Pair<String, String> tokens){
+        ArrayList<Playlist> userPlaylists = new ArrayList<>();
+
+        try {
+            SpotifyApi spotifyApi = build.build();
+            //The access token must be set to ensure the correct user's playlists are being searched
+            spotifyApi.setAccessToken(tokens.getKey());
+
+            //Requesting playlist information from api
+            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                    .getListOfCurrentUsersPlaylists()
+                    .limit(10)
+                    .offset(0)
+                    .build();
+            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+
+            //Parsing playlist names into a string array
+            for (int i=0;i<playlists.getTotal(); i++){
+                Playlist playlist = new Playlist();
+                playlist.spotifyId = playlists.getItems()[i].getId();
+                playlist.Name = playlists.getItems()[i].getName();
+                userPlaylists.add(playlist);
+            }
+
+        } catch (Exception e) {e.printStackTrace();}
+        return userPlaylists;
+    }
+
 }
