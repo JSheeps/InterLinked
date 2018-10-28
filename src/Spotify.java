@@ -214,7 +214,11 @@ public class Spotify extends StreamingService
                     .offset(0)
                     .build();
             Paging<Track> results = searchRequest.execute();
-            match = results.getItems()[0];
+            Track[] resultSongs = results.getItems();
+            if (resultSongs.length == 0)
+                return null;
+
+            match = resultSongs[0];
             s = trackToSong(match);
             System.out.println(s.getTitle());
 

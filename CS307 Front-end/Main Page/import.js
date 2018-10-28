@@ -48,6 +48,7 @@ function importPlayList(platformID, playlistID) {
 			return;
 		}
 		console.log(result);
+		alert("Imported Successfully!");
 		viewImportList(plsel);
 	});
 }

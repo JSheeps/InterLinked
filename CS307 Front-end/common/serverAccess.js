@@ -52,6 +52,12 @@ function mergeLists(platformID, playlistID1, playlistID2) {
 	});
 }
 
+function serverSearch(searchText) {
+	return sendMessage({
+		search: searchText
+	});
+}
+
 function sendMessage(myData) {
 	var authToken = getAuthToken();
 	if (authToken) {
@@ -62,12 +68,4 @@ function sendMessage(myData) {
 		data: myData,
 		dataType: "jsonp"
 	});
-}
-
-// function to simulate ajax call.
-function simulateAjax(obj) {
-	return {
-		done: function(resolveFunction) { resolveFunction(obj); return this; },
-		fail: function(errorFunction) { return this; }
-	};
 }

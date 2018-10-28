@@ -34,6 +34,5 @@ function viewExportablePlaylists(sel) {
 }
 
 function tableText(table, text) {
-	console.log(text);
 	return table.after("<tr><td><i>" + text + "</i></td></tr>");
 }

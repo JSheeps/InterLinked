@@ -146,16 +146,22 @@ class WebAPI {
 
     // ----------------------------------------  Query Commands  ------------------------------------------------------
     @SuppressWarnings("unchecked")
-    private JSONArray search(QueryValues query) {
-
+    private Object search(QueryValues query) {
         String search = query.get("search");
 
         Song song = Spotify.findSong(search);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
+        if (song == null) {
+            jsonObject.put("error", "Song not found");
+            return jsonObject;
+        }
 
-        jsonObject.put("result", song.getSpotifyURI());
+        JSONArray jsonArray = new JSONArray();
+
+        jsonObject.put("title", song.getTitle());
+        jsonObject.put("artist", song.getArtist());
+        jsonObject.put("URL", song.getSpotifyURI());
         jsonArray.put(jsonObject);
 
         return jsonArray;
