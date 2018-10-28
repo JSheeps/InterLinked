@@ -161,7 +161,7 @@ class WebAPI {
 
         jsonObject.put("title", song.getTitle());
         jsonObject.put("artist", song.getArtist());
-        jsonObject.put("URL", song.getSpotifyURI());
+        jsonObject.put("SpotifyURL", Spotify.listenToSong(song));
         jsonArray.put(jsonObject);
 
         return jsonArray;

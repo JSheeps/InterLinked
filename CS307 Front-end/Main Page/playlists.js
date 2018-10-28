@@ -70,8 +70,13 @@ function search() {
 					resultString += ", by " + result.artist;
 			}
 			
-			if (resultString.length != 0)
+			if (resultString.length != 0) {
 				searchResults.append("<p class='black'>" + resultString + "</p>");
+				
+				if (result.SpotifyURL) {
+					searchResults.append("<a class='black' href=" + result.SpotifyURL + ">Spotify</a>");
+				}
+			}
 			
 		}
 	});
