@@ -12,6 +12,10 @@ class Playlist {
     public String spotifyId;
     private List<Song> playlist = new ArrayList<>();
 
+    public void clearSongs(){
+        playlist.clear();
+    }
+
     public void addSong(Song song) {
         playlist.add(song);
     }

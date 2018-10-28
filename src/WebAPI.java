@@ -21,7 +21,7 @@ class WebAPI {
     private HashMap<String, User> userAuthTokens;
     private User currentUser;
     private Debug debug;
-    String tokenFilePath = "data/tokens.txt";
+    final private String tokenFilePath = "data/tokens.txt";
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
@@ -182,6 +182,7 @@ class WebAPI {
                     }
                 }
                 if(newSpotifyPlaylist){
+                    spotifyPlaylist.save(currentUser);
                     currentUser.playlistList.add(spotifyPlaylist);
                 }
             }
@@ -198,11 +199,25 @@ class WebAPI {
 
         // Import a playlist
         int playlistId = Integer.parseInt(query.get("playlist"));
-        // TODO: the playlistId is not in the database because it hasn't been imported yet. Give these playlists a ID.
         Playlist playlist = Playlist.getPlaylistById(playlistId);
 
+        if(playlist == null){
+            throw new ServerErrorException("Playlist not found");
+        }
+
         Spotify spotify = new Spotify();
-        Playlist importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
+        List<Song> importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
+
+        playlist.clearSongs();
+
+        debug.log("Found songs:");
+        for(Song song : importPlaylist){
+            debug.log(song.toString());
+            playlist.addSong(song);
+            //todo Uncomment to save imported songs to database
+//            song.save();
+        }
+//        playlist.savePlaylistState();
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);

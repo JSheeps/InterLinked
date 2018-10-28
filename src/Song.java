@@ -22,7 +22,7 @@ public class Song {
     }
 
     public void setAlbum(String name) {
-        this.title = name;
+        this.album = name;
     }
 
     public void setArtist(String name) {

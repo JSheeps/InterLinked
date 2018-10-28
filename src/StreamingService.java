@@ -1,5 +1,8 @@
 import javafx.util.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Douglas on 9/22/2018.
  */
@@ -12,7 +15,7 @@ public class StreamingService {
     //Use this function to import a specific Playlist by name
     //Arguments are <Access Token, Refresh Token>, and name of playlist to be imported
     //as returned by getPlaylistNames()
-    public Playlist importPlaylist(Pair<String,String> tokens, String playlistName){return new Playlist();}
+    public List<Song> importPlaylist(Pair<String,String> tokens, String playlistName){return new ArrayList<>();}
 
     //"Legacy Function" that imports all playlists
     public Playlist[] importAllPlaylists(Pair<String, String> tokens)
