@@ -25,7 +25,7 @@ public class Spotify extends StreamingService
     private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     //This is the URL that the user will be sent to after authorizing us to access their account
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/");
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/?platformID=Spotify");
 
     private static SpotifyApi.Builder build = new SpotifyApi.Builder()
             .setClientId(client_ID)

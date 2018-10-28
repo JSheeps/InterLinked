@@ -14,7 +14,7 @@ public class SpotifyTest {
         String code = "";
         Spotify s = new Spotify();
         try {
-            System.out.println(s.getAuthorizationURL());
+            System.out.println(s.getAuthorizationURL(""));
             ServerSocket ss = new ServerSocket(15000);
             Socket client = ss.accept();
             BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));

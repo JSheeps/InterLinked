@@ -56,7 +56,7 @@ public class Server {
             server.setExecutor(new HttpThreadCreator());
 
             server.start();
-
+            System.out.println("Server started on port " + port);
         } catch (Exception e) {
             e.printStackTrace();
         }

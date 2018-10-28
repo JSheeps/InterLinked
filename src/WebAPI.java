@@ -89,11 +89,11 @@ class WebAPI {
 
     public void serviceLogIn(HttpExchange t) {
         QueryValues query = new QueryValues(t.getRequestURI().getQuery());
-        String platfomID = query.get("platfomID");
+        String platformID = query.get("platformID");
         String code = query.get("code");
         String authToken = query.get("state");
 
-        debug.log("~~~User Logged In To: " + platfomID);
+        debug.log("~~~User Logged In To: " + platformID);
         debug.log("~~~Code: " + code);
         debug.log("~~~State: " + authToken);
 
@@ -171,7 +171,7 @@ class WebAPI {
         JSONArray jsonArray = new JSONArray();
 
         if(!query.containsKey("playlist")){
-
+            // Get list of importable playlists
             ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
             currentUser.FetchPlaylists();
             for(Playlist spotifyPlaylist : playlists){
@@ -196,7 +196,9 @@ class WebAPI {
             return jsonArray;
         }
 
+        // Import a playlist
         int playlistId = Integer.parseInt(query.get("playlist"));
+        // TODO: the playlistId is not in the database because it hasn't been imported yet. Give these playlists a ID.
         Playlist playlist = Playlist.getPlaylistById(playlistId);
 
         Spotify spotify = new Spotify();
