@@ -46,11 +46,18 @@
 		<div id="playlistsWindow">
             <div id="mainContents">
                 <table id="playlistTable" align="center">
-                    <tr> <th> My Playlists </th> </tr>
+					<tr> <th></th> <th> My Playlists </th> </tr>
                 </table>
             </div>
         </div>
-            
+
+		<!-- Add friend's playlist -->
+		<div class="addFromFriend">
+			<input type="text" placeholder="Enter a friend's playlist token" id="saddFromFriend">
+		</div>
+		<button id="addPlaylistBtn" type="submit" onclick="addFriendPlaylist">Add Friend's Playlist</button>
+        <!-- End Add friend's playlist-->
+
         <a class="logout" onclick="logoutRedirect()">Logout</a>
         
         
