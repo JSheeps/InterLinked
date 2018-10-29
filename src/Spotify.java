@@ -9,6 +9,7 @@ import com.wrapper.spotify.requests.authorization.authorization_code.Authorizati
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.playlists.*;
+import org.apache.commons.lang3.tuple.MutablePair;
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import javafx.util.Pair;
@@ -35,7 +36,7 @@ public class Spotify extends StreamingService
             .setClientSecret(client_Secret)
             .setRedirectUri(redirectURI);
 
-    private static Pair<String,String> handleTokenRefresh(Pair<String, String> tokens){
+    private static MutablePair<String,String> handleTokenRefresh(MutablePair<String, String> tokens){
         if (!refreshDebugFlag) return tokens;
 
         SpotifyApi s = build.build();
@@ -43,7 +44,7 @@ public class Spotify extends StreamingService
         s.setRefreshToken(tokens.getValue());
         try {
             AuthorizationCodeCredentials credentials = s.authorizationCodeRefresh().build().execute();
-            tokens = new Pair<>(credentials.getAccessToken(),credentials.getRefreshToken());
+            tokens.setLeft(credentials.getAccessToken());
             return tokens;
         } catch (Exception e){e.printStackTrace();}
         return tokens;
@@ -63,14 +64,12 @@ public class Spotify extends StreamingService
     }
 
     //Code retrieved at redirect_uri after user authorization has passed, return value is a pair <accessToken, refreshToken>
-    public static Pair<String,String> Login(String code) {
+    public static MutablePair<String,String> Login(String code) {
         try {
             SpotifyApi spotifyApi = build.build();
             final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
             AuthorizationCodeCredentials c = authorizationcoderequest.execute();
-
-            Pair<String, String> tokens = new Pair<String, String> (c.getAccessToken(),c.getRefreshToken());
-
+            MutablePair<String, String> tokens = new MutablePair<String, String> (c.getAccessToken(),c.getRefreshToken());
             return tokens;
         }
         catch (BadRequestException e){
@@ -81,10 +80,10 @@ public class Spotify extends StreamingService
         {
             e.printStackTrace();
         }
-        return new Pair<String, String> ("error","error");
+        return new MutablePair<String, String> ("error","error");
     }
 
-    public static String[] getPlaylistNames(Pair<String, String> tokens){
+    public static String[] getPlaylistNames(MutablePair<String, String> tokens){
         String [] playlist_names = {};
         tokens = handleTokenRefresh(tokens);
         try {
@@ -112,7 +111,7 @@ public class Spotify extends StreamingService
     }
 
     //TODO add an exception for if a playlist hasnt been imported correctly
-    public static List<Song> importPlaylist(Pair<String, String> tokens, String playlistName){
+    public static List<Song> importPlaylist(MutablePair<String, String> tokens, String playlistName){
         handleTokenRefresh(tokens);
         List<Song> return_list = new ArrayList<>();
         try{
@@ -147,9 +146,8 @@ public class Spotify extends StreamingService
 
                         //check if local playlist has the same number of songs as the Spotify list
                         if (return_list.size() != tracks.getTotal()){
-                            //TODO error during import, not all songs were added
-                        }
 
+                        }
                     }
                 }
             }
@@ -160,7 +158,7 @@ public class Spotify extends StreamingService
         return return_list;
     }
 
-    public static void exportPlaylist(Pair<String,String> tokens,Playlist playlist) {
+    public static ArrayList<String> exportPlaylist(MutablePair<String,String> tokens,Playlist playlist) {
         List<String> uris = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
         for (int i = 0; i < playlist.getNumSongs(); i++) {
@@ -195,11 +193,17 @@ public class Spotify extends StreamingService
             GetPlaylistRequest gpr = spotifyApi.getPlaylist(userID,playlist1.getId()).build();
             com.wrapper.spotify.model_objects.specification.Playlist temp = gpr.execute();
             if(temp.getTracks().getTotal() != playlist.getSize()){
-                //TODO error, not all songs added to playlist
+                Paging<PlaylistTrack> success_list = temp.getTracks();
+                for (int j=0; j<success_list.getTotal(); j++){
+                    if (uris.contains(success_list.getItems()[j].getTrack().getUri())){
+
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return new ArrayList<String>() {};
     }
 
 
@@ -280,7 +284,7 @@ public class Spotify extends StreamingService
     }
 
     // Added this to get a list of playlists and their spotify id's
-    public static ArrayList<Playlist> getPlaylists(Pair<String, String> tokens){
+    public static ArrayList<Playlist> getPlaylists(MutablePair<String, String> tokens){
         ArrayList<Playlist> userPlaylists = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
         try {

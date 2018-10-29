@@ -1,4 +1,5 @@
 import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.sql.Date;
 import java.sql.ResultSet;
@@ -10,7 +11,7 @@ public class User {
     int ID;
     String userName;
     String email;
-    Pair<String, String> tokens;
+    MutablePair<String, String> tokens;
     ArrayList<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){

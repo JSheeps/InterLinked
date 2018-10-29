@@ -101,8 +101,7 @@ class WebAPI {
 
         debug.log("~~~Associated user: " + user.userName);
 
-        Spotify spotify = new Spotify();
-        user.tokens = spotify.Login(code);
+        user.tokens = Spotify.Login(code);
 
         debug.log("~~~Set user's tokens: " + user.tokens.toString());
 

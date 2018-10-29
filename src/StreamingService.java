@@ -18,18 +18,18 @@ public class StreamingService {
     public static List<Song> importPlaylist(Pair<String,String> tokens, String playlistName){return new ArrayList<>();}
 
     //
-    public static void exportPlaylist(Pair<String,String> tokens, Playlist playlist){
-
+    public static ArrayList<String> exportPlaylist(Pair<String,String> tokens, Playlist playlist){
+        return new ArrayList<>();
     }
 
     public static Song findSong(String query){return new Song();}
 
     //Argument is the authorization code returned to the redirect URI after the user authorizes us to access their account
     //Returns an access token and a refresh token
-    public static Pair<String, String> Login(String code)
-    {
-        return new Pair<String,String>("","");
-    }
+   // public static Pair<String, String> Login(String code)
+  //  {
+  //      return new Pair<String,String>("","");
+    //}
 
 
     public static String search(String query)
