@@ -21,7 +21,7 @@ class WebAPI {
     private HashMap<String, User> userAuthTokens;
     private User currentUser;
     private Debug debug;
-    String tokenFilePath = "data/tokens.txt";
+    final private String tokenFilePath = "data/tokens.txt";
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
@@ -89,11 +89,11 @@ class WebAPI {
 
     public void serviceLogIn(HttpExchange t) {
         QueryValues query = new QueryValues(t.getRequestURI().getQuery());
-        String platfomID = query.get("platfomID");
+        String platformID = query.get("platformID");
         String code = query.get("code");
         String authToken = query.get("state");
 
-        debug.log("~~~User Logged In To: " + platfomID);
+        debug.log("~~~User Logged In To: " + platformID);
         debug.log("~~~Code: " + code);
         debug.log("~~~State: " + authToken);
 
@@ -146,16 +146,22 @@ class WebAPI {
 
     // ----------------------------------------  Query Commands  ------------------------------------------------------
     @SuppressWarnings("unchecked")
-    private JSONArray search(QueryValues query) {
-
+    private Object search(QueryValues query) {
         String search = query.get("search");
 
         Song song = Spotify.findSong(search);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
+        if (song == null) {
+            jsonObject.put("error", "Song not found");
+            return jsonObject;
+        }
 
-        jsonObject.put("result", song.getSpotifyURI());
+        JSONArray jsonArray = new JSONArray();
+
+        jsonObject.put("title", song.getTitle());
+        jsonObject.put("artist", song.getArtist());
+        jsonObject.put("SpotifyURL", Spotify.listenToSong(song));
         jsonArray.put(jsonObject);
 
         return jsonArray;
@@ -171,7 +177,7 @@ class WebAPI {
         JSONArray jsonArray = new JSONArray();
 
         if(!query.containsKey("playlist")){
-
+            // Get list of importable playlists
             ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
             currentUser.FetchPlaylists();
             for(Playlist spotifyPlaylist : playlists){
@@ -182,6 +188,7 @@ class WebAPI {
                     }
                 }
                 if(newSpotifyPlaylist){
+                    spotifyPlaylist.save(currentUser);
                     currentUser.playlistList.add(spotifyPlaylist);
                 }
             }
@@ -196,11 +203,27 @@ class WebAPI {
             return jsonArray;
         }
 
+        // Import a playlist
         int playlistId = Integer.parseInt(query.get("playlist"));
         Playlist playlist = Playlist.getPlaylistById(playlistId);
 
+        if(playlist == null){
+            throw new ServerErrorException("Playlist not found");
+        }
+
         Spotify spotify = new Spotify();
-        Playlist importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
+        List<Song> importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
+
+        playlist.clearSongs();
+
+        debug.log("Found songs:");
+        for(Song song : importPlaylist){
+            debug.log(song.toString());
+            playlist.addSong(song);
+            //todo Uncomment to save imported songs to database
+//            song.save();
+        }
+//        playlist.savePlaylistState();
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);

@@ -8,15 +8,28 @@ body{
 	width: auto;
 }
 
+.clickable {
+	cursor: pointer;
+}
+
 a, p{
 	font-size: 12px;
 	text-decoration: none;
 	color: #ffffff;
 }
 
+.black {
+	color: #000000;
+}
+
 a{
 	text-decoration: none;
     text-align: center;
+}
+
+a:hover {
+	text-decoration: underline;
+	cursor: pointer;
 }
 
 

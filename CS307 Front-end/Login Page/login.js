@@ -60,12 +60,11 @@ function signUp() {
 	signupRedirect();
 }
 
+// check if already has session token
+if (getAuthToken())
+	playlistRedirect();
+
 $(document).ready( () => {
-	// check if already has session token
-	var token = getAuthToken();
-	if (token)
-		playlistRedirect();
-	
 	// initailize Field variables
 	userNameField = $("#userNameInput");
 	passwordField = $("#passwordInput");

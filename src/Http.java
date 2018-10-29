@@ -30,6 +30,7 @@ public class Http {
 
     public void handle(HttpExchange httpExchange) throws IOException {
         URI requestURI = httpExchange.getRequestURI().normalize();
+        Headers h = httpExchange.getRequestHeaders();
 
         String method = httpExchange.getRequestMethod();
         // Check if method supported
@@ -134,7 +135,11 @@ public class Http {
 
     public Path getResourcePath(URI uri) {
         String path = uri.getPath();
-        if (path.equals("/") || path.startsWith("/login"))
+        if (path.startsWith("/login")) {
+            path = path.substring("/login".length());
+        }
+
+        if (path.equals("") || path.equals("/"))
             path = defaultExpand;
 
         if (path.charAt(0) == '/')

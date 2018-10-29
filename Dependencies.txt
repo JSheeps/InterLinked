@@ -1,6 +1,7 @@
 Maven
 	com.microsoft.sqlserver:mssql-jdbc:6.2.2.jre8
 	org.jetbrains:annotations:16.0.2
+	org.json:json:20180813
 	se.michaelthelin.spotify:spotify-web-api-java:2.0.5
 
 Java

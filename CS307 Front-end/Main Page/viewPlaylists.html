@@ -8,9 +8,11 @@
 		<!-- JQuery API -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		
+		<script src="tables.js"></script>
 		<script src="/common/serverAccess.js"></script>
 		<script src="playlists.js"></script>
 		<script src="/common/common.js"></script>
+		
 		<link href="page.css" type="text/css" rel="stylesheet">
 	</head>
 	<body>
@@ -34,10 +36,11 @@
         <!-- Search bar -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         
-        <form class="search" action="action_page.php">
-            <input type="text" placeholder="Search.." name="search">
-            <button id="searchbtn" type="submit"><i class="fa fa-search"></i></button>
-        </form>
+        <div class="search">
+            <input type="text" placeholder="Search for a song..." id="search">
+            <button id="searchbtn" type="submit" onclick="search()"><i class="fa fa-search"></i></button>
+			<div id="searchResults"></div>
+        </div>
         <!-- End Search bar -->
         
 		<div id="playlistsWindow">

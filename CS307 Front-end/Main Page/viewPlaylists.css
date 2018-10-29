@@ -5,8 +5,15 @@
     border: 2px black solid;
     margin: 0 auto;
     margin-top: 100px;
-    
 }
+
+#searchResults {
+	background-color: white;
+	width: 80%;
+	margin: 0 auto;
+	float: center;
+}
+
 #mainContents{
     position: relative;
     height: 600px;

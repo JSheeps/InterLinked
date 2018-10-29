@@ -25,7 +25,7 @@ public class Spotify extends StreamingService
     private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     //This is the URL that the user will be sent to after authorizing us to access their account
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/");
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/?platformID=Spotify");
 
     private static SpotifyApi.Builder build = new SpotifyApi.Builder()
             .setClientId(client_ID)
@@ -95,8 +95,8 @@ public class Spotify extends StreamingService
     }
 
     //TODO add an exception for if a playlist hasnt been imported correctly
-    public Playlist importPlaylist(Pair<String, String> tokens, String playlistName){
-        Playlist return_list = new Playlist();
+    public List<Song> importPlaylist(Pair<String, String> tokens, String playlistName){
+        List<Song> return_list = new ArrayList<>();
         try{
             SpotifyApi spotifyApi = build.build();
             spotifyApi.setAccessToken(tokens.getKey());
@@ -120,16 +120,15 @@ public class Spotify extends StreamingService
                             .offset(0)
                             .build();
                     final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
-                    return_list.setName(playlistName);
 
                     for (int j=0;j<tracks.getTotal();j++){
 
                         Track thisSong = (tracks.getItems())[j].getTrack();
                         Song s = trackToSong(thisSong);
-                        return_list.addSong(s);
+                        return_list.add(s);
 
                         //check if local playlist has the same number of songs as the Spotify list
-                        if (return_list.getSize() != tracks.getTotal()){
+                        if (return_list.size() != tracks.getTotal()){
                             //TODO error during import, not all songs were added
                         }
 
@@ -215,7 +214,11 @@ public class Spotify extends StreamingService
                     .offset(0)
                     .build();
             Paging<Track> results = searchRequest.execute();
-            match = results.getItems()[0];
+            Track[] resultSongs = results.getItems();
+            if (resultSongs.length == 0)
+                return null;
+
+            match = resultSongs[0];
             s = trackToSong(match);
             System.out.println(s.getTitle());
 
@@ -228,6 +231,7 @@ public class Spotify extends StreamingService
     //Helper function for making a Song object from the Spotify wrappers Track object
     private static Song trackToSong(Track t){
         Song s  = new Song();
+        s.setArtist(t.getArtists()[0].getName());
         s.setAlbum(t.getAlbum().getName());
         s.setDuration(t.getDurationMs());
         s.setExplicit(t.getIsExplicit());
