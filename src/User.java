@@ -122,4 +122,12 @@ public class User {
 
         return true;
     }
+
+    Playlist getPlaylistByName(String name){
+        for (Playlist playlist : playlistList){
+            if(playlist.Name.equals(name))
+                return playlist;
+        }
+        return null;
+    }
 }
