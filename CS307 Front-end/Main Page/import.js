@@ -28,15 +28,21 @@ function viewImportList(tableSelector) {
 			tableText(table, "No playslists on accounts");
 			return;
 		}
+		/*playlists = [
+			{ name: "Bach", id: 0 },
+			{ name: "Beethoven", id: 1 }
+		];*/
+			
 		
 		console.log(playlists);
-		for (var i = playlists.length - 1; i >= 0; i--) {
+		for (var i = 0; i < playlists.length; i++) {
 			var str = "<tr>";
 			var playlist = playlists[i];
 			str += "<td><a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.id + "');\">Import</a></td>"
 			str += "<td>" + playlist.name + "</td>";
 			str += "</tr>";
-			table = table.after(str);
+			table.after(str);
+			table = table.next();
 		}
 	});
 }
