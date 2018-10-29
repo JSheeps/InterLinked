@@ -42,7 +42,6 @@ class Table {
 	only val is required
 	*/
 	addRow(...objs) {
-		debugger;
 		if (typeOf(objs[0]) == "array")
 			objs = objs[0];
 		if (objs.length != this.columns)
