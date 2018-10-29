@@ -26,13 +26,16 @@ function viewExportablePlaylists(sel) {
 		
 		console.log(playlists);
 		for (var i = playlists.length - 1; i >= 0; i--) {
-			var playlist = playlists[i];
-			var str = "<tr><td>" + playlist.name + "</td></tr>";
-			table = table.after(str);
+		    var str = "<tr>";
+            var playlist = playlists[i];
+            str += "<td><a class='black' onclick=\"exportPlayList('" + playlist.id + "');\">Export</a></td>"
+            str += "<td>" + playlist.name + "</td>";
+            str += "</tr>";
+            table = table.after(str);
 		}
 	});
 }
 
-function tableText(table, text) {
-	return table.after("<tr><td><i>" + text + "</i></td></tr>");
+function tableText(table, text, priorText="") {
+	return table.after("<tr><td>" + priorText + "</td> <td><i>" + text + "</i></td></tr>");
 }

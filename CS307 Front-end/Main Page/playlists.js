@@ -45,8 +45,8 @@ function viewPlaylists(tableSelector) {
 	});
 }
 
-function tableText(table, text) {
-	return table.after("<tr><td><i>" + text + "</i></td></tr>");
+function tableText(table, text, priorText="") {
+	return table.after("<tr><td>" + priorText + "</td> <td><i>" + text + "</i></td></tr>");
 }
 
 function search() {
