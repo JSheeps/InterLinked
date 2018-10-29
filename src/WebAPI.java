@@ -197,7 +197,6 @@ class WebAPI {
             for(Playlist playlist : currentUser.playlistList){
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("name", playlist.Name);
-                jsonObject.put("id", playlist.ID);
                 jsonArray.put(jsonObject);
             }
 
