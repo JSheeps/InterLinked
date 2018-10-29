@@ -67,8 +67,10 @@ th{
 .search{
     position: relative;
     top: 75px;
-    
 }
 #searchbtn{
+    cursor: pointer;
+}
+#addPlaylistBtn {
     cursor: pointer;
 }

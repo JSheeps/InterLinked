@@ -106,7 +106,7 @@ class WebAPI {
         debug.log("~~~Set user's tokens: " + user.tokens.toString());
 
         debug.log("~~~Finished Login");
-    }
+    }   
 
 
     // Redirects queries
@@ -175,27 +175,27 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
 
-        if(!query.containsKey("playlist")){
-            // Get list of importable playlists
-            ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
-            currentUser.FetchPlaylists();
-            for(Playlist spotifyPlaylist : playlists){
-                boolean newSpotifyPlaylist = true;
-                for(Playlist databasePlaylist : currentUser.playlistList){
-                    if(spotifyPlaylist.equals(databasePlaylist)){
-                        newSpotifyPlaylist = false;
-                    }
-                }
-                if(newSpotifyPlaylist){
-                    spotifyPlaylist.save(currentUser);
-                    currentUser.playlistList.add(spotifyPlaylist);
+        ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
+        currentUser.FetchPlaylists();
+        for(Playlist spotifyPlaylist : playlists){
+            boolean newSpotifyPlaylist = true;
+            for(Playlist databasePlaylist : currentUser.playlistList){
+                if(spotifyPlaylist.equals(databasePlaylist)){
+                    newSpotifyPlaylist = false;
                 }
             }
+            if(newSpotifyPlaylist){
+//                    spotifyPlaylist.save(currentUser);
+                currentUser.playlistList.add(spotifyPlaylist);
+            }
+        }
 
+
+        if(!query.containsKey("playlist")){
+            // Get list of importable playlists
             for(Playlist playlist : currentUser.playlistList){
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("name", playlist.Name);
-                jsonObject.put("id", playlist.ID);
                 jsonArray.put(jsonObject);
             }
 
@@ -203,11 +203,10 @@ class WebAPI {
         }
 
         // Import a playlist
-        int playlistId = Integer.parseInt(query.get("playlist"));
-        Playlist playlist = Playlist.getPlaylistById(playlistId);
+        Playlist playlist = currentUser.getPlaylistByName(query.get("Playlist"));
 
         if(playlist == null){
-            throw new ServerErrorException("Playlist not found");
+            throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
         }
 
         Spotify spotify = new Spotify();
@@ -222,7 +221,8 @@ class WebAPI {
             //todo Uncomment to save imported songs to database
 //            song.save();
         }
-//        playlist.savePlaylistState();
+
+        playlist.save(currentUser);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);
