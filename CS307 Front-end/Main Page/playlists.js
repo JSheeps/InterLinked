@@ -1,6 +1,9 @@
 "use strict";
 
+var table;
+
 $(document).ready( () => {
+	table = new Table("#playlistTable", "My Playlists", 3, null, "Playlist Name", null);
 	viewPlaylists("#playlistTable");
 	
 	// Add event listener to search field
@@ -14,35 +17,43 @@ $(document).ready( () => {
 });
 
 function viewPlaylists(tableSelector) {
-	var table = clearTable(tableSelector);
-	tableText(table, "Loading...");
+	table.clear().text("Loading...");
 	
 	getPlaylistsFromServer().done( (playlists) => {
-		table = clearTable(tableSelector);
+		/*playlists = [
+			{ name: "test" },
+			{ name: "second" },
+			{ name: "third" },
+			{ name: "fourth" }
+		];*/
+		
+		table.clear();
 		if (playlists.error) {
 			if (playlists.error == "NotLoggedInToService: User needs to log in to streaming service") {
 				grantServerAccessRedirect();
 				return;
 			}
-			tableText(table, playlists.error);
+			table.text(playlists.error);
 			return;
 		}
 		if (playlists.length == 0) {
-			tableText(table, "No Playlists Imported");
+			table.text("No Playlists Imported");
 			return;
 		}
 		
 		console.log(playlists);
+		table.makeSortRow();
+		
 		for (var i = playlists.length - 1; i >= 0; i--) {
 			var playlist = playlists[i];
-			var str = "<tr><td>" + playlist.name + "</td></tr>";
-			table = table.after(str);
+			table.addRow(
+				"<a class='black' onclick=\"sharePlayList();\">Share</a>",
+				playlist.name,
+				"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
+			);
 		}
 	});
-}
 
-function tableText(table, text) {
-	return table.after("<tr><td><i>" + text + "</i></td></tr>");
 }
 
 function search() {
@@ -70,8 +81,13 @@ function search() {
 					resultString += ", by " + result.artist;
 			}
 			
-			if (resultString.length != 0)
+			if (resultString.length != 0) {
 				searchResults.append("<p class='black'>" + resultString + "</p>");
+				
+				if (result.SpotifyURL) {
+					searchResults.append("<a class='black' target='_blank' href=" + result.SpotifyURL + ">Spotify</a>");
+				}
+			}
 			
 		}
 	});

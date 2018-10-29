@@ -8,6 +8,10 @@ body{
 	width: auto;
 }
 
+.clickable {
+	cursor: pointer;
+}
+
 a, p{
 	font-size: 12px;
 	text-decoration: none;
