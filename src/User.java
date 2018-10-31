@@ -48,7 +48,6 @@ public class User {
                 return null;
             }
         }catch (SQLException e){
-            // TODO
             System.err.println(e);
             return null;
         }
@@ -77,8 +76,8 @@ public class User {
                 newUser.ID = results.getInt("ID");
             }
         }catch(SQLException e){
-            // TODO
             System.err.println(e);
+            return null;
         }
 
         if(UserPassword.CreateUserPassword(newUser.ID, password)){
@@ -117,7 +116,7 @@ public class User {
             }
             helper.closeConnection();
         }catch(SQLException e){
-            // TODO
+            System.err.println(e);
             return false;
         }
 

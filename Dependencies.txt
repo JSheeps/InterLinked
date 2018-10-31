@@ -3,6 +3,6 @@ Maven
 	org.jetbrains:annotations:16.0.2
 	org.json:json:20180813
 	se.michaelthelin.spotify:spotify-web-api-java:2.0.5
-	org.apache.commons:commons-lang3:3.02
+	org.apache.commons:commons-lang3:3.8.1
 Java
 	lib/junit.jar

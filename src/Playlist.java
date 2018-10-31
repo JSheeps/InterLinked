@@ -184,7 +184,7 @@ class Playlist {
 
     // Adds the generated playlist to the User's saved playlists. Fetch playlists again to get the new playlist
     // Returns true on success and false on failure
-    public boolean generateSharedPlaylist(String shareToken, User currentUser){
+    public static boolean generateSharedPlaylist(String shareToken, User currentUser){
         String[] bigSplit = shareToken.split(";");
 
         if(bigSplit.length != 2) return false;
