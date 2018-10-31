@@ -88,3 +88,4 @@ fabric.properties
 # Extra
 *.xml
 *.iml
+data/tokens.txt
