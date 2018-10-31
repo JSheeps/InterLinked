@@ -139,6 +139,15 @@ class WebAPI {
         else if(query.containsKey("search"))
             return search(query);
 
+        else if(query.containsKey("remove"))
+            return remove(query);
+
+        else if(query.containsKey("share"))
+            return share(query);
+
+        else if(query.containsKey("importshare"))
+            return importShare(query);
+
         throw new BadQueryException("Query has no meaning");
     }
 
@@ -355,6 +364,93 @@ class WebAPI {
             json.put("duration", song.duration);
             jsonArray.put(json);
         }
+
+        return jsonArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray remove(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        int removeId;
+        try {
+            removeId = Integer.parseInt(query.get("remove"));
+        }
+        catch (Exception e){
+            throw new BadQueryException("Expected type of remove key is int");
+        }
+
+        Playlist playlistById = currentUser.getPlaylistById(removeId);
+
+        if(playlistById == null){
+            throw new ServerErrorException("Couldn't find playlist with id: " + removeId);
+        }
+        else {
+            boolean delete = playlistById.delete();
+            if(!delete)
+                throw new ServerErrorException("Error deleting playlist");
+        }
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("result",true);
+        jsonArray.put(jsonObject);
+
+        return jsonArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray share(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        int shareId;
+        try {
+            shareId = Integer.parseInt(query.get("share"));
+        }
+        catch (Exception e){
+            throw new BadQueryException("Expected type of share key is int");
+        }
+
+        Playlist playlistById = currentUser.getPlaylistById(shareId);
+
+        String shareToken;
+        if(playlistById == null){
+            throw new ServerErrorException("Couldn't find playlist with id: " + shareId);
+        }
+        else {
+            shareToken = playlistById.generateShareToken();
+            if(shareToken == null)
+                throw new ServerErrorException("Error generating share token");
+        }
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("result",true);
+        JSONObject jsonShareToken = new JSONObject();
+        jsonShareToken.put("share", shareToken);
+
+        jsonArray.put(jsonResult);
+        jsonArray.put(jsonShareToken);
+
+        return jsonArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray importShare(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        String shareToken = query.get("importshare");
+
+        boolean b = Playlist.generateSharedPlaylist(shareToken, currentUser);
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("result",b);
+
+        jsonArray.put(jsonResult);
 
         return jsonArray;
     }

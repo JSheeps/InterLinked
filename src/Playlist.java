@@ -181,12 +181,12 @@ class Playlist {
     }
 
     public String generateShareToken(){
-        String token = "";
-        token += Name + ";";
+        StringBuilder token = new StringBuilder();
+        token.append(Name).append(";");
         for(Song song : playlist){
-            token += song.ID + ",";
+            token.append(song.ID).append(",");
         }
-        return token;
+        return token.toString();
     }
 
     // Adds the generated playlist to the User's saved playlists. Fetch playlists again to get the new playlist

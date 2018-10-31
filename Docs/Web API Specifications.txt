@@ -47,5 +47,9 @@ Query Specifications
 		password	<password>				username		Used with either login or signup.
 
 		search      <search string>                         String of result. Will eventually be spotify uri
+
+		share       <playlistID>                            Share token string for the selected playlist
+
+		importshare <sharetoken>                            Playlist object from token
 		
 		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).
