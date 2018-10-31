@@ -31,6 +31,8 @@ class WebAPI {
         debug = new Debug(true, false);
     }
 
+    // ----------------------------------------  Server Handlers  ------------------------------------------------------
+
     public void handle(HttpExchange t) throws IOException {
         debug.log("------------------ Start API Connection ------------------");
 
@@ -87,39 +89,49 @@ class WebAPI {
         debug.log("------------------ Connection Completed ------------------");
     }
 
-    public void serviceLogIn(HttpExchange t) {
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    void serviceLogIn(HttpExchange t) {
         QueryValues query = new QueryValues(t.getRequestURI().getQuery());
+
         String platformID = query.get("platformID");
+
+        // Code sent from Spotify, used to get user's tokens
         String code = query.get("code");
+
+        // State contains user's interlinked auth token
         String authToken = query.get("state");
 
         debug.log("~~~User Logged In To: " + platformID);
         debug.log("~~~Code: " + code);
         debug.log("~~~State: " + authToken);
 
+        // Get user associated with interlinked auth token
         User user = userAuthTokens.get(authToken);
 
         debug.log("~~~Associated user: " + user.userName);
 
-        user.tokens = Spotify.Login(code);
+        // Attempt to login using provided code
+        try {
+            user.tokens = Spotify.Login(code);
+        } catch (Exception e) {
+            debug.log("~~~Login failed: " + e.getMessage());
+            debug.printStackTrace(e);
+            return;
+        }
 
         debug.log("~~~Set user's tokens: " + user.tokens.toString());
 
         debug.log("~~~Finished Login");
     }   
 
-
-    // Redirects queries
     private Object commandRedirect(QueryValues query) throws Exception {
-
-        debug.log("Connection sent keys{");
-        for(String s : query.keySet()){
-            debug.log("\t" + s + ", " + query.get(s));
-        }
-        debug.log("}");
+        // Debug Output
+        debug.logVerbose("Connection sent keys{");
+        query.keySet().forEach(s -> debug.logVerbose("\t" + s + ", " + query.get(s)));
+        debug.logVerbose("}");
 
         if (query.containsKey("get"))
-            return get(query);
+            return get();
 
         else if (query.containsKey("signup"))
             return signUp(query);
@@ -163,14 +175,18 @@ class WebAPI {
 
         String search = query.get("search");
 
-        Song song = Spotify.findSong(search);
-
-        JSONObject jsonObject = new JSONObject();
-        if (song == null) {
-            jsonObject.put("error", "Song not found");
-            return jsonObject;
+        // Search for song on Spotify
+        Song song;
+        try {
+            song = Spotify.findSong(search);
+        } catch (Exception e) {
+            debug.printStackTrace(e);
+            throw new ServerErrorException(e.getMessage());
         }
 
+        // Build Json response
+
+        JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
         jsonObject.put("title", song.getTitle());
@@ -190,20 +206,10 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
 
-        // Put playlists from spotify and database into user object with no repeats
+        // Get playlists from spotify
         ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
-        currentUser.FetchPlaylists();
-        for(Playlist spotifyPlaylist : playlists){
-            boolean newSpotifyPlaylist = true;
-            for(Playlist databasePlaylist : currentUser.playlistList){
-                if(spotifyPlaylist.equals(databasePlaylist))
-                    newSpotifyPlaylist = spotifyPlaylist.equals(databasePlaylist);
-            }
-            if(newSpotifyPlaylist)
-                currentUser.playlistList.add(spotifyPlaylist);
-        }
 
-
+        // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
             // Get list of importable playlists
             for(Playlist playlist : currentUser.playlistList){
@@ -215,16 +221,26 @@ class WebAPI {
             return jsonArray;
         }
 
-        // Import a playlist
-        Playlist playlist = currentUser.getPlaylistByName(query.get("playlist"));
+        // Find playlist to import
+        Playlist playlist = null;
+        for(Playlist p : playlists){
+            if(p.Name.equals(query.get("playlist")))
+                playlist = p;
+        }
 
         if(playlist == null) throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
 
-        Spotify spotify = new Spotify();
-        List<Song> importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
+        // Check if playlist already exists
+        currentUser.FetchPlaylists();
+        if(currentUser.playlistList.contains(playlist) && !query.containsKey("force"))
+            throw new ServerErrorException("Playlist already exists in database " +
+                    "(to import anyway, send query: force)");
 
+        // Get songs for selected playlist
+        List<Song> importPlaylist = Spotify.importPlaylist(currentUser.tokens, playlist.Name);
+
+        // Add songs to new playlist
         playlist.clearSongs();
-
         debug.log("Found songs:");
         for(Song song : importPlaylist){
             debug.log(song.toString());
@@ -242,6 +258,7 @@ class WebAPI {
         return jsonArray;
     }
 
+    @SuppressWarnings("unchecked")
     private JSONArray exportQuery(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
@@ -259,8 +276,13 @@ class WebAPI {
             throw new ServerErrorException("Playlist not found");
         }
 
-        Spotify spotify = new Spotify();
-        spotify.exportPlaylist(currentUser.tokens, playlist); //TODO return failed songs
+        ArrayList<String> failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("result", failedSongs.size() == 0);
+        jsonArray.put(jsonResult);
+        JSONObject jsonSongs = new JSONObject();
+        jsonSongs.put("songs", failedSongs);
 
         return jsonArray;
     }
@@ -314,7 +336,7 @@ class WebAPI {
 
     // Method to handle "get" query. Returns json with a list of playlist objects for current user
     @SuppressWarnings("unchecked")
-    private JSONArray get(QueryValues query) throws Exception {
+    private JSONArray get() throws Exception {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
@@ -322,9 +344,7 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
 
-
-        boolean b = currentUser.FetchPlaylists();
-        debug.log("Result of user.FetchPlaylists(): " + b);
+        currentUser.FetchPlaylists();
 
         ArrayList<Playlist> playlists = currentUser.playlistList;
 

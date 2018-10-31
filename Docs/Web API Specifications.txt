@@ -23,6 +23,11 @@ Query Specifications
 																A list of playlists on the <platform> that the user can import.
 															IF the playlist key IS present:
 																The playlist.
+															IF the playlist already exists in database:
+															    IF query contains "force"
+															        Error message
+															    Else
+															        The playlist
 																
 		export		<platformID>			playlist		Returns which songs were NOT successfully exported, if any, as an array.
 		

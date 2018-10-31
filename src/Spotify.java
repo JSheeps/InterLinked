@@ -1,6 +1,5 @@
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
-import com.wrapper.spotify.exceptions.detailed.BadRequestException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
@@ -9,10 +8,9 @@ import com.wrapper.spotify.requests.authorization.authorization_code.Authorizati
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.playlists.*;
-import org.apache.commons.lang3.tuple.MutablePair;
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -64,23 +62,11 @@ public class Spotify extends StreamingService
     }
 
     //Code retrieved at redirect_uri after user authorization has passed, return value is a pair <accessToken, refreshToken>
-    public static MutablePair<String,String> Login(String code) {
-        try {
-            SpotifyApi spotifyApi = build.build();
-            final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
-            AuthorizationCodeCredentials c = authorizationcoderequest.execute();
-            MutablePair<String, String> tokens = new MutablePair<String, String> (c.getAccessToken(),c.getRefreshToken());
-            return tokens;
-        }
-        catch (BadRequestException e){
-            e.printStackTrace();
-            System.out.println(e.getMessage());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return new MutablePair<String, String> ("error","error");
+    public static MutablePair<String,String> Login(String code) throws Exception {
+        SpotifyApi spotifyApi = build.build();
+        final AuthorizationCodeRequest authorizationcoderequest = spotifyApi.authorizationCode(code).grant_type("authorization_code").build();
+        AuthorizationCodeCredentials c = authorizationcoderequest.execute();
+        return new MutablePair<>(c.getAccessToken(), c.getRefreshToken());
     }
 
     public static String[] getPlaylistNames(MutablePair<String, String> tokens){
@@ -221,33 +207,27 @@ public class Spotify extends StreamingService
     }
 
     //Returns the top result from the query as a song object
-    public static Song findSong(String query) {
-        Song s = new Song();
+    public static Song findSong(String query) throws Exception{
         ClientCredentials cc;
         ClientCredentialsRequest ccr;
         SpotifyApi spotifyApi = build.build();
-        try{
-            ccr = spotifyApi.clientCredentials().build();
-            cc = ccr.execute();
-            spotifyApi.setAccessToken(cc.getAccessToken());
-            Track match;
-            SearchTracksRequest searchRequest = spotifyApi.searchTracks(query)
-                    .limit(10)
-                    .offset(0)
-                    .build();
-            Paging<Track> results = searchRequest.execute();
-            Track[] resultSongs = results.getItems();
-            if (resultSongs.length == 0)
-                return null;
 
-            match = resultSongs[0];
-            s = trackToSong(match);
-            System.out.println(s.getTitle());
+        ccr = spotifyApi.clientCredentials().build();
+        cc = ccr.execute();
+        spotifyApi.setAccessToken(cc.getAccessToken());
+        Track match;
+        SearchTracksRequest searchRequest = spotifyApi.searchTracks(query)
+                .limit(10)
+                .offset(0)
+                .build();
+        Paging<Track> results = searchRequest.execute();
+        Track[] resultSongs = results.getItems();
 
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return s;
+        if (resultSongs.length == 0) return null;
+
+        match = resultSongs[0];
+
+        return trackToSong(match);
     }
 
     //Helper function for making a Song object from the Spotify wrappers Track object
