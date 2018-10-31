@@ -212,7 +212,7 @@ class WebAPI {
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
             // Get list of importable playlists
-            for(Playlist playlist : currentUser.playlistList){
+            for(Playlist playlist : playlists){
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("name", playlist.Name);
                 jsonArray.put(jsonObject);
@@ -339,8 +339,6 @@ class WebAPI {
     private JSONArray get() throws Exception {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.tokens == null)
-            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
 
