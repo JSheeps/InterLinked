@@ -148,13 +148,19 @@ class WebAPI {
         else if(query.containsKey("importshare"))
             return importShare(query);
 
+        else if(query.containsKey("merge"))
+            return merge(query);
+
         throw new BadQueryException("Query has no meaning");
     }
 
 
     // ----------------------------------------  Query Commands  ------------------------------------------------------
     @SuppressWarnings("unchecked")
-    private Object search(QueryValues query) {
+    private Object search(QueryValues query) throws Exception {
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
         String search = query.get("search");
 
         Song song = Spotify.findSong(search);
@@ -184,19 +190,17 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
 
+        // Put playlists from spotify and database into user object with no repeats
         ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
         currentUser.FetchPlaylists();
         for(Playlist spotifyPlaylist : playlists){
             boolean newSpotifyPlaylist = true;
             for(Playlist databasePlaylist : currentUser.playlistList){
-                if(spotifyPlaylist.equals(databasePlaylist)){
-                    newSpotifyPlaylist = false;
-                }
+                if(spotifyPlaylist.equals(databasePlaylist))
+                    newSpotifyPlaylist = spotifyPlaylist.equals(databasePlaylist);
             }
-            if(newSpotifyPlaylist){
-//                    spotifyPlaylist.save(currentUser);
+            if(newSpotifyPlaylist)
                 currentUser.playlistList.add(spotifyPlaylist);
-            }
         }
 
 
@@ -214,9 +218,7 @@ class WebAPI {
         // Import a playlist
         Playlist playlist = currentUser.getPlaylistByName(query.get("playlist"));
 
-        if(playlist == null){
-            throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
-        }
+        if(playlist == null) throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
 
         Spotify spotify = new Spotify();
         List<Song> importPlaylist = spotify.importPlaylist(currentUser.tokens, playlist.Name);
@@ -448,7 +450,44 @@ class WebAPI {
 
         JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
-        jsonResult.put("result",b);
+        jsonResult.put("result", b);
+
+        jsonArray.put(jsonResult);
+
+        return jsonArray;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JSONArray merge(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        int[] mergeIds;
+
+        try {
+            String mergeIdString = query.get("merge");
+            String[] mergeIdStrings = mergeIdString.split(", ");
+            mergeIds = new int[2];
+            mergeIds[0] = Integer.parseInt(mergeIdStrings[0]);
+            mergeIds[1] = Integer.parseInt(mergeIdStrings[1]);
+        }
+        catch (Exception e) {throw new BadQueryException("Unable to parse ids for merge");}
+
+        Playlist playlist1 = Playlist.getPlaylistById(mergeIds[0]);
+        Playlist playlist2 = Playlist.getPlaylistById(mergeIds[1]);
+
+        if(playlist1 == null || playlist2 == null){
+            throw new ServerErrorException("Unable to find playlist: " +
+                    ((playlist1 == null)? mergeIds[0] : mergeIds[1]));
+        }
+
+        Playlist merge = playlist1.merge(playlist2);
+
+        merge.save(currentUser);
+
+        JSONArray jsonArray = new JSONArray();
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("merge", merge.ID);
 
         jsonArray.put(jsonResult);
 
