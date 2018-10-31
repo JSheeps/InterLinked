@@ -105,6 +105,8 @@ class Playlist {
                 PlaylistSong playlistSong = new PlaylistSong(ID, song.ID);
                 playlistSong.save();
             }
+
+            return true;
         }else{
             // Send update query that may or may not actually do anything
             String updateQuery = "UPDATE Playlists "+
@@ -161,12 +163,17 @@ class Playlist {
         if(ID == 0){
             return true;
         }else{
-            String deletionQuery1 = "DELETE FROM PlaylistSongs WHERE PlaylistID = "+ ID;
-            String deletionQuery2 = "DELETE FROM Playlists WHERE ID ="+ ID;
+            String deletionQuery1 = "DELETE PlaylistHistorySongs FROM PlaylistHistorySongs JOIN PlaylistHistory ON PlaylistHistorySongs.PlaylistHistoryID = PlaylistHistory.ID "+
+                    "WHERE PlaylistHistory.PlaylistID =" + ID;
+            String deletionQuery2 = "DELETE FROM PlaylistHistory WHERE PlaylistID = " + ID;
+            String deletionQuery3 = "DELETE FROM PlaylistSongs WHERE PlaylistID = "+ ID;
+            String deletionQuery4 = "DELETE FROM Playlists WHERE ID ="+ ID;
 
             SqlHelper helper = new SqlHelper();
             helper.ExecuteQuery(deletionQuery1);
             helper.ExecuteQuery(deletionQuery2);
+            helper.ExecuteQuery(deletionQuery3);
+            helper.ExecuteQuery(deletionQuery4);
             helper.closeConnection();
 
             return true;
@@ -223,13 +230,13 @@ class Playlist {
 
         String currentTime = LocalDateTime.now().toString();
 
-        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedDate) VALUES(" + this.ID + ", '" + currentTime + "')";
+        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(" + this.ID + ", '" + currentTime + "')";
 
         SqlHelper helper = new SqlHelper();
         helper.ExecuteQuery(playlistHistoryInsert);
 
         // Fetch ID of playlistHistory object
-        String idFetch = "SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = " + this.ID + " ORDER BY CreatedDate DESC";
+        String idFetch = "SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = " + this.ID + " ORDER BY CreatedTime DESC";
 
         ResultSet resultSet = helper.ExecuteQueryWithReturn(idFetch);
         int historyID = 0;

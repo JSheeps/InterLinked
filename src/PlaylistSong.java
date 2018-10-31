@@ -32,7 +32,7 @@ public class PlaylistSong {
                 helper.closeConnection();
                 return true;
             }catch (SQLException e){
-                // TODO
+                System.err.println(e);
                 return false;
             }
         }

@@ -102,6 +102,7 @@ public class Song {
 
     public Song(ResultSet resultSet){
         try {
+            title = resultSet.getString("Title");
             album = resultSet.getString("Album");
             artist = resultSet.getString("Artist");
             duration = resultSet.getInt("Duration");
@@ -151,11 +152,11 @@ public class Song {
             return true;
         }
         String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
-                "VALUES('" + artist + "', '" + title + "', '" + album + "', " + duration + ", " + explicit + ", '" + spotifyID + "', '" + spotifyURI + "')";
+                "VALUES('" + artist + "', '" + title + "', '" + album + "', " + duration + ", " + (explicit? 1 : 0) + ", '" + spotifyID + "', '" + spotifyURI + "')";
         SqlHelper helper = new SqlHelper();
         helper.ExecuteQuery(insertQuery);
         // Get ID of thing we just inserted
-        String idQuery = "SELECT ID FROM Songs WHERE Artist = " + artist + " AND Title = " + title;
+        String idQuery = "SELECT ID FROM Songs WHERE Artist = '" + artist + "' AND Title = '" + title + "'";
         ResultSet resultSet = helper.ExecuteQueryWithReturn(idQuery);
         try {
             while(resultSet.next()){

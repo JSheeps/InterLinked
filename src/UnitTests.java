@@ -34,6 +34,7 @@ public class UnitTests {
     @Test(timeout = 100)
     public static void PlaylistTest(){
         Song song = new Song();
+        song.ID = 17;
         song.title = "Title 1";
         song.artist = "Dre";
         song.explicit = true;
@@ -41,6 +42,7 @@ public class UnitTests {
         song.album = "Best of Dre";
 
         Song song2 = new Song();
+        song2.ID = 18;
         song2.title = "Title 2";
         song2.album = "What what";
         song2.duration = 4;
@@ -57,14 +59,23 @@ public class UnitTests {
         User user = User.getUserByUserName("testUserName");
         user.FetchPlaylists();
 
-        playlist.save(user);
+        boolean ret;
+        for (Playlist list : user.playlistList) {
+            ret = list.delete();
+            Assert.assertEquals(true, ret);
+        }
 
+        ret = playlist.save(user);
+
+        Assert.assertEquals(true, ret);
+
+        user.FetchPlaylists();
 
         Playlist userPlaylist = user.playlistList.get(0);
 
         boolean test1 = userPlaylist.Name.equals(playlist.Name);
-        boolean test2 = userPlaylist.getSong(0).equals(song);
-        boolean test3 = userPlaylist.getSong(1).equals(song2);
+        boolean test2 = userPlaylist.getSong(0).title.equals(song.title);
+        boolean test3 = userPlaylist.getSong(1).title.equals(song2.title);
 
         Assert.assertEquals(true, test1);
         Assert.assertEquals(true, test2);
@@ -74,6 +85,7 @@ public class UnitTests {
     @Test(timeout = 100)
     public static void shareTokenTest(){
         Song song = new Song();
+        song.ID = 17;
         song.title = "Title 1";
         song.artist = "Dre";
         song.explicit = true;
@@ -81,6 +93,7 @@ public class UnitTests {
         song.album = "Best of Dre";
 
         Song song2 = new Song();
+        song2.ID = 18;
         song2.title = "Title 2";
         song2.album = "What what";
         song2.duration = 4;

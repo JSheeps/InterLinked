@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
@@ -110,7 +111,11 @@ public class User {
                 playlist.Name = resultSet.getString("Name");
                 playlist.UserID = resultSet.getInt("UserID");
 
-                playlist.FetchSongs();
+                List<Song> songs = playlist.FetchSongs();
+
+                for(Song song : songs){
+                    playlist.addSong(song);
+                }
 
                 playlistList.add(playlist);
             }
