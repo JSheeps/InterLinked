@@ -203,7 +203,7 @@ class WebAPI {
         }
 
         // Import a playlist
-        Playlist playlist = currentUser.getPlaylistByName(query.get("Playlist"));
+        Playlist playlist = currentUser.getPlaylistByName(query.get("playlist"));
 
         if(playlist == null){
             throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
@@ -218,8 +218,7 @@ class WebAPI {
         for(Song song : importPlaylist){
             debug.log(song.toString());
             playlist.addSong(song);
-            //todo Uncomment to save imported songs to database
-//            song.save();
+            song.save();
         }
 
         playlist.save(currentUser);

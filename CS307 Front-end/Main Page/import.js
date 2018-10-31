@@ -38,7 +38,7 @@ function viewImportList(tableSelector) {
 		for (var i = 0; i < playlists.length; i++) {
 			var str = "<tr>";
 			var playlist = playlists[i];
-			str += "<td><a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.id + "');\">Import</a></td>"
+			str += "<td><a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.name + "');\">Import</a></td>"
 			str += "<td>" + playlist.name + "</td>";
 			str += "</tr>";
 			table.after(str);
@@ -47,8 +47,8 @@ function viewImportList(tableSelector) {
 	});
 }
 
-function importPlayList(platformID, playlistID) {
-	importList(platformID, playlistID).done( (result) => {
+function importPlayList(platformID, playlistName) {
+	importList(platformID, playlistName).done( (result) => {
 		if (result.error) {
 			alert("Could not import playlist.\n" + result.error);
 			return;
