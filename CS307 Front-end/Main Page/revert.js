@@ -22,12 +22,13 @@ function viewRevertList() {
             }
 
             table.makeSortRow();
-            var img = "<img src="revert playlists.png"/>";
+            //var img = "<img src=\"revert playlists.png\"/>";
+
             for (var i = 0; i < playlists.length; i++) {
                 var playlist = playlists[i];
                 table.addRow(
                     null,
-                    "<a class='black' onclick=\"revertPlayList(" + playlist.id + ");\">Revert</a>",
+                    "<a class='black' onclick=\"revertPlayList(" + playlist.id + ");\"><img src=\"revert playlists.png\"/ alt=\"Revert\" width=\"15\" height=\"15\"></a>",
                     playlist.name
                 );
             }
