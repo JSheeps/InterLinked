@@ -84,8 +84,11 @@ function mergePlaylists() {
 			alert(result.error);
 		} else {
 			alert("Merge successful!");
-			console.log(result);
+			viewMergeList();
+			return;
 		}
+		
+		console.log(result);
 	});
 }
 

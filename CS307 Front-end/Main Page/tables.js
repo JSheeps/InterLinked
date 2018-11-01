@@ -55,13 +55,17 @@ class Table {
 	only val is required
 	*/
 	addRow(rowAttribs, ...objs) {
+		this.addRowAfter("tr:last", rowAttribs, ...objs);
+	}
+	
+	addRowAfter(selector, rowAttribs, ...objs) {
 		if (typeOf(objs[0]) == "array")
 			objs = objs[0];
 		if (objs.length != this.columns)
 			throw "number of objects != " + this.columns;
 
 		
-		var lastRow = this.tbody.find("tr:last");
+		var lastRow = this.tbody.find(selector);
 		var header = serialize(rowAttribs);
 		var html = "<tr" + header + ">";
 		
@@ -91,6 +95,11 @@ class Table {
 	
 	getRow(index) {
 		return this.tbody.children().eq(index);
+	}
+	
+	
+	getRowByID(id) {
+		return this.tbody.find("#" + id);
 	}
 	
 	rows() {

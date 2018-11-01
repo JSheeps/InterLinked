@@ -8,7 +8,7 @@ var searchedSong = "";
 var localPlaylists = null;
 
 $(document).ready( () => {
-	table = new Table("#playlistTable", "My Playlists", null, null, "Playlist Name", null);
+	table = new Table("#playlistTable", "My Playlists", null, "Playlist Name", null, null, null);
 	friendPlaylistInput = $("#addFromFriend");
 	viewPlaylists();
 	
@@ -22,6 +22,22 @@ $(document).ready( () => {
 	});
 	
 });
+
+// Local playlist management
+function removeLocalPlaylist(i) {	
+	localPlaylists[i] = localPlaylists[localPlaylists.length - 1];
+	localPlaylists.pop();
+}
+
+function getLocalPlaylistIndex(id) {
+	for (var i = 0; i < localPlaylists.length; i++) {
+		if (localPlaylists[i].id == id) {
+			return i;
+		}
+	}
+	
+	throw "Can't find playlist with id: " + id;
+}
 
 // Viewing playlists
 function viewPlaylists(refresh = true) {
@@ -51,20 +67,19 @@ function fillTable(playlists) {
 		var rowNum = i + 2;
 		table.addRow(
 			{ id: playlist.id },
-			(searchedSong.length != 0 ? "<a class='black' onclick=\"addSearchedSong(" + playlist.id + ");\">Add Song,</a>" : ""),
-			"<a class='black' onmousedown=\"sharePlayList(" + rowNum + ");\">Share</a>",
+			"<a class='black' state='closed' id='showSongsButton" + playlist.id + "' onclick='viewSongs(\"" + playlist.id + "\")'>[+]</a>",
 			playlist.name,
-			"<a class='black' onclick=\"removePlayList('" + rowNum + "');\">Remove</a></td>"
+			(searchedSong.length != 0 ? "<a class='black' onclick=\"addSearchedSong(" + playlist.id + ");\">Add Song</a>" : ""),
+			"<a class='black' onmousedown=\"sharePlayList(" + playlist.id + ");\">Share,</a>",
+			"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
 		);
 	}
 	
 	localPlaylists = playlists;
 }
 
-function removePlayList(i) {
-	var row = table.getRow(i);
-	var id = row.attr("id");
-	if (!id) return;
+function removePlayList(id) {
+	var row = table.getRowByID(id);
 	
 	serverRemovePlaylist(id).done( (result) => {
 		if (result.error) {
@@ -72,8 +87,7 @@ function removePlayList(i) {
 			alert(result.error);
 		}
 		if (result.result) {
-			localPlaylists[i - 2] = localPlaylists[localPlaylists.length - 1];
-			localPlaylists.pop();
+			removeLocalPlaylist(getLocalPlaylistIndex(id));
 			viewPlaylists(false);
 			alert("Successfully removed");
 		} else {
@@ -81,6 +95,64 @@ function removePlayList(i) {
 			console.log(result);
 		}
 	});
+}
+
+function viewSongs(id) {
+	var playlist =  localPlaylists[getLocalPlaylistIndex(id)];
+	if (playlist.songs) {
+		expandSongs(id);
+		return;
+	}
+	
+	var row = table.getRowByID(id);
+	var expandButton = row.children().children().eq(0);
+	console.log(expandButton[0].onclick);
+	expandButton[0].onclick = null;
+	expandButton.text("[...]");
+	
+	serverGetSongs(id).done( (result) => {
+		if (result.error) {
+			genericErrorHandlers(result.error);
+			alert(result.error);
+			return;
+		}
+		
+		playlist.songs = result;
+		expandSongs(playlist, row, expandButton);
+		console.log(result);
+	});
+}
+
+function expandSongs(playlist, row = null, expandButton = null) {
+	songValuesInit(row, expandButton);
+	
+	expandButton.text("[-]");
+	expandButton[0].onclick = function(event) { collapseSongs(playlist, row, expandButton); };
+	
+	var songs = playlist.songs;
+	for (var i = 0; i < songs.length; i++) {
+		var song = songs[i];
+		console.log(song);
+	}
+	
+	//console.log(playlist);
+	//console.log(row);
+	//console.log(expandButton);
+}
+
+function collapseSongs(playlist, row = null, expandButton = null) {
+	songValuesInit(row, expandButton);
+	
+	expandButton.text("[+]");
+	expandButton[0].onclick = function(event) { expandSongs(playlist, row, expandButton); };
+}
+
+function songValuesInit(row, expandButton) {
+	if (row == null)
+		row = table.getRowByID(playlist.id);
+	
+	if (expandButton == null)
+		expandButton = row.children().children().eq(0);
 }
 
 // search functionality
