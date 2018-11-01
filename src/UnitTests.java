@@ -8,14 +8,15 @@ import java.util.List;
 
 public class UnitTests {
     public static void main(String[] args){
-        UserCreationTest1();
+        UserCreationTest();
         PlaylistTest();
         ShareTokenTest();
         PlaylistStateTest();
+        PlaylistSearchTest();
     }
 
     @Test(timeout = 100)
-    public static void UserCreationTest1(){
+    public static void UserCreationTest(){
         String userName = "testUserName1";
         String password = "testPassword";
         String email = "testEmail@test.com";
@@ -181,5 +182,58 @@ public class UnitTests {
         Assert.assertEquals(true, previousPlaylists.size() == 1);
         Assert.assertEquals(true, previousPlaylists.get(0).getNumSongs() == 1);
         Assert.assertEquals(true, previousPlaylists.get(0).getSong(0).title.equals(song1.title));
+    }
+
+    @Test(timeout = 100)
+    public static void PlaylistSearchTest(){
+        Playlist startList = new Playlist();
+
+        String songFetch = "SELECT TOP 2 * FROM Songs";
+
+        SqlHelper helper = new SqlHelper();
+
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(songFetch);
+
+        Song song1 = new Song();
+        Song song2 = new Song();
+        try{
+            resultSet.next();
+            song1 = new Song(resultSet);
+            resultSet.next();
+            song2 = new Song(resultSet);
+        }catch (SQLException e){
+            System.err.println(e);
+            Assert.fail();
+        }
+
+        User user = User.getUserByUserName("testUserName");
+
+        user.FetchPlaylists();
+        for(Playlist list : user.playlistList){
+            list.delete();
+        }
+
+        startList.addSong(song1);
+        startList.addSong(song2);
+        Song song3 = null;
+        Song song4 = null;
+        try {
+            song3 = Spotify.findSong("I write sins not tragedies");
+            song4 = Spotify.findSong("Ice ice baby");
+
+            startList.addSong(song3);
+            startList.addSong(song4);
+        }catch(Exception e){
+            System.err.println(e);
+            Assert.fail();
+        }
+
+        Assert.assertEquals(true, song3.title.equalsIgnoreCase("I write sins not tragedies"));
+        Assert.assertEquals(true, song4.title.equalsIgnoreCase("Ice ice baby"));
+
+        Assert.assertEquals(true, startList.getSong(0).title.equals(song1.title));
+        Assert.assertEquals(true, startList.getSong(1).title.equals(song2.title));
+        Assert.assertEquals(true, startList.getSong(2).title.equals(song3.title));
+        Assert.assertEquals(true, startList.getSong(3).title.equals(song4.title));
     }
 }
