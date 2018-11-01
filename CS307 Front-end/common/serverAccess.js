@@ -38,17 +38,24 @@ function getImportListFromServer(platformID) {
 	});
 }
 
-function importList(platformID, playlistID) {
-	return sendMessage({
+function importList(platformID, playlistID, force = false) {
+	var data = {
 		import: platformID,
-		playlist: playlistID
-	});
+		playlist: playlistID,
+	}
+	
+	if (force)
+		data.force = true;
+	
+	console.log (data);
+	
+	return sendMessage(data);
 }
 
 function mergeLists(ids, playlistName) {
 	var idString = ids[0];
 	for (var i = 1; i < ids.length; i++)
-		idString += " " + ids[i];
+		idString += ", " + ids[i];
 	
 	return sendMessage({
 		merge: idString,

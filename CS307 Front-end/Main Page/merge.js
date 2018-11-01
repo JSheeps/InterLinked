@@ -78,8 +78,10 @@ function mergePlaylists() {
 		if (result.error) {
 			genericErrorHandlers(result);
 			alert(result.error);
+		} else {
+			alert("Merge successful!");
+			console.log(result);
 		}
-		console.log(result);
 	});
 }
 

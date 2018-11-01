@@ -1,5 +1,6 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.scenario.effect.impl.sw.java.JSWBlend_MULTIPLYPeer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -28,7 +29,7 @@ class WebAPI {
 
     WebAPI() {
         userAuthTokens = getAuthTokens();
-        debug = new Debug(true, false);
+        debug = new Debug(true, true);
     }
 
     // ----------------------------------------  Server Handlers  ------------------------------------------------------
@@ -395,7 +396,7 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray remove(QueryValues query) throws Exception{
+    private Object remove(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -418,12 +419,10 @@ class WebAPI {
                 throw new ServerErrorException("Error deleting playlist");
         }
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("result",true);
-        jsonArray.put(jsonObject);
 
-        return jsonArray;
+        return jsonObject;
     }
 
     @SuppressWarnings("unchecked")
@@ -482,40 +481,51 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray merge(QueryValues query) throws Exception{
+    private Object merge(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
         int[] mergeIds;
 
+        String name = query.get("name");
+        if (name == null)
+            throw new BadQueryException("Must provide a merge list name");
+
         try {
             String mergeIdString = query.get("merge");
             String[] mergeIdStrings = mergeIdString.split(", ");
-            mergeIds = new int[2];
-            mergeIds[0] = Integer.parseInt(mergeIdStrings[0]);
-            mergeIds[1] = Integer.parseInt(mergeIdStrings[1]);
+            mergeIds = new int[mergeIdStrings.length];
+
+            for (int i = 0; i < mergeIds.length; i++) {
+                mergeIds[i] = Integer.parseInt((mergeIdStrings[i]));
+            }
         }
         catch (Exception e) {throw new BadQueryException("Unable to parse ids for merge");}
 
-        Playlist playlist1 = Playlist.getPlaylistById(mergeIds[0]);
-        Playlist playlist2 = Playlist.getPlaylistById(mergeIds[1]);
+        if (mergeIds.length < 2)
+            throw new BadQueryException("Need 2 or more playlists for merging");
 
-        if(playlist1 == null || playlist2 == null){
-            throw new ServerErrorException("Unable to find playlist: " +
-                    ((playlist1 == null)? mergeIds[0] : mergeIds[1]));
+        Playlist[] playlists= new Playlist[mergeIds.length];
+        for (int i = 0; i < playlists.length; i++) {
+            playlists[i] = Playlist.getPlaylistById(mergeIds[i]);
+            if (playlists[i] == null)
+                throw new ServerErrorException("Unable to find playlist: " +
+                        mergeIds[i]);
         }
 
-        Playlist merge = playlist1.merge(playlist2);
+        assert playlists.length >= 2 : "This should be true because we check if there are 2 or more mergeIDs";
+        Playlist merge =  playlists[0].merge(playlists[1]);
+        for (int i = 2; i < playlists.length; i++)
+            merge = merge.merge(playlists[i]);
+
+        merge.Name = name;
 
         merge.save(currentUser);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("merge", merge.ID);
 
-        jsonArray.put(jsonResult);
-
-        return jsonArray;
+        return jsonResult;
     }
 
 

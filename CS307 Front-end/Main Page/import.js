@@ -37,10 +37,22 @@ function viewImportList() {
 	});
 }
 
-function importPlayList(platformID, playlistName) {
-	importList(platformID, playlistName).done( (result) => {
+function importPlayList(platformID, playlistName, force = false) {
+	importList(platformID, playlistName, force).done( (result) => {
 		if (result.error) {
+			if (result.error == "Server Error: Playlist already exists in database (to import anyway, send query: force)") {
+				var choice = confirm("This is already in the data base. Would you like to overwrite what is already imported?");
+				console.log(choice);
+				if (choice) {
+					importPlayList(platformID, playlistName, true);
+					return;
+				} else {
+					result.error = "Playlist already exists and user does not wish to overwrite it";
+				}
+			}
+			
 			alert("Could not import playlist.\n" + result.error);
+			console.log(result.error);
 			return;
 		}
 		console.log(result);

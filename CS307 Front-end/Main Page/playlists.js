@@ -90,6 +90,12 @@ function removePlayList(id) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
 		}
-		console.log(result);
+		if (result.result) {
+			alert("Success");
+			viewPlaylists();
+		} else {
+			alert("Failed to remove playlist");
+			console.log(result);
+		}
 	});
 }
