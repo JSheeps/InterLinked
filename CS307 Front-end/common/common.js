@@ -33,6 +33,9 @@ function exportRedirect() {
 function mergeRedirect() {
 	redirect("/Main Page/merge.html");
 }
+function revertRedirect(){
+    redirect("/Main Page/revert.html")
+}
 
 function grantServerAccessRedirect() {
 	redirect("/SelectService Page/SelectService.html");

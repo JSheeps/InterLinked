@@ -32,23 +32,70 @@ function getPlaylistsFromServer() {
 	});
 }
 
+function serverGetSongs(playlistID) {
+	return sendMessage({
+		playlist: playlistID
+	});
+}
+
+function serverShare(id) {
+	return sendMessage({
+		share: id
+	});
+}
+
+function serverGetFriendPlaylist(shareCode) {
+	return sendMessage({
+		importshare: shareCode
+	});
+}
+
 function getImportListFromServer(platformID) {
 	return sendMessage({
 		import: platformID
 	});
 }
 
-function importList(platformID, playlistID) {
-	return sendMessage({
+function importList(platformID, playlistID, force = false) {
+	var data = {
 		import: platformID,
+		playlist: playlistID,
+	}
+	
+	if (force)
+		data.force = true;
+	
+	return sendMessage(data);
+}
+
+function mergeLists(ids, playlistName) {
+	var idString = ids[0];
+	for (var i = 1; i < ids.length; i++)
+		idString += ", " + ids[i];
+	
+	return sendMessage({
+		merge: idString,
+		name: playlistName
+	});
+}
+
+function serverAddSong(songQuery, playlistID) {
+	return sendMessage({
+		addSong: songQuery,
 		playlist: playlistID
 	});
 }
 
-function mergeLists(platformID, playlistID1, playlistID2) {
+function exportPlaylist(id, platform) {
 	return sendMessage({
-		merge: playlistID1,
-		playlist2: playlistID2
+		export: id,
+		platformID: platform
+	});
+}
+
+function serverRemovePlaylist(id) {
+	return sendMessage({
+		remove: id
 	});
 }
 

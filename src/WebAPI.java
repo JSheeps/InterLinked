@@ -28,7 +28,7 @@ class WebAPI {
 
     WebAPI() {
         userAuthTokens = getAuthTokens();
-        debug = new Debug(true, false);
+        debug = new Debug(false, false);
     }
 
     // ----------------------------------------  Server Handlers  ------------------------------------------------------
@@ -42,7 +42,13 @@ class WebAPI {
         headers.set("Access-Control-Allow-Origin", "*");
 
         URI uri = t.getRequestURI();
-        QueryValues query = new QueryValues(uri.getQuery());
+        QueryValues query;
+        try {
+            query = new QueryValues(uri.getQuery());
+        } catch(Exception e) {
+            noCallback(t);
+            return;
+        }
 
         String callback = query.get("callback");
         if (callback == null) {
@@ -259,13 +265,11 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray exportQuery(QueryValues query) throws Exception{
+    private Object exportQuery(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
             throw new NotLoggedInToService("User needs to log in to streaming service");
-
-        JSONArray jsonArray = new JSONArray();
 
         String pid = query.get("export");
         int id = Integer.parseInt(pid);
@@ -276,15 +280,19 @@ class WebAPI {
             throw new ServerErrorException("Playlist not found");
         }
 
-        ArrayList<String> failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+        ArrayList<String> failedSongs;
+        try {
+            failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+        } catch (Exception e){
+            throw new ServerErrorException(e.getMessage());
+        }
 
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", failedSongs.size() == 0);
-        jsonArray.put(jsonResult);
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
-        return jsonArray;
+        return jsonResult;
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
@@ -389,7 +397,7 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray remove(QueryValues query) throws Exception{
+    private Object remove(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -412,16 +420,14 @@ class WebAPI {
                 throw new ServerErrorException("Error deleting playlist");
         }
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("result",true);
-        jsonArray.put(jsonObject);
 
-        return jsonArray;
+        return jsonObject;
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray share(QueryValues query) throws Exception{
+    private Object share(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -445,20 +451,16 @@ class WebAPI {
                 throw new ServerErrorException("Error generating share token");
         }
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result",true);
-        JSONObject jsonShareToken = new JSONObject();
-        jsonShareToken.put("share", shareToken);
+        jsonResult.put("share", shareToken);
 
-        jsonArray.put(jsonResult);
-        jsonArray.put(jsonShareToken);
 
-        return jsonArray;
+        return jsonResult;
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray importShare(QueryValues query) throws Exception{
+    private Object importShare(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -466,50 +468,58 @@ class WebAPI {
 
         boolean b = Playlist.generateSharedPlaylist(shareToken, currentUser);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", b);
 
-        jsonArray.put(jsonResult);
-
-        return jsonArray;
+        return jsonResult;
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray merge(QueryValues query) throws Exception{
+    private Object merge(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
         int[] mergeIds;
 
+        String name = query.get("name");
+        if (name == null)
+            throw new BadQueryException("Must provide a merge list name");
+
         try {
             String mergeIdString = query.get("merge");
             String[] mergeIdStrings = mergeIdString.split(", ");
-            mergeIds = new int[2];
-            mergeIds[0] = Integer.parseInt(mergeIdStrings[0]);
-            mergeIds[1] = Integer.parseInt(mergeIdStrings[1]);
+            mergeIds = new int[mergeIdStrings.length];
+
+            for (int i = 0; i < mergeIds.length; i++) {
+                mergeIds[i] = Integer.parseInt((mergeIdStrings[i]));
+            }
         }
         catch (Exception e) {throw new BadQueryException("Unable to parse ids for merge");}
 
-        Playlist playlist1 = Playlist.getPlaylistById(mergeIds[0]);
-        Playlist playlist2 = Playlist.getPlaylistById(mergeIds[1]);
+        if (mergeIds.length < 2)
+            throw new BadQueryException("Need 2 or more playlists for merging");
 
-        if(playlist1 == null || playlist2 == null){
-            throw new ServerErrorException("Unable to find playlist: " +
-                    ((playlist1 == null)? mergeIds[0] : mergeIds[1]));
+        Playlist[] playlists= new Playlist[mergeIds.length];
+        for (int i = 0; i < playlists.length; i++) {
+            playlists[i] = Playlist.getPlaylistById(mergeIds[i]);
+            if (playlists[i] == null)
+                throw new ServerErrorException("Unable to find playlist: " +
+                        mergeIds[i]);
         }
 
-        Playlist merge = playlist1.merge(playlist2);
+        assert playlists.length >= 2 : "This should be true because we check if there are 2 or more mergeIDs";
+        Playlist merge =  playlists[0].merge(playlists[1]);
+        for (int i = 2; i < playlists.length; i++)
+            merge = merge.merge(playlists[i]);
+
+        merge.Name = name;
 
         merge.save(currentUser);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("merge", merge.ID);
 
-        jsonArray.put(jsonResult);
-
-        return jsonArray;
+        return jsonResult;
     }
 
 

@@ -5,15 +5,16 @@
         
         <link href="viewPlaylists.css" type="text/css" rel="stylesheet">
 		<link href="/common/common.css" type="text/css" rel="stylesheet">
+		<link href="page.css" type="text/css" rel="stylesheet">
+		
 		<!-- JQuery API -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		
 		<script src="tables.js"></script>
+		<script src="errorHandler.js"></script>
 		<script src="/common/serverAccess.js"></script>
 		<script src="playlists.js"></script>
-		<script src="/common/common.js"></script>
-		
-		<link href="page.css" type="text/css" rel="stylesheet">
+		<script src="/common/common.js"></script>		
 	</head>
 	<body>
     
@@ -31,6 +32,7 @@
 			<img src="import playlist.png" title="Import a Playlist" class="icon" id="importPlaylistButton" onclick="importRedirect()">
 			<img src="export playlist.png" title="Export a Playlist" class="icon" id="exportPlaylistButton" onclick="exportRedirect()">
 			<img src="merge playlists.png" title="Merge Playlists" class="icon" id="mergePlaylistsButton" onclick="mergeRedirect()">
+			<img src="revert playlists.png" title="Revert Playlists" class="icon" id="revertPlaylistsButton" onclick="revertRedirect()">
 		</div>
         
         <!-- Search bar -->
@@ -39,23 +41,21 @@
         <div class="search">
             <input type="text" placeholder="Search for a song..." id="search">
             <button id="searchbtn" type="submit" onclick="search()"><i class="fa fa-search"></i></button>
-			<div id="searchResults"></div>
+			<table id="searchResults"></table>
         </div>
         <!-- End Search bar -->
         
 		<div id="playlistsWindow">
             <div id="mainContents">
-                <table id="playlistTable" align="center">
-                    <tr> <th></th> <th> My Playlists </th> </tr>
-                </table>
+                <table id="playlistTable" align="center"> </table>
             </div>
         </div>
 
 		<!-- Add friend's playlist -->
 		<div class="addFromFriend">
-			<input type="text" placeholder="Enter a friend's playlist token" id="saddFromFriend">
+			<input type="text" placeholder="Enter a friend's playlist token" id="addFromFriend" onclick="addFriendPlaylistClear()">
 		</div>
-		<button id="addPlaylistBtn" type="submit" onclick="addFriendPlaylist">Add Friend's Playlist</button>
+		<button id="addPlaylistBtn" type="submit" onclick="addFriendPlaylist()">Add Friend's Playlist</button>
         <!-- End Add friend's playlist-->
 
         <a class="logout" onclick="logoutRedirect()">Logout</a>

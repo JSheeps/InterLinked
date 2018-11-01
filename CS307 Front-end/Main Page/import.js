@@ -1,64 +1,60 @@
 "use strict";
-var pageContents;
-const plsel = "#importablePlaylistTable";
+var table;
 
 $(document).ready( () => {
-	pageContents = $("#mainContents");
-	viewImportList(plsel);
+	table = new Table("#importablePlaylistTable", "Importable Playlists", null, "Playlist Name");
+	viewImportList();
 });
 
-function viewImportList(tableSelector) {
+function viewImportList() {
 	var platformID = "Spotify";
-	var table = clearTable(tableSelector);
-	tableText(table, "Loading...");
+	table.loading();
 	
 	getImportListFromServer(platformID).done( (playlists) => {
-		table = clearTable(tableSelector);
-		console.log(table);
+		table.clear();
+		
 		var error = playlists.error;
 		if (error) {
-			if (error == "Unknown Error: Unauthenticated: User needs to log in to service" || error == "NotLoggedInToService: User needs to log in to streaming service") {
-				grantServerAccessRedirect();
-				return;
-			}
-			tableText(table, error);
+			genericErrorHandlers(error);
+			table.text(error);
 			return;
 		}
 		if (playlists.length == 0) {
-			tableText(table, "No playslists on accounts");
+			table.text("No playslists on accounts");
 			return;
-		}
-		/*playlists = [
-			{ name: "Bach", id: 0 },
-			{ name: "Beethoven", id: 1 }
-		];*/
-			
+		}			
 		
-		console.log(playlists);
+		table.makeSortRow();
 		for (var i = 0; i < playlists.length; i++) {
-			var str = "<tr>";
 			var playlist = playlists[i];
-			str += "<td><a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.name + "');\">Import</a></td>"
-			str += "<td>" + playlist.name + "</td>";
-			str += "</tr>";
-			table.after(str);
-			table = table.next();
+			table.addRow(
+				null,
+				"<a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.name + "');\">Import</a>",
+				playlist.name
+			);
 		}
 	});
 }
 
-function importPlayList(platformID, playlistName) {
-	importList(platformID, playlistName).done( (result) => {
+function importPlayList(platformID, playlistName, force = false) {
+	importList(platformID, playlistName, force).done( (result) => {
 		if (result.error) {
+			if (result.error == "Server Error: Playlist already exists in database (to import anyway, send query: force)") {
+				var choice = confirm("This is already in the data base. Would you like to overwrite what is already imported?");
+				console.log(choice);
+				if (choice) {
+					importPlayList(platformID, playlistName, true);
+					return;
+				} else {
+					result.error = "Playlist already exists and user does not wish to overwrite it";
+				}
+			}
+			
 			alert("Could not import playlist.\n" + result.error);
+			console.log(result.error);
 			return;
 		}
-		console.log(result);
+		
 		alert("Imported Successfully!");
-		viewImportList(plsel);
 	});
-}
-
-function tableText(table, text, priorText = "") {
-	return table.after("<tr><td>" + priorText + "</td> <td><i>" + text + "</i></td></tr>");
 }

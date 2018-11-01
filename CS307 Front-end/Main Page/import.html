@@ -6,12 +6,14 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		
 		<script src="/common/serverAccess.js"></script>
-        <link href="viewPlaylists.css" type="text/css" rel="stylesheet">
-		<link href="/common/common.css" type="text/css" rel="stylesheet">
 		<script src="/common/common.js"></script>
+		<script src="errorHandler.js"></script>
 		<script src="tables.js"></script>
 		<script src="import.js"></script>
+		
 		<link href="page.css" type="text/css" rel="stylesheet">
+        <link href="viewPlaylists.css" type="text/css" rel="stylesheet">
+		<link href="/common/common.css" type="text/css" rel="stylesheet">
 	</head>
 	<body>
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,600' rel='stylesheet' type='text/css'>
@@ -27,6 +29,7 @@
 			<img src="import playlist.png" title="Import a Playlist" class="icon" id="importPlaylistButton" onclick="importRedirect()">
 			<img src="export playlist.png" title="Export a Playlist" class="icon" id="exportPlaylistButton" onclick="exportRedirect()">
 			<img src="merge playlists.png" title="Merge Playlists" class="icon" id="mergePlaylistsButton" onclick="mergeRedirect()">
+			<img src="revert playlists.png" title="Revert Playlists" class="icon" id="revertPlaylistsButton" onclick="revertRedirect()">
 		</div>
         <div id="playlistsWindow">
             <div id="mainContents">
@@ -37,6 +40,5 @@
         </div>
         
         <a class="logout" onclick="logoutRedirect()">Logout</a>
-        <button id="importbtn">Import Selected Playlists</button>
 	</body>
 </html>

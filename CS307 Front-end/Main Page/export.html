@@ -7,6 +7,7 @@
 		
 		<script src="/common/common.js"></script>
 		<script src="/common/serverAccess.js"></script>
+		<script src="errorHandler.js"></script>
 		<script src="tables.js"></script>
 		<script src="export.js"></script>
 		
@@ -29,6 +30,7 @@
 			<img src="import playlist.png" title="Import a Playlist" class="icon" id="importPlaylistButton" onclick="importRedirect()">
 			<img src="export playlist.png" title="Export a Playlist" class="icon" id="exportPlaylistButton" onclick="exportRedirect()">
 			<img src="merge playlists.png" title="Merge Playlists" class="icon" id="mergePlaylistsButton" onclick="mergeRedirect()">
+			<img src="revert playlists.png" title="Revert Playlists" class="icon" id="revertPlaylistsButton" onclick="revertRedirect()">
 		</div>
         <div id="playlistsWindow">
             <div id="mainContents">
@@ -39,6 +41,5 @@
         </div>
         
         <a class="logout" onclick="logoutRedirect()">Logout</a>
-        <button id="exportbtn">Export Selected Playlists</button>
 	</body>
 </html>
