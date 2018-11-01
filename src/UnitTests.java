@@ -7,11 +7,12 @@ public class UnitTests {
     public static void main(String[] args){
         UserCreationTest1();
         PlaylistTest();
+        ShareTokenTest();
     }
 
     @Test(timeout = 100)
     public static void UserCreationTest1(){
-        String userName = "testUserName";
+        String userName = "testUserName1";
         String password = "testPassword";
         String email = "testEmail@test.com";
 
@@ -83,7 +84,7 @@ public class UnitTests {
     }
 
     @Test(timeout = 100)
-    public static void shareTokenTest(){
+    public static void ShareTokenTest(){
         Song song = new Song();
         song.ID = 17;
         song.title = "Title 1";
@@ -126,7 +127,7 @@ public class UnitTests {
 
         user.FetchPlaylists();
 
-        Assert.assertEquals(user.playlistList.size() == 1, user.playlistList.size() != 1);
+        Assert.assertEquals(true, user.playlistList.size() == 1);
 
         Playlist returnedList = user.playlistList.get(0);
 
