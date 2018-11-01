@@ -2,7 +2,7 @@
 var table;
 
 $(document).ready( () => {
-	table = new Table("#importablePlaylistTable", "Importable Playlists", 2, null, "Playlist Name");
+	table = new Table("#importablePlaylistTable", "Importable Playlists", null, "Playlist Name");
 	viewImportList();
 });
 

@@ -13,21 +13,21 @@ function clearTable(tableSelector) {
 }
 
 class Table {
-	constructor(id, title, numberOfColumns = 1, ...sortColumnsTitles) {
+	constructor(id, title, ...sortColumnsTitles) {
 		this.id = id;
 		this.table = $(id);
 		this.tbody = this.table.children();
-		this.columns = numberOfColumns;
-		if (sortColumnsTitles) {
-			if (sortColumnsTitles.length != numberOfColumns)
-				throw "sortColumnsTitles must have " + numberOfColumns + " elements";
+		if (this.tbody.length == 0) {
+			this.table.append("<tbody></tbody>");
+			this.tbody = this.table.children();
 		}
+		this.columns = sortColumnsTitles.length;
 		
 		this.sortColumnsTitles = sortColumnsTitles;
 		this.orderBy = -1;
 		
 		this.tbody.empty();
-		this.tbody.html("<tr> <th colspan='" + numberOfColumns + "'>" + title + "</th></tr>");
+		this.tbody.html("<tr> <th colspan='" + this.columns + "'>" + title + "</th></tr>");
 	}
 	
 	/*
@@ -58,7 +58,7 @@ class Table {
 		if (typeOf(objs[0]) == "array")
 			objs = objs[0];
 		if (objs.length != this.columns)
-			throw "number of objects != " + this.numberOfColumns;
+			throw "number of objects != " + this.columns;
 
 		
 		var lastRow = this.tbody.find("tr:last");

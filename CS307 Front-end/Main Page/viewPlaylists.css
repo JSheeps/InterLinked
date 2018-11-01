@@ -9,8 +9,8 @@
 
 #searchResults {
 	background-color: white;
-	width: 80%;
-	margin: 0 auto;
+	width: auto;
+	margin: 10px auto;
 	float: center;
 }
 

@@ -63,6 +63,13 @@ function mergeLists(ids, playlistName) {
 	});
 }
 
+function serverAddSong(songQuery, playlistID) {
+	return sendMessage({
+		addSong: songQuery,
+		playlist: playlistID
+	});
+}
+
 function exportPlaylist(id, platform) {
 	return sendMessage({
 		export: id,

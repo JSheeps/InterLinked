@@ -3,7 +3,7 @@ var table;
 var mergeListNameBox;
 
 $(document).ready( () => {
-	table = new Table("#mergeablePlaylistTable", "Mergeable Playlists", 2, null, "Playlist Name");
+	table = new Table("#mergeablePlaylistTable", "Mergeable Playlists", null, "Playlist Name");
 	viewMergeList();
 	mergeListNameBox = $("#mergePlaylistName");
 	

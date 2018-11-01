@@ -2,7 +2,7 @@
 var table;
 
 $(document).ready( () => {
-	table = new Table("#exportablePlaylistTable", "Exportable Playlists", 2, null, "Playlist Name");
+	table = new Table("#exportablePlaylistTable", "Exportable Playlists", null, "Playlist Name");
 	viewExportablePlaylists();
 });
 
