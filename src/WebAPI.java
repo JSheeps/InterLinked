@@ -172,6 +172,9 @@ class WebAPI {
         else if(query.containsKey("add"))
             return addSong(query);
 
+        else if(query.containsKey("revert"))
+            return revert(query);
+
         throw new BadQueryException("Query has no meaning");
     }
 
@@ -556,6 +559,30 @@ class WebAPI {
         playlist.addSong(song);
 
         playlist.save(currentUser);
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("result", true);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object revert(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        int playlistId = Integer.parseInt(query.get("revert"));
+
+        Playlist playlist = Playlist.getPlaylistById(playlistId);
+
+        if(playlist == null) throw new ServerErrorException("Couldn't find playlist with id: " + playlistId);
+
+        List<Playlist> playlists = playlist.fetchPreviousStates();
+
+        if(playlists == null) throw new ServerErrorException("Server error");
+        if(playlists.size() == 0)
+            throw new ServerErrorException("Couldn't find previous states for playlist: " + playlist.Name);
+
+        playlists.get(0).save(currentUser);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("result", true);
