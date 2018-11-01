@@ -34,17 +34,17 @@ th{
     display: inline-block;
     font-size: 16px;
 }
-#mergebtn:hover{
-    cursor: pointer;
-}
+
 
 .search{
     position: relative;
     top: 75px;
 }
-#searchbtn{
+
+#mergebtn:hover #searchbtn #addPlaylistBtn {
     cursor: pointer;
 }
-#addPlaylistBtn {
-    cursor: pointer;
+
+.sharebox {
+	width: 50%
 }

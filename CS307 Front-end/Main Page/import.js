@@ -56,6 +56,5 @@ function importPlayList(platformID, playlistName, force = false) {
 		}
 		
 		alert("Imported Successfully!");
-		viewImportList();
 	});
 }

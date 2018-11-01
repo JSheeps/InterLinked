@@ -32,6 +32,24 @@ function getPlaylistsFromServer() {
 	});
 }
 
+function serverGetSongs(playlistID) {
+	return sendMessage({
+		playlist: playlistID
+	});
+}
+
+function serverShare(id) {
+	return sendMessage({
+		share: id
+	});
+}
+
+function serverGetFriendPlaylist(shareCode) {
+	return sendMessage({
+		importshare: shareCode
+	});
+}
+
 function getImportListFromServer(platformID) {
 	return sendMessage({
 		import: platformID
@@ -46,8 +64,6 @@ function importList(platformID, playlistID, force = false) {
 	
 	if (force)
 		data.force = true;
-	
-	console.log (data);
 	
 	return sendMessage(data);
 }

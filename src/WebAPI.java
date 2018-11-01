@@ -427,7 +427,7 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray share(QueryValues query) throws Exception{
+    private Object share(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -451,20 +451,16 @@ class WebAPI {
                 throw new ServerErrorException("Error generating share token");
         }
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result",true);
-        JSONObject jsonShareToken = new JSONObject();
-        jsonShareToken.put("share", shareToken);
+        jsonResult.put("share", shareToken);
 
-        jsonArray.put(jsonResult);
-        jsonArray.put(jsonShareToken);
 
-        return jsonArray;
+        return jsonResult;
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray importShare(QueryValues query) throws Exception{
+    private Object importShare(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
@@ -472,13 +468,10 @@ class WebAPI {
 
         boolean b = Playlist.generateSharedPlaylist(shareToken, currentUser);
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", b);
 
-        jsonArray.put(jsonResult);
-
-        return jsonArray;
+        return jsonResult;
     }
 
     @SuppressWarnings("unchecked")

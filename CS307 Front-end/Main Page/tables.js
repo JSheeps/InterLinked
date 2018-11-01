@@ -85,6 +85,10 @@ class Table {
 		lastRow.after(html);
 	}
 	
+	removeRow(i) {
+		getRow(i).clear();
+	}
+	
 	getRow(index) {
 		return this.tbody.children().eq(index);
 	}

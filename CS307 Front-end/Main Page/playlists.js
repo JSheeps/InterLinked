@@ -1,16 +1,20 @@
 "use strict";
 
 var table;
+var friendPlaylistInput;
+
 var searchResults = null;
 var searchedSong = "";
 var localPlaylists = null;
 
 $(document).ready( () => {
 	table = new Table("#playlistTable", "My Playlists", null, null, "Playlist Name", null);
+	friendPlaylistInput = $("#addFromFriend");
 	viewPlaylists();
 	
 	// Add event listener to search field
 	$("input#search").on("enterPressed", search);
+	friendPlaylistInput.on("enterPressed", addFriendPlaylist);
 	
 	$("input").on("keyup", function (event) {
 		if (event.which == 13)
@@ -19,6 +23,7 @@ $(document).ready( () => {
 	
 });
 
+// Viewing playlists
 function viewPlaylists(refresh = true) {
 	table.loading();
 	if (refresh)
@@ -43,18 +48,42 @@ function fillTable(playlists) {
 	
 	for (var i = 0; i < playlists.length; i++) {
 		var playlist = playlists[i];
+		var rowNum = i + 2;
 		table.addRow(
-			null,
+			{ id: playlist.id },
 			(searchedSong.length != 0 ? "<a class='black' onclick=\"addSearchedSong(" + playlist.id + ");\">Add Song,</a>" : ""),
-			"<a class='black' onclick=\"sharePlayList(" + playlist.id + ");\">Share</a>",
+			"<a class='black' onmousedown=\"sharePlayList(" + rowNum + ");\">Share</a>",
 			playlist.name,
-			"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
+			"<a class='black' onclick=\"removePlayList('" + rowNum + "');\">Remove</a></td>"
 		);
 	}
 	
 	localPlaylists = playlists;
 }
 
+function removePlayList(i) {
+	var row = table.getRow(i);
+	var id = row.attr("id");
+	if (!id) return;
+	
+	serverRemovePlaylist(id).done( (result) => {
+		if (result.error) {
+			genericErrorHandlers(result.error);
+			alert(result.error);
+		}
+		if (result.result) {
+			localPlaylists[i - 2] = localPlaylists[localPlaylists.length - 1];
+			localPlaylists.pop();
+			viewPlaylists(false);
+			alert("Successfully removed");
+		} else {
+			alert("Failed to remove playlist");
+			console.log(result);
+		}
+	});
+}
+
+// search functionality
 function search() {
 	if (searchResults == null)
 		searchResults = new Table("#searchResults", "Search Results", null);
@@ -81,7 +110,7 @@ function search() {
 			return;
 		}
 		
-		// console.log(songs);
+		console.log(songs);
 		for (var i = 0; i < songs.length; i++) {
 			var result = songs[i];
 			var resultString = "";
@@ -105,26 +134,93 @@ function search() {
 	});
 }
 
-function removePlayList(id) {
-	serverRemovePlaylist(id).done( (result) => {
+function addSearchedSong(playlistID) {
+	serverAddSong(searchedSong, playlistID).done( (result) => {
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
+			return;
 		}
+		console.log(result);
+	});
+}
+
+
+// Sharing functionality
+function sharePlayList(i) {
+	var row = table.getRow(i);
+	var id = row.attr("id");
+	
+	serverShare(id).done( (result) => {
+		if (result.error) {
+			genericErrorHandlers(result.error);
+			
+			alert(result.error);
+			return;
+		}
+		
 		if (result.result) {
-			alert("Success");
-			viewPlaylists();
+			var shareField = row.children().eq(1);
+			var shareBoxID = "shareBox" + id;
+			shareField.html(
+				"<div class='tooltip'>" +
+					"<input type='text' id='" + shareBoxID + "' class='tooltip sharebox' onmouseout='shareBoxOut(\"" + shareBoxID + "\")' onmouseup='shareBoxCopy(\"" + shareBoxID + "\")' readonly>" +
+				"</div>"
+			);
+			
+			shareField = shareField.children().children();
+			shareField.val(result.share);
 		} else {
-			alert("Failed to remove playlist");
+			alert(result);
 			console.log(result);
 		}
 	});
 }
 
-function sharePlayList(id) {
-	console.log("Share: " + id);
+function shareBoxOut(id) {
+	var shareBoxText = $("#" + id + "text");
+	shareBoxText.remove();
 }
 
-function addSearchedSong(playlistID) {
+function shareBoxCopy(id) {
+	id = id.toString();
+	var shareField = $("#" + id);
+	shareField.focus();
+	shareField.select();
+	var tooltipText = (document.execCommand('copy') == false ?
+		"Could not copy to clipboard" :
+		"Copied to clipboard");
 	
+	shareField.after(
+		"<span class='tooltiptext' id='" + id + "text'>" +
+			tooltipText +
+		"</span>"
+	);
+}
+
+function addFriendPlaylistClear() {
+	friendPlaylistInput.select();
+}
+
+function addFriendPlaylist() {
+	var shareCode = friendPlaylistInput.val();
+	if (shareCode.length == 0) {
+		alert("No share code provided");
+		return;
+	}
+	
+	serverGetFriendPlaylist(shareCode).done( (result) => {
+		if (result.error) {
+			genericErrorHandlers(result);
+			alert(result.error);
+			return;
+		}
+		
+		if (result.result == true) {
+			viewPlaylists();
+			alert("Friend's playlist imported");
+			return;
+		}
+		console.log(result);
+	});
 }
