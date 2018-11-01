@@ -238,12 +238,19 @@ class WebAPI {
 
         // Check if playlist already exists
         currentUser.FetchPlaylists();
-        if(currentUser.playlistList.contains(playlist) && !query.containsKey("force"))
-            throw new ServerErrorException("Playlist already exists in database " +
-                    "(to import anyway, send query: force)");
+        if(currentUser.playlistList.contains(playlist)) {
+            if(!query.containsKey("force"))
+                throw new ServerErrorException("Playlist already exists in database " +
+                                                "(to import anyway, send query: force)");
+            else
+                playlist = currentUser.getPlaylistByName(playlist.Name);
+        }
 
-        // Get songs for selected playlist
-        List<Song> importPlaylist = Spotify.importPlaylist(currentUser.tokens, playlist.Name);
+        List<Song> importPlaylist;
+        try {
+            // Get songs for selected playlist
+            importPlaylist = Spotify.importPlaylist(currentUser.tokens, playlist.Name);
+        } catch (Exception e) {throw new ServerErrorException("Error importing playlist");}
 
         // Add songs to new playlist
         playlist.clearSongs();
@@ -522,6 +529,58 @@ class WebAPI {
 
         return jsonResult;
     }
+
+    @SuppressWarnings("unchecked")
+    private Object addSong(QueryValues query) throws Exception{
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        int[] mergeIds;
+
+        String name = query.get("name");
+        if (name == null)
+            throw new BadQueryException("Must provide a merge list name");
+
+        try {
+            String mergeIdString = query.get("merge");
+            String[] mergeIdStrings = mergeIdString.split(", ");
+            mergeIds = new int[mergeIdStrings.length];
+
+            for (int i = 0; i < mergeIds.length; i++) {
+                mergeIds[i] = Integer.parseInt((mergeIdStrings[i]));
+            }
+        }
+        catch (Exception e) {throw new BadQueryException("Unable to parse ids for merge");}
+
+        if (mergeIds.length < 2)
+            throw new BadQueryException("Need 2 or more playlists for merging");
+
+        Playlist[] playlists= new Playlist[mergeIds.length];
+        for (int i = 0; i < playlists.length; i++) {
+            playlists[i] = Playlist.getPlaylistById(mergeIds[i]);
+            assert playlists[i] != null;
+            playlists[i].setPlaylist(playlists[i].FetchSongs());
+            if (playlists[i] == null)
+                throw new ServerErrorException("Unable to find playlist: " +
+                        mergeIds[i]);
+        }
+
+        assert playlists.length >= 2 : "This should be true because we check if there are 2 or more mergeIDs";
+
+        Playlist merge =  playlists[0].merge(playlists[1]);
+        for (int i = 2; i < playlists.length; i++)
+            merge = merge.merge(playlists[i]);
+
+        merge.Name = name;
+
+        merge.save(currentUser);
+
+        JSONObject jsonResult = new JSONObject();
+        jsonResult.put("merge", merge.ID);
+
+        return jsonResult;
+    }
+
 
 
     // ----------------------------------------  Authentication  ------------------------------------------------------

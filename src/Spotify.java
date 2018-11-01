@@ -71,7 +71,8 @@ public class Spotify extends StreamingService
     }
 
     public static String[] getPlaylistNames(MutablePair<String, String> tokens){
-        String [] playlist_names = {};
+        List<String> playlist_names = new ArrayList<>();
+
         tokens = handleTokenRefresh(tokens);
         try {
             SpotifyApi spotifyApi = build.build();
@@ -86,15 +87,13 @@ public class Spotify extends StreamingService
                     .build();
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
 
-            //Parsing playlist names into a string array
-            playlist_names = new String[playlists.getTotal()];
-
-            for (int i=0;i<playlists.getTotal(); i++){
-                playlist_names[i] = (playlists.getItems()[i]).getName();
+            PlaylistSimplified[] items = playlists.getItems();
+            for(PlaylistSimplified item : items){
+                playlist_names.add(item.getName());
             }
 
         } catch (Exception e) {e.printStackTrace();}
-        return playlist_names;
+        return playlist_names.toArray(new String[0]);
     }
 
     //TODO add an exception for if a playlist hasnt been imported correctly
@@ -282,10 +281,11 @@ public class Spotify extends StreamingService
             final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
 
             //Parsing playlist names into a string array
-            for (int i=0;i<playlists.getTotal(); i++){
+            PlaylistSimplified[] items = playlists.getItems();
+            for(PlaylistSimplified item : items){
                 Playlist playlist = new Playlist();
-                playlist.spotifyId = playlists.getItems()[i].getId();
-                playlist.Name = playlists.getItems()[i].getName();
+                playlist.spotifyId = item.getId();
+                playlist.Name = item.getName();
                 userPlaylists.add(playlist);
             }
 
