@@ -1,13 +1,17 @@
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class UnitTests {
     public static void main(String[] args){
         UserCreationTest1();
         PlaylistTest();
         ShareTokenTest();
+        PlaylistStateTest();
     }
 
     @Test(timeout = 100)
@@ -134,5 +138,48 @@ public class UnitTests {
         Assert.assertEquals(true, returnedList.equals(playlist));
         Assert.assertEquals(true, returnedList.getSong(0).equals(song));
         Assert.assertEquals(true, returnedList.getSong(1).equals(song2));
+    }
+
+    @Test(timeout = 100)
+    public static void PlaylistStateTest(){
+        Playlist startList = new Playlist();
+
+        String songFetch = "SELECT TOP 2 * FROM Songs";
+
+        SqlHelper helper = new SqlHelper();
+
+        ResultSet resultSet = helper.ExecuteQueryWithReturn(songFetch);
+
+        Song song1 = new Song();
+        Song song2 = new Song();
+        try{
+            resultSet.next();
+            song1 = new Song(resultSet);
+            resultSet.next();
+            song2 = new Song(resultSet);
+        }catch (SQLException e){
+            System.err.println(e);
+            Assert.fail();
+        }
+
+        User user = User.getUserByUserName("testUserName");
+
+        user.FetchPlaylists();
+        for(Playlist list : user.playlistList){
+            list.delete();
+        }
+
+        startList.addSong(song1);
+        startList.save(user);
+
+        startList.clearSongs();
+        startList.addSong(song2);
+        startList.save(user);
+
+        List<Playlist> previousPlaylists = startList.fetchPreviousStates();
+
+        Assert.assertEquals(true, previousPlaylists.size() == 1);
+        Assert.assertEquals(true, previousPlaylists.get(0).getNumSongs() == 1);
+        Assert.assertEquals(true, previousPlaylists.get(0).getSong(0).title.equals(song1.title));
     }
 }

@@ -217,16 +217,8 @@ class Playlist {
         return newPlaylist.save(currentUser);
     }
 
-    public boolean savePlaylistState(){
+    private boolean savePlaylistState(){
         List<Song> currentSongs = this.FetchSongs();
-
-        // Check to make sure all songs in playlist have IDs
-        for(Song song : playlist){
-            if(song.ID == 0){
-                System.err.println("Each song in playlist must be saved prior to calling savePlaylistState()");
-                return false;
-            }
-        }
 
         String currentTime = LocalDateTime.now().toString();
 
@@ -252,7 +244,7 @@ class Playlist {
 
         if(historyID == 0) return false;
 
-        for(Song song : playlist){
+        for(Song song : currentSongs){
             String playlistHistorySongInsert = "INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(" + historyID + ", " + song.ID + ")";
 
             helper.ExecuteQuery(playlistHistorySongInsert);
@@ -266,7 +258,7 @@ class Playlist {
     public List<Playlist> fetchPreviousStates(){
 
         // Start by getting each playlistHistory ID
-        String playlistHistoryIDFetch = "SELECT * FROM PlaylistHistory WHERE PlaylistID =" + ID + " ORDER BY CreatedDate DESC";
+        String playlistHistoryIDFetch = "SELECT * FROM PlaylistHistory WHERE PlaylistID =" + ID + " ORDER BY CreatedTime DESC";
 
         SqlHelper helper = new SqlHelper();
         ResultSet resultSet = helper.ExecuteQueryWithReturn(playlistHistoryIDFetch);
@@ -285,7 +277,7 @@ class Playlist {
         // Next, fetch the songs in each playlistHistory state and make a new playlist using them
         List<Playlist> previousPlaylistStates = new ArrayList<>();
         for(int historyID : playlistHistoryIDs){
-            String songFetch = "SELECT * FROM PlalistHistorySongs WHERE PlaylistHistoryID = " + historyID;
+            String songFetch = "SELECT * FROM PlaylistHistorySongs WHERE PlaylistHistoryID = " + historyID;
 
             ResultSet resultSet1 = helper.ExecuteQueryWithReturn(songFetch);
 
@@ -294,8 +286,8 @@ class Playlist {
             previousState.ID = this.ID;
 
             try{
-                while(resultSet.next()){
-                    int songID = resultSet.getInt("SongID");
+                while(resultSet1.next()){
+                    int songID = resultSet1.getInt("SongID");
                     previousState.playlist.add(Song.fetchSongByID(songID));
                 }
             }catch(SQLException e){
