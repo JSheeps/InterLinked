@@ -59,5 +59,8 @@ Query Specifications
 		importshare <sharetoken>                            Playlist object from token
 
 		add         <playlistID SpotifySongID>              Result true or false
+
+		revert      <playlistID>                            Result true or false
+		                                                    Reverts playlist to most previous state
 		
 		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).
