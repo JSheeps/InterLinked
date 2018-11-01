@@ -27,12 +27,6 @@ a{
     text-align: center;
 }
 
-a:hover {
-	text-decoration: underline;
-	cursor: pointer;
-}
-
-
 .logout{
     position: fixed;
     cursor: pointer;
