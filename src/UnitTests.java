@@ -144,6 +144,7 @@ public class UnitTests {
     @Test(timeout = 100)
     public static void PlaylistStateTest(){
         Playlist startList = new Playlist();
+        startList.Name = "State playlist";
 
         String songFetch = "SELECT TOP 2 * FROM Songs";
 
@@ -187,6 +188,7 @@ public class UnitTests {
     @Test(timeout = 100)
     public static void PlaylistSearchTest(){
         Playlist startList = new Playlist();
+        startList.Name = "Search test";
 
         String songFetch = "SELECT TOP 2 * FROM Songs";
 
