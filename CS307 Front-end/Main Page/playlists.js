@@ -4,7 +4,7 @@ var table;
 
 $(document).ready( () => {
 	table = new Table("#playlistTable", "My Playlists", 3, null, "Playlist Name", null);
-	viewPlaylists("#playlistTable");
+	viewPlaylists();
 	
 	// Add event listener to search field
 	$("input#search").on("enterPressed", search);
@@ -16,23 +16,13 @@ $(document).ready( () => {
 	
 });
 
-function viewPlaylists(tableSelector) {
-	table.clear().text("Loading...");
+function viewPlaylists() {
+	table.loading();
 	
-	getPlaylistsFromServer().done( (playlists) => {
-		/*playlists = [
-			{ name: "test" },
-			{ name: "second" },
-			{ name: "third" },
-			{ name: "fourth" }
-		];*/
-		
+	getPlaylistsFromServer().done( (playlists) => {		
 		table.clear();
 		if (playlists.error) {
-			if (playlists.error == "NotLoggedInToService: User needs to log in to streaming service") {
-				grantServerAccessRedirect();
-				return;
-			}
+			genericErrorHandlers(playlists.error);
 			table.text(playlists.error);
 			return;
 		}
@@ -44,9 +34,10 @@ function viewPlaylists(tableSelector) {
 		console.log(playlists);
 		table.makeSortRow();
 		
-		for (var i = playlists.length - 1; i >= 0; i--) {
+		for (var i = 0; i < playlists.length; i++) {
 			var playlist = playlists[i];
 			table.addRow(
+				null,
 				"<a class='black' onclick=\"sharePlayList();\">Share</a>",
 				playlist.name,
 				"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
@@ -90,5 +81,15 @@ function search() {
 			}
 			
 		}
+	});
+}
+
+function removePlayList(id) {
+	serverRemovePlaylist(id).done( (result) => {
+		if (result.error) {
+			genericErrorHandlers(result.error);
+			alert(result.error);
+		}
+		console.log(result);
 	});
 }

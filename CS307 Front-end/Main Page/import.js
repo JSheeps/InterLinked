@@ -1,48 +1,38 @@
 "use strict";
-var pageContents;
-const plsel = "#importablePlaylistTable";
+var table;
 
 $(document).ready( () => {
-	pageContents = $("#mainContents");
-	viewImportList(plsel);
+	table = new Table("#importablePlaylistTable", "Importable Playlists", 2, null, "Playlist Name");
+	viewImportList();
 });
 
-function viewImportList(tableSelector) {
+function viewImportList() {
 	var platformID = "Spotify";
-	var table = clearTable(tableSelector);
-	tableText(table, "Loading...");
+	table.loading();
 	
 	getImportListFromServer(platformID).done( (playlists) => {
-		table = clearTable(tableSelector);
-		console.log(table);
+		table.clear();
+		
 		var error = playlists.error;
 		if (error) {
-			if (error == "Unknown Error: Unauthenticated: User needs to log in to service" || error == "NotLoggedInToService: User needs to log in to streaming service") {
-				grantServerAccessRedirect();
-				return;
-			}
-			tableText(table, error);
+			genericErrorHandlers(error);
+			table.text(error);
 			return;
 		}
 		if (playlists.length == 0) {
-			tableText(table, "No playslists on accounts");
+			table.text("No playslists on accounts");
 			return;
-		}
-		/*playlists = [
-			{ name: "Bach", id: 0 },
-			{ name: "Beethoven", id: 1 }
-		];*/
-			
+		}			
 		
 		console.log(playlists);
+		table.makeSortRow();
 		for (var i = 0; i < playlists.length; i++) {
-			var str = "<tr>";
 			var playlist = playlists[i];
-			str += "<td><a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.name + "');\">Import</a></td>"
-			str += "<td>" + playlist.name + "</td>";
-			str += "</tr>";
-			table.after(str);
-			table = table.next();
+			table.addRow(
+				null,
+				"<a class='black' onclick=\"importPlayList('" + platformID + "', '" + playlist.name + "');\">Import</a>",
+				playlist.name
+			);
 		}
 	});
 }
@@ -55,10 +45,6 @@ function importPlayList(platformID, playlistName) {
 		}
 		console.log(result);
 		alert("Imported Successfully!");
-		viewImportList(plsel);
+		viewImportList();
 	});
-}
-
-function tableText(table, text, priorText = "") {
-	return table.after("<tr><td>" + priorText + "</td> <td><i>" + text + "</i></td></tr>");
 }

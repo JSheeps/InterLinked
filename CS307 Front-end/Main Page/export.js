@@ -1,41 +1,52 @@
 "use strict";
+var table;
 
 $(document).ready( () => {
-	viewExportablePlaylists("#exportablePlaylistTable");
+	table = new Table("#exportablePlaylistTable", "Exportable Playlists", 2, null, "Playlist Name");
+	viewExportablePlaylists();
 });
 
-function viewExportablePlaylists(sel) {
-	var table = clearTable(sel);
-	tableText(table, "Loading...");
+function viewExportablePlaylists() {
+	table.loading();
 	
 	getPlaylistsFromServer().done( (playlists) => {
-		table = clearTable(sel);
+		table.clear();
 		if (playlists.error) {
-			if (playlists.error == "NotLoggedInToService: User needs to log in to streaming service") {
-				grantServerAccessRedirect();
-				return;
-			}
-			tableText(table, playlists.error);
+			genericErrorHandlers(playlists.error);
+			table.text(playlists.error);
 			return;
 		}
 		
 		if (playlists.length == 0) {
-			tableText(table, "No Playlists Imported");
+			table.text("No Playlists Imported");
 			return;
 		}
 		
 		console.log(playlists);
-		for (var i = playlists.length - 1; i >= 0; i--) {
-		    var str = "<tr>";
+		table.makeSortRow();
+		for (var i = 0; i < playlists.length; i++) {
             var playlist = playlists[i];
-            str += "<td><a class='black' onclick=\"exportPlayList('" + playlist.id + "');\">Export</a></td>"
-            str += "<td>" + playlist.name + "</td>";
-            str += "</tr>";
-            table = table.after(str);
+			table.addRow(
+				null,
+				"<a class='black' onclick=\"exportPlayList('" + playlist.id + "');\">Export</a>",
+				playlist.name
+			);
 		}
 	});
 }
 
-function tableText(table, text, priorText="") {
-	return table.after("<tr><td>" + priorText + "</td> <td><i>" + text + "</i></td></tr>");
+function exportPlayList(id, platformID = "Spotify") {
+	exportPlaylist(id, platformID).done( (response) => {
+		genericErrorHandlers(response.error);
+		if (response.error) {
+			alert(response.error);
+			return;
+		}
+		
+		if (response.length == 0) {
+			alert("Export Successful!");
+			return;
+		}
+		console.log(response);
+	});
 }

@@ -31,6 +31,19 @@ class Table {
 	}
 	
 	/*
+	1st argument: an (array of) attributes to put into the row entry.
+	e.g.:
+		{ class: "row1" }
+	e.g.:
+	[
+		{
+			class: "row1",
+			order: "up"
+		},
+		{ class: "hi" }
+	]
+	
+	2nd argument:
 	takes either dynamic params or one array
 	Each element is either a string or an object like so:
 	{
@@ -41,7 +54,7 @@ class Table {
 	}
 	only val is required
 	*/
-	addRow(...objs) {
+	addRow(rowAttribs, ...objs) {
 		if (typeOf(objs[0]) == "array")
 			objs = objs[0];
 		if (objs.length != this.columns)
@@ -49,12 +62,15 @@ class Table {
 
 		
 		var lastRow = this.tbody.find("tr:last");
-		var html = "<tr>";
+		var header = serialize(rowAttribs);
+		var html = "<tr" + header + ">";
 		
 		for (var i = 0; i < objs.length; i++) {
 			var obj = objs[i];
 			var objType = typeOf(obj);
 			html += "<td";
+			if (this.sortColumnsTitles != null && this.sortColumnsTitles[i] != null)
+				html += " sortData=" + getSortData(obj);
 			
 			if (objType == "string") {
 				html +=">" + obj + "</td>";
@@ -67,6 +83,14 @@ class Table {
 		html +="</tr>";
 		
 		lastRow.after(html);
+	}
+	
+	getRow(index) {
+		return this.tbody.children().eq(index);
+	}
+	
+	rows() {
+		return this.tbody.children().length;
 	}
 	
 	makeSortRow() {
@@ -86,7 +110,7 @@ class Table {
 			row.push(titleEntry);
 		}
 		
-		this.addRow(row);
+		this.addRow(null, row);
 	}
 	
 	clear() {
@@ -100,6 +124,7 @@ class Table {
 		
 		var ascending = this.ascending(column);
 		
+		
 		var sortFunc = (a, b) => {
 			return compare(
 				$(a).children().eq(column).attr("sortData"),
@@ -108,17 +133,17 @@ class Table {
 			);	
 		};
 		
-		this.tbody.find("tr:gt(1)").sort(sortFunc).appendTo(tbody);
+		this.tbody.find("tr:gt(1)").sort(sortFunc).appendTo(this.tbody);
 		this.tbody.attr("order", (ascending ? "asc" : "desc"));
 		return this;
 	}
 	
 	ascending(column) {
 		if (this.orderBy == column) {
-			asc = tbody.attr("order");
-			if (asc == undefined || asc == "asc")
+			var asc = this.tbody.attr("order");
+			if (asc == undefined || asc == "desc")
 				return true;
-			else if (asc == "desc")
+			else if (asc == "asc")
 				return false;
 			else throw "Neither ascending nor descending";
 		} else {
@@ -138,9 +163,14 @@ class Table {
 		for (var i = 0; i < this.columns; i++)
 			arr.push(i == column ? (openTag + txt + closeTag) : "");
 		
-		this.addRow(arr);
+		this.addRow(null, arr);
 		
 		return this;
+	}
+	
+	loading() {
+		this.clear();
+		this.text("Loading...");
 	}
 }
 
@@ -152,6 +182,27 @@ function compare(a, b, ascending) {
 	return ascending ? 1 : -1;
 }
 
+function getSortData(obj) {
+	return obj;
+}
+
 function typeOf( obj ) {
   return ({}).toString.call( obj ).match(/\s(\w+)/)[1].toLowerCase();
+}
+
+function serialize(obj) {
+	if (!obj) return "";
+	
+	var ret = "";
+	var objType = typeOf(obj);
+	
+	if (objType == "array") {
+		for (var i = 0; i < obj.length; i++)
+			ret += serialize(obj[i]);
+	} else if (objType == "object") {
+		for (var attrib in obj) {
+			ret += " " + attrib + "=" + obj[attrib];
+		}
+	} else throw objType;
+	return ret;
 }

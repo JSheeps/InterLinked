@@ -42,7 +42,13 @@ class WebAPI {
         headers.set("Access-Control-Allow-Origin", "*");
 
         URI uri = t.getRequestURI();
-        QueryValues query = new QueryValues(uri.getQuery());
+        QueryValues query;
+        try {
+            query = new QueryValues(uri.getQuery());
+        } catch(Exception e) {
+            noCallback(t);
+            return;
+        }
 
         String callback = query.get("callback");
         if (callback == null) {

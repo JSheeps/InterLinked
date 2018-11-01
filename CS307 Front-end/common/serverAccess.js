@@ -45,10 +45,27 @@ function importList(platformID, playlistID) {
 	});
 }
 
-function mergeLists(platformID, playlistID1, playlistID2) {
+function mergeLists(ids, playlistName) {
+	var idString = ids[0];
+	for (var i = 1; i < ids.length; i++)
+		idString += " " + ids[i];
+	
 	return sendMessage({
-		merge: playlistID1,
-		playlist2: playlistID2
+		merge: idString,
+		name: playlistName
+	});
+}
+
+function exportPlaylist(id, platform) {
+	return sendMessage({
+		export: id,
+		platformID: platform
+	});
+}
+
+function serverRemovePlaylist(id) {
+	return sendMessage({
+		remove: id
 	});
 }
 

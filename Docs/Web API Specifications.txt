@@ -31,7 +31,8 @@ Query Specifications
 																
 		export		<platformID>			playlist		Returns which songs were NOT successfully exported, if any, as an array.
 		
-		merge		<playlistID>, <playlistID>	        	Merges <playlistID>s, returns the playlistID of the new playlist and all songs in each playlist that were lost in the merge.
+		merge		<playlistIDs>			name			Merges all <playlistID>s into one playlist and names the playlist the value of the name key, returns the playlistID of the new playlist and all songs in each playlist that were lost in the merge.
+															<playlistIDs> is a space-separated list of playlists e.g. "12 13 14"
 		
 		playlist	<playlistID>							Returns songs in list if used on its own.
 		
