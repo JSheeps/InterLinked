@@ -169,6 +169,9 @@ class WebAPI {
         else if(query.containsKey("merge"))
             return merge(query);
 
+        else if(query.containsKey("add"))
+            return addSong(query);
+
         throw new BadQueryException("Query has no meaning");
     }
 
@@ -198,6 +201,7 @@ class WebAPI {
         jsonObject.put("title", song.getTitle());
         jsonObject.put("artist", song.getArtist());
         jsonObject.put("SpotifyURL", Spotify.listenToSong(song));
+        jsonObject.put("SpotifyID", song.spotifyID);
         jsonArray.put(jsonObject);
 
         return jsonArray;
@@ -535,52 +539,28 @@ class WebAPI {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
-        int[] mergeIds;
-
-        String name = query.get("name");
-        if (name == null)
-            throw new BadQueryException("Must provide a merge list name");
-
-        try {
-            String mergeIdString = query.get("merge");
-            String[] mergeIdStrings = mergeIdString.split(", ");
-            mergeIds = new int[mergeIdStrings.length];
-
-            for (int i = 0; i < mergeIds.length; i++) {
-                mergeIds[i] = Integer.parseInt((mergeIdStrings[i]));
-            }
+        String add = query.get("add");
+        String[] s = add.split(" ");
+        if(s.length != 2){
+            throw new BadQueryException("Add expects <playlistid songid>, got: " + add);
         }
-        catch (Exception e) {throw new BadQueryException("Unable to parse ids for merge");}
+        int playlistId = Integer.parseInt(s[0]);
+        String songId = s[1];
 
-        if (mergeIds.length < 2)
-            throw new BadQueryException("Need 2 or more playlists for merging");
+        Playlist playlist = Playlist.getPlaylistById(playlistId);
+        Song song = Spotify.getSongByID(songId);
 
-        Playlist[] playlists= new Playlist[mergeIds.length];
-        for (int i = 0; i < playlists.length; i++) {
-            playlists[i] = Playlist.getPlaylistById(mergeIds[i]);
-            assert playlists[i] != null;
-            playlists[i].setPlaylist(playlists[i].FetchSongs());
-            if (playlists[i] == null)
-                throw new ServerErrorException("Unable to find playlist: " +
-                        mergeIds[i]);
-        }
+        if(playlist == null) throw new ServerErrorException("Couldn't find playlist with id: " + playlistId);
+        if(song == null) throw new ServerErrorException("Couldn't find song with id: " + songId);
 
-        assert playlists.length >= 2 : "This should be true because we check if there are 2 or more mergeIDs";
+        playlist.addSong(song);
 
-        Playlist merge =  playlists[0].merge(playlists[1]);
-        for (int i = 2; i < playlists.length; i++)
-            merge = merge.merge(playlists[i]);
+        playlist.save(currentUser);
 
-        merge.Name = name;
-
-        merge.save(currentUser);
-
-        JSONObject jsonResult = new JSONObject();
-        jsonResult.put("merge", merge.ID);
-
-        return jsonResult;
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("result", true);
+        return jsonObject;
     }
-
 
 
     // ----------------------------------------  Authentication  ------------------------------------------------------
