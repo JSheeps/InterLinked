@@ -9,6 +9,7 @@ import com.wrapper.spotify.requests.authorization.authorization_code.Authorizati
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.playlists.*;
 import com.wrapper.spotify.requests.data.search.simplified.SearchTracksRequest;
+import com.wrapper.spotify.requests.data.tracks.GetTrackRequest;
 import com.wrapper.spotify.requests.data.users_profile.GetCurrentUsersProfileRequest;
 import org.apache.commons.lang3.tuple.MutablePair;
 
@@ -148,7 +149,7 @@ public class Spotify extends StreamingService
         List<String> uris = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
         for (int i = 0; i < playlist.getNumSongs(); i++) {
-            if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY) {
+            if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY && playlist.getSong(i).getSpotifyURI()!=null) {
                 uris.add(playlist.getSong(i).spotifyURI);
             } else {
                 uris.add(findURI(playlist.getSong(i)));
@@ -292,4 +293,20 @@ public class Spotify extends StreamingService
         return userPlaylists;
     }
 
+    public static Song getSongByID(String id){
+        Song song = new Song();
+        SpotifyApi s = build.build();
+        ClientCredentialsRequest ccr = s.clientCredentials().build();
+        try{
+            ClientCredentials cc = ccr.execute();
+            s.setAccessToken(cc.getAccessToken());
+            GetTrackRequest getTrack = s.getTrack(id).build();
+            Track t = getTrack.execute();
+            song = trackToSong(t);
+        } catch (Exception e){
+
+        }
+
+        return song;
+    }
 }
