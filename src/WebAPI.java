@@ -1,6 +1,5 @@
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_MULTIPLYPeer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -281,7 +280,12 @@ class WebAPI {
             throw new ServerErrorException("Playlist not found");
         }
 
-        ArrayList<String> failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+        ArrayList<String> failedSongs;
+        try {
+            failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+        } catch (Exception e){
+            throw new ServerErrorException(e.getMessage());
+        }
 
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", failedSongs.size() == 0);
