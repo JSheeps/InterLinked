@@ -85,11 +85,11 @@ class Playlist {
         if (ID == 0) {
             // Playlist hasn't been saved to DB yet
             int currentUserID = currentUser.ID;
-            String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", '" + Name + "')";
+            String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", '" + Name.replaceAll("'","''") + "')";
             SqlHelper helper = new SqlHelper();
             helper.ExecuteQuery(playlistInsertQuery);
             // Send query to find ID of playlist we just inserted
-            String findIDQuery = "SELECT ID FROM Playlists WHERE Name = '" + Name + "'";
+            String findIDQuery = "SELECT ID FROM Playlists WHERE Name = '" + Name.replaceAll("'","''") + "'";
             ResultSet results = helper.ExecuteQueryWithReturn(findIDQuery);
             try {
                 while(results.next()){
@@ -110,7 +110,7 @@ class Playlist {
         }else{
             // Send update query that may or may not actually do anything
             String updateQuery = "UPDATE Playlists "+
-                                 "SET Name = '"+ Name + "'"+
+                                 "SET Name = '"+ Name.replaceAll("'","''") + "'"+
                                  "WHERE ID = " + ID;
             SqlHelper helper = new SqlHelper();
             helper.ExecuteQuery(updateQuery);
