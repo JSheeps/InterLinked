@@ -28,7 +28,7 @@ class WebAPI {
 
     WebAPI() {
         userAuthTokens = getAuthTokens();
-        debug = new Debug(false, false);
+        debug = new Debug(true, true);
     }
 
     // ----------------------------------------  Server Handlers  ------------------------------------------------------
@@ -368,8 +368,6 @@ class WebAPI {
     private JSONArray playlist(QueryValues query) throws Exception {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.tokens == null)
-            throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
         String pid = query.get("playlist");
@@ -382,7 +380,7 @@ class WebAPI {
         if(playlist == null)
             throw new ServerErrorException("Playlist ID not found");
 
-        for(Song song : playlist.getArrayList()){
+        for(Song song : playlist.FetchSongs()){
             JSONObject json = new JSONObject();
             json.put("title", song.title);
             json.put("artist", song.artist);
@@ -508,6 +506,7 @@ class WebAPI {
         }
 
         assert playlists.length >= 2 : "This should be true because we check if there are 2 or more mergeIDs";
+
         Playlist merge =  playlists[0].merge(playlists[1]);
         for (int i = 2; i < playlists.length; i++)
             merge = merge.merge(playlists[i]);
