@@ -31,14 +31,13 @@ function viewPlaylists() {
 			return;
 		}
 		
-		console.log(playlists);
 		table.makeSortRow();
 		
 		for (var i = 0; i < playlists.length; i++) {
 			var playlist = playlists[i];
 			table.addRow(
 				null,
-				"<a class='black' onclick=\"sharePlayList();\">Share</a>",
+				"<a class='black' onclick=\"sharePlayList(" + playlist.id + ");\">Share</a>",
 				playlist.name,
 				"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
 			);
@@ -98,4 +97,8 @@ function removePlayList(id) {
 			console.log(result);
 		}
 	});
+}
+
+function sharePlayList(id) {
+	console.log("Share: " + id);
 }

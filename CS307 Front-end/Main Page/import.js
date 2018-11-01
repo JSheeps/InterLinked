@@ -24,7 +24,6 @@ function viewImportList() {
 			return;
 		}			
 		
-		console.log(playlists);
 		table.makeSortRow();
 		for (var i = 0; i < playlists.length; i++) {
 			var playlist = playlists[i];
@@ -55,7 +54,7 @@ function importPlayList(platformID, playlistName, force = false) {
 			console.log(result.error);
 			return;
 		}
-		console.log(result);
+		
 		alert("Imported Successfully!");
 		viewImportList();
 	});

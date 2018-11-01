@@ -22,7 +22,6 @@ function viewExportablePlaylists() {
 			return;
 		}
 		
-		console.log(playlists);
 		table.makeSortRow();
 		for (var i = 0; i < playlists.length; i++) {
             var playlist = playlists[i];
@@ -43,10 +42,22 @@ function exportPlayList(id, platformID = "Spotify") {
 			return;
 		}
 		
-		if (response.length == 0) {
+		if (response.result) {
 			alert("Export Successful!");
 			return;
+		} else {
+			alertText =
+				"Could not export every song\n" +
+				"These songs could not be exported:";
+			
+			for (var i = 0; i < response.songs; i++)
+				alertText += "\n" + response.songs[i];
+			
+			alert(alertText);
+			console.log(response);
+			return;
 		}
-		console.log(response);
+		
+		
 	});
 }

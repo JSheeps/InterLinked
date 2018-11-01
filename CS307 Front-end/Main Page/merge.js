@@ -33,7 +33,11 @@ function viewMergeList() {
 			return;
 		}
 		
-		console.log(playlists);
+		if (playlists.length < 2) {
+			table.text("Needs 2 or more playlists imported");
+			return;
+		}
+		
 		table.makeSortRow();
 		for (var i = 0; i < playlists.length; i++) {
 			var playlist = playlists[i];

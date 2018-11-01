@@ -29,7 +29,7 @@ class WebAPI {
 
     WebAPI() {
         userAuthTokens = getAuthTokens();
-        debug = new Debug(true, true);
+        debug = new Debug(false, false);
     }
 
     // ----------------------------------------  Server Handlers  ------------------------------------------------------
@@ -266,13 +266,11 @@ class WebAPI {
     }
 
     @SuppressWarnings("unchecked")
-    private JSONArray exportQuery(QueryValues query) throws Exception{
+    private Object exportQuery(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
         if(currentUser.tokens == null)
             throw new NotLoggedInToService("User needs to log in to streaming service");
-
-        JSONArray jsonArray = new JSONArray();
 
         String pid = query.get("export");
         int id = Integer.parseInt(pid);
@@ -287,11 +285,10 @@ class WebAPI {
 
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", failedSongs.size() == 0);
-        jsonArray.put(jsonResult);
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
-        return jsonArray;
+        return jsonResult;
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
