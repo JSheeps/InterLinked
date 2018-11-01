@@ -2,7 +2,7 @@
 var table;
 
 $(document).ready( () => {
-	table = new Table("#revertablePlaylistTable", "Revertable Playlists", 2, null, "Playlist Name");
+	table = new Table("#revertablePlaylistTable", "Revertable Playlists", null, "Playlist Name");
 	viewRevertList();
 });
 
