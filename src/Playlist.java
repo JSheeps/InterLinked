@@ -329,6 +329,10 @@ class Playlist {
         }
     }
 
+    public void setPlaylist(List<Song> playlist) {
+        this.playlist = playlist;
+    }
+
     @Override
     public boolean equals(Object obj) {
         Playlist playlist = (Playlist) obj;

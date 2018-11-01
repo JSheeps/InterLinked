@@ -500,6 +500,8 @@ class WebAPI {
         Playlist[] playlists= new Playlist[mergeIds.length];
         for (int i = 0; i < playlists.length; i++) {
             playlists[i] = Playlist.getPlaylistById(mergeIds[i]);
+            assert playlists[i] != null;
+            playlists[i].setPlaylist(playlists[i].FetchSongs());
             if (playlists[i] == null)
                 throw new ServerErrorException("Unable to find playlist: " +
                         mergeIds[i]);
