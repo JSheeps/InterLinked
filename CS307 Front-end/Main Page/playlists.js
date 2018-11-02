@@ -70,7 +70,7 @@ function fillTable(playlists) {
 			"<a class='black' state='closed' id='showSongsButton" + playlist.id + "' onclick='viewSongs(\"" + playlist.id + "\")'>[+]</a>",
 			playlist.name,
 			(searchedSong.length != 0 ? "<a class='black' onclick=\"addSearchedSong(" + playlist.id + ");\">Add Song</a>" : ""),
-			"<a class='black' onmousedown=\"sharePlayList(" + playlist.id + ");\">Share,</a>",
+			"<a class='black' onmousedown=\"sharePlayList(" + playlist.id + ");\">Share</a>",
 			"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
 		);
 	}
@@ -98,19 +98,63 @@ function removePlayList(id) {
 }
 
 function viewSongs(id) {
-	var playlist =  localPlaylists[getLocalPlaylistIndex(id)];
+	var index = getLocalPlaylistIndex(id);
+	var playlist =  localPlaylists[index];
+	
+	var row = table.getRowByID(id);
+	var expandButton = row.children().eq(0).children().eq(0);
+	
 	if (playlist.songs) {
-		expandSongs(id);
+		makeSongTable(playlist);
+		expandSongs(playlist, expandButton);
 		return;
 	}
 	
-	var row = table.getRowByID(id);
-	var expandButton = row.children().children().eq(0);
-	console.log(expandButton[0].onclick);
-	expandButton[0].onclick = null;
+	updateSongTable(index, expandButton, () => {
+		expandSongs(playlist, expandButton);
+	});
+}
+
+function makeSongTable(index) {
+	var playlist = localPlaylists[index];
+	var id = playlist.id;
+	var songTable = {
+		val: "<table id='" + id + "songs'></table>",
+		span: table.columns
+	};
+	
+	table.addRowAfter("#" + id, null, songTable);
+	
+	var songTable = new Table("#" + id + "songs", null, "Title", "Artist");
+	playlist.songTable = songTable;
+	songTable.table.addClass("subTable");
+	
+	songTable.makeSortRow("localPlaylists[" + index + "].songTable.sort()");
+	
+	for (var i = 0; i < playlist.songs.length; i++) {
+		var song = playlist.songs[i];
+		songTable.addRow(null, song.title, song.artist);
+	}
+}
+
+function updateSongTable(index, expandButton = null, afterFunction = () => {}) {
+	var playlist = localPlaylists[index];
+	var id = playlist.id;
+	
+	if (expandButton == null) {
+		var row = table.getRowByID(id);
+		expandButton = row.children().eq(0).children().eq(0);
+		expandButton[0].onclick = null;
+	}
+	
+	var oldExpandText = expandButton.text();
 	expandButton.text("[...]");
 	
+	if (playlist.songTable)
+		playlist.songTable.clear();
+	
 	serverGetSongs(id).done( (result) => {
+		expandButton.text(oldExpandText);
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
@@ -118,41 +162,23 @@ function viewSongs(id) {
 		}
 		
 		playlist.songs = result;
-		expandSongs(playlist, row, expandButton);
-		console.log(result);
+		makeSongTable(index);
+		afterFunction();
 	});
 }
 
-function expandSongs(playlist, row = null, expandButton = null) {
-	songValuesInit(row, expandButton);
+function expandSongs(playlist, expandButton) {
+	playlist.songTable.show();
 	
 	expandButton.text("[-]");
-	expandButton[0].onclick = function(event) { collapseSongs(playlist, row, expandButton); };
-	
-	var songs = playlist.songs;
-	for (var i = 0; i < songs.length; i++) {
-		var song = songs[i];
-		console.log(song);
-	}
-	
-	//console.log(playlist);
-	//console.log(row);
-	//console.log(expandButton);
+	expandButton[0].onclick = function(event) { collapseSongs(playlist, expandButton); };
 }
 
-function collapseSongs(playlist, row = null, expandButton = null) {
-	songValuesInit(row, expandButton);
+function collapseSongs(playlist, expandButton) {
+	playlist.songTable.hide();
 	
 	expandButton.text("[+]");
-	expandButton[0].onclick = function(event) { expandSongs(playlist, row, expandButton); };
-}
-
-function songValuesInit(row, expandButton) {
-	if (row == null)
-		row = table.getRowByID(playlist.id);
-	
-	if (expandButton == null)
-		expandButton = row.children().children().eq(0);
+	expandButton[0].onclick = function(event) { expandSongs(playlist, expandButton); };
 }
 
 // search functionality
@@ -201,7 +227,7 @@ function search() {
 				}
 			}
 		}
-		searchedSong = searchText;
+		searchedSong = result.SpotifyID;
 		viewPlaylists(false);
 	});
 }
@@ -213,15 +239,21 @@ function addSearchedSong(playlistID) {
 			alert(result.error);
 			return;
 		}
-		console.log(result);
+		
+		if (result.result) {
+			alert("Added song successfully");
+			var index = getLocalPlaylistIndex(playlistID);
+			var playlist = localPlaylists[index];
+			if (playlist.songTable)
+				updateSongTable(index);
+		}
 	});
 }
 
 
 // Sharing functionality
-function sharePlayList(i) {
-	var row = table.getRow(i);
-	var id = row.attr("id");
+function sharePlayList(id) {
+	var row = table.getRowByID(id);
 	
 	serverShare(id).done( (result) => {
 		if (result.error) {

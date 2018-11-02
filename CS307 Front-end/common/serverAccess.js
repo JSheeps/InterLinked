@@ -81,8 +81,7 @@ function mergeLists(ids, playlistName) {
 
 function serverAddSong(songQuery, playlistID) {
 	return sendMessage({
-		addSong: songQuery,
-		playlist: playlistID
+		add: playlistID + " " + songQuery,
 	});
 }
 

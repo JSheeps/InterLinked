@@ -92,3 +92,12 @@ a{
     visibility: visible;
     opacity: 1;
 }
+
+
+.subTable {
+	font-size: 10px;
+	background-color: #fff8b5;
+}
+td {
+	padding: 0px 5px;
+}
