@@ -70,7 +70,7 @@ function fillTable(playlists) {
 			"<a class='black' state='closed' id='showSongsButton" + playlist.id + "' onclick='viewSongs(\"" + playlist.id + "\")'>[+]</a>",
 			playlist.name,
 			(searchedSong.length != 0 ? "<a class='black' onclick=\"addSearchedSong(" + playlist.id + ");\">Add Song</a>" : ""),
-			"<a class='black' onmousedown=\"sharePlayList(" + playlist.id + ");\">Share</a>",
+			"<a class='black shareButton' onmousedown=\"sharePlayList(" + playlist.id + ");\">Share</a>",
 			"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
 		);
 	}
@@ -104,6 +104,10 @@ function viewSongs(id) {
 	var row = table.getRowByID(id);
 	var expandButton = row.children().eq(0).children().eq(0);
 	
+	if (playlist.songTable) {
+		expandSongs(playlist);
+	}
+	
 	if (playlist.songs) {
 		makeSongTable(playlist);
 		expandSongs(playlist, expandButton);
@@ -129,7 +133,7 @@ function makeSongTable(index) {
 	playlist.songTable = songTable;
 	songTable.table.addClass("subTable");
 	
-	songTable.makeSortRow("localPlaylists[" + index + "].songTable.sort()");
+	songTable.makeSortRow("localPlaylists[" + index + "].songTable");
 	
 	for (var i = 0; i < playlist.songs.length; i++) {
 		var song = playlist.songs[i];
@@ -264,7 +268,7 @@ function sharePlayList(id) {
 		}
 		
 		if (result.result) {
-			var shareField = row.children().eq(1);
+			var shareField = row.children("td").children("a.shareButton");
 			var shareBoxID = "shareBox" + id;
 			shareField.html(
 				"<div class='tooltip'>" +
