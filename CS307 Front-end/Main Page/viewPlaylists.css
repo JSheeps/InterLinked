@@ -7,6 +7,15 @@
     margin-top: 100px;
 }
 
+#platformSelect {
+	float: center;
+	position: relative;
+	margin: 10px auto 0px;
+	background-color: white;
+	border: 2px black solid;
+	width: 50%;
+}
+
 #searchResults {
 	background-color: white;
 	width: auto;
@@ -21,6 +30,7 @@
     overflow: scroll;
     background-color: white;
 }
+
 th{
     text-decoration: underline;
 }

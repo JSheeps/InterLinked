@@ -34,8 +34,18 @@ function viewExportablePlaylists() {
 	});
 }
 
-function exportPlayList(id, platformID = "Spotify") {
-	exportPlaylist(id, platformID).done( (response) => {
+function exportPlayList(id) {
+	var platformSelectors = $("#platformSelect").children();
+	var selected = platformSelectors.filter("input[name='platform']:checked");
+	
+	var platform = selected.val();
+	if (platform == undefined) {
+		alert("Must pick a platform to export to");
+		return;
+	}
+	
+	
+	exportPlaylist(id, platform).done( (response) => {
 		genericErrorHandlers(response.error);
 		if (response.error) {
 			alert(response.error);
