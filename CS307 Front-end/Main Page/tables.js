@@ -264,7 +264,12 @@ function binding(row) {
 function compare(a, b, ascending, column) {
 	var asd = $(a).children().eq(column).attr("sortData");
 	var bsd = $(b).children().eq(column).attr("sortData");
-	
+
+	if (asd)
+		asd = asd.toLowerCase();
+	if (bsd)
+		bsd = bsd.toLowerCase();
+
 	if (asd == bsd)
 		return 0;
 	
