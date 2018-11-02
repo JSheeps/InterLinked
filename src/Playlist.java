@@ -1,5 +1,6 @@
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -219,8 +220,7 @@ class Playlist {
 
     private boolean savePlaylistState(){
         List<Song> currentSongs = this.FetchSongs();
-
-        String currentTime = LocalDateTime.now().toString();
+        String currentTime = Timestamp.valueOf(LocalDateTime.now()).toString();
 
         String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(" + this.ID + ", '" + currentTime + "')";
 

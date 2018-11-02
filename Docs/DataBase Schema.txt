@@ -30,13 +30,13 @@ INSERT INTO OriginHosts([Name]) VALUES('YOUTUBE')
 
 CREATE TABLE dbo.Songs(
   ID int PRIMARY KEY IDENTITY(1,1),
-  Title nvarchar(100) not null,
-  Artist nvarchar(50) not null,
-  Album nvarchar(50) null,
+  Title nvarchar(300) not null,
+  Artist nvarchar(300) not null,
+  Album nvarchar(300) null,
   Duration int null,
   Explicit bit not null default 0,
-  SpotifyID nvarchar(100) null,
-  SpotifyURI nvarchar(100) null
+  SpotifyID nvarchar(300) null,
+  SpotifyURI nvarchar(300) null
   OriginHostID FOREIGN KEY REFERENCES OriginHosts(ID)
 )
 
