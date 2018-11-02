@@ -266,6 +266,7 @@ class WebAPI {
                 playlist.addSong(song);
                 song.save();
             }
+            
 
             playlist.save(currentUser);
 
@@ -296,7 +297,7 @@ class WebAPI {
             throw new ServerErrorException("Playlist not found");
         }
 
-        ArrayList<String> failedSongs;
+        List<Song> failedSongs;
         try {
             failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
         } catch (Exception e){
@@ -304,7 +305,7 @@ class WebAPI {
         }
 
         JSONObject jsonResult = new JSONObject();
-        jsonResult.put("result", failedSongs.size() == 0);
+        jsonResult.put("result", true);
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
@@ -558,6 +559,7 @@ class WebAPI {
         if(playlist == null) throw new ServerErrorException("Couldn't find playlist with id: " + playlistId);
         if(song == null) throw new ServerErrorException("Couldn't find song with id: " + songId);
 
+        playlist.setPlaylist(playlist.FetchSongs());
         playlist.addSong(song);
 
         playlist.save(currentUser);

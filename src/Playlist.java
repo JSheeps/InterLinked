@@ -127,14 +127,14 @@ class Playlist {
         List<Song> unionList = new ArrayList<Song>(songSet);
         List<Song> addedList = new ArrayList<Song>();
         for (Song song : unionList) {
-            if (!playlist.contains(song)) {
+            if (!songList.contains(song)) {
                 addedList.add(song);
             }
         }
         // Find what songs were deleted, if any
         List<Song> deletedList = new ArrayList<Song>();
         for (Song song : unionList) {
-            if (!songList.contains(song)) {
+            if (!playlist.contains(song)) {
                 deletedList.add(song);
             }
         }
@@ -221,8 +221,9 @@ class Playlist {
     private boolean savePlaylistState(){
         List<Song> currentSongs = this.FetchSongs();
         String currentTime = Timestamp.valueOf(LocalDateTime.now()).toString();
+        String currentTimeTrunc = currentTime.substring(0, currentTime.indexOf('.') + 4);
 
-        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(" + this.ID + ", '" + currentTime + "')";
+        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(" + this.ID + ", '" + currentTimeTrunc + "')";
 
         SqlHelper helper = new SqlHelper();
         helper.ExecuteQuery(playlistHistoryInsert);

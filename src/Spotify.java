@@ -144,66 +144,63 @@ public class Spotify extends StreamingService
         return return_list;
     }
 
-    public static ArrayList<String> exportPlaylist(MutablePair<String,String> tokens,Playlist playlist) {
+    public static List<Song> exportPlaylist(MutablePair<String,String> tokens, Playlist playlist) throws Exception {
         List<String> uris = new ArrayList<>();
+        List<Song> failedSongs = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
-        for (int i = 0; i < playlist.getNumSongs(); i++) {
-            if (playlist.getSong(i).origin == Song.OriginHostName.SPOTIFY && playlist.getSong(i).getSpotifyURI()!=null) {
-                uris.add(playlist.getSong(i).spotifyURI);
+        for (Song song : playlist.getArrayList()) {
+            if (song.origin == Song.OriginHostName.SPOTIFY && song.getSpotifyURI()!=null) {
+                uris.add(song.spotifyURI);
             } else {
-                uris.add(findURI(playlist.getSong(i)));
+                String uri = findURI(song);
+                if(uri == null) failedSongs.add(song);
+                else uris.add(uri);
             }
         }
-        try {
-            SpotifyApi spotifyApi = build.build();
-            if (Arrays.asList(getPlaylistNames(tokens)).contains(playlist.Name)){
-                 playlist.setName(playlist.Name+"(2)");
-            }
-            spotifyApi.setAccessToken(tokens.getKey());
-            GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
-            User user = getUserID.execute();
-            String userID = user.getId();
-            CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.Name)
-                    .collaborative(false)
-                    .public_(false)
-                    .description("InterLinked custom Playlist")
-                    .build();
-            com.wrapper.spotify.model_objects.specification.Playlist playlist1 = createPlaylist.execute();
-            String playlistID = playlist1.getId();
-            String [] uri_array = new String [uris.size()];
-            uris.toArray(uri_array);
-            AddTracksToPlaylistRequest addTracks = spotifyApi.addTracksToPlaylist(userID,playlistID,uri_array)
-                    .position(0)
-                    .build();
-            addTracks.execute();
-            GetPlaylistRequest gpr = spotifyApi.getPlaylist(userID,playlist1.getId()).build();
-            com.wrapper.spotify.model_objects.specification.Playlist temp = gpr.execute();
-            if(temp.getTracks().getTotal() != playlist.getSize()){
-                Paging<PlaylistTrack> success_list = temp.getTracks();
-                for (int j=0; j<success_list.getTotal(); j++){
-                    if (uris.contains(success_list.getItems()[j].getTrack().getUri())){
+        SpotifyApi spotifyApi = build.build();
+        if (Arrays.asList(getPlaylistNames(tokens)).contains(playlist.Name)){
+            playlist.setName(playlist.Name+"(2)");
+        }
+        spotifyApi.setAccessToken(tokens.getKey());
+        GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
+        User user = getUserID.execute();
+        String userID = user.getId();
+        CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.Name)
+                .collaborative(false)
+                .public_(false)
+                .description("InterLinked custom Playlist")
+                .build();
+        com.wrapper.spotify.model_objects.specification.Playlist playlist1 = createPlaylist.execute();
+        String playlistID = playlist1.getId();
+        String [] uri_array = new String [uris.size()];
+        uris.toArray(uri_array);
+        AddTracksToPlaylistRequest addTracks = spotifyApi.addTracksToPlaylist(userID,playlistID,uri_array)
+                .position(0)
+                .build();
+        addTracks.execute();
+        GetPlaylistRequest gpr = spotifyApi.getPlaylist(userID,playlist1.getId()).build();
+        com.wrapper.spotify.model_objects.specification.Playlist temp = gpr.execute();
+        if(temp.getTracks().getTotal() != playlist.getSize()){
+            Paging<PlaylistTrack> success_list = temp.getTracks();
+            for (int j=0; j<success_list.getTotal(); j++){
+                if (uris.contains(success_list.getItems()[j].getTrack().getUri())){
 
-                    }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return new ArrayList<String>() {};
+        return failedSongs;
     }
 
 
-    private static String findURI(Song s) {
+    private static String findURI(Song s) throws Exception {
         SpotifyApi spotifyApi = build.build();
         ClientCredentialsRequest ccr = spotifyApi.clientCredentials().grant_type("client_credentials").build();
-        try {
-            ClientCredentials cc = ccr.execute();
-            spotifyApi.setAccessToken(cc.getAccessToken());
-            SearchTracksRequest search = spotifyApi.searchTracks(s.getTitle()+" " + s.getArtist()+ " " + s.getAlbum()).build();
-            Paging<Track> tracks = search.execute();
-            return tracks.getItems()[0].getUri();
-        } catch (Exception e){e.printStackTrace();}
-        return "";
+        ClientCredentials cc = ccr.execute();
+        spotifyApi.setAccessToken(cc.getAccessToken());
+        SearchTracksRequest search = spotifyApi.searchTracks(s.getTitle()+" " + s.getArtist()+ " " + s.getAlbum()).build();
+        Paging<Track> tracks = search.execute();
+        if(tracks.getItems().length == 0) return null;
+        else return tracks.getItems()[0].getUri();
     }
 
     //Returns the top result from the query as a song object
