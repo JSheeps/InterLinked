@@ -123,7 +123,7 @@ function makeSongTable(index) {
 		span: table.columns
 	};
 	
-	table.addRowAfter("#" + id, null, songTable);
+	table.addRowAfter("#" + id, { bind: "UP" }, songTable);
 	
 	var songTable = new Table("#" + id + "songs", null, "Title", "Artist");
 	playlist.songTable = songTable;
