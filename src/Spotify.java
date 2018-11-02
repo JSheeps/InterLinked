@@ -35,31 +35,25 @@ public class Spotify extends StreamingService
             .setClientSecret(client_Secret)
             .setRedirectUri(redirectURI);
 
-    private static MutablePair<String,String> handleTokenRefresh(MutablePair<String, String> tokens){
+    private static MutablePair<String,String> handleTokenRefresh(MutablePair<String, String> tokens) throws Exception {
         if (!refreshDebugFlag) return tokens;
 
         SpotifyApi s = build.build();
         s.setAccessToken(tokens.getKey());
         s.setRefreshToken(tokens.getValue());
-        try {
-            AuthorizationCodeCredentials credentials = s.authorizationCodeRefresh().build().execute();
-            tokens.setLeft(credentials.getAccessToken());
-            return tokens;
-        } catch (Exception e){e.printStackTrace();}
+        AuthorizationCodeCredentials credentials = s.authorizationCodeRefresh().build().execute();
+        tokens.setLeft(credentials.getAccessToken());
         return tokens;
     }
 
     //URL the user is sent to so they can allow us to access their account
     //State allows the callback to be matched to a user, because state is passed as a parameter with the GET request
-    public static String getAuthorizationURL(String state){
+    static String getAuthorizationURL(String state){
         URI temp;
         SpotifyApi spotifyApi = build.build();
-        try {
-            AuthorizationCodeUriRequest authorizationCodeReq = spotifyApi.authorizationCodeUri().state(state).scope(scopes).show_dialog(true).build();
-            temp = authorizationCodeReq.execute();
-            return temp.toString();
-        } catch (Exception e){e.printStackTrace();}
-        return "";
+        AuthorizationCodeUriRequest authorizationCodeReq = spotifyApi.authorizationCodeUri().state(state).scope(scopes).show_dialog(true).build();
+        temp = authorizationCodeReq.execute();
+        return temp.toString();
     }
 
     //Code retrieved at redirect_uri after user authorization has passed, return value is a pair <accessToken, refreshToken>
@@ -70,81 +64,74 @@ public class Spotify extends StreamingService
         return new MutablePair<>(c.getAccessToken(), c.getRefreshToken());
     }
 
-    public static String[] getPlaylistNames(MutablePair<String, String> tokens){
+    static String[] getPlaylistNames(MutablePair<String, String> tokens) throws Exception {
         List<String> playlist_names = new ArrayList<>();
 
         tokens = handleTokenRefresh(tokens);
-        try {
-            SpotifyApi spotifyApi = build.build();
-            //The access token must be set to ensure the correct user's playlists are being searched
-            spotifyApi.setAccessToken(tokens.getKey());
+        SpotifyApi spotifyApi = build.build();
+        //The access token must be set to ensure the correct user's playlists are being searched
+        spotifyApi.setAccessToken(tokens.getKey());
 
-            //Requesting playlist information from api
-            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
-                    .getListOfCurrentUsersPlaylists()
-                    .limit(10)
-                    .offset(0)
-                    .build();
-            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+        //Requesting playlist information from api
+        final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                .getListOfCurrentUsersPlaylists()
+                .limit(10)
+                .offset(0)
+                .build();
+        final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
 
-            PlaylistSimplified[] items = playlists.getItems();
-            for(PlaylistSimplified item : items){
-                playlist_names.add(item.getName());
-            }
+        PlaylistSimplified[] items = playlists.getItems();
+        for(PlaylistSimplified item : items){
+            playlist_names.add(item.getName());
+        }
 
-        } catch (Exception e) {e.printStackTrace();}
         return playlist_names.toArray(new String[0]);
     }
 
-    //TODO add an exception for if a playlist hasnt been imported correctly
-    public static List<Song> importPlaylist(MutablePair<String, String> tokens, String playlistName){
+    static List<Song> importPlaylist(MutablePair<String, String> tokens, String playlistName) throws Exception {
         handleTokenRefresh(tokens);
         List<Song> return_list = new ArrayList<>();
-        try{
-            SpotifyApi spotifyApi = build.build();
-            spotifyApi.setAccessToken(tokens.getKey());
+        SpotifyApi spotifyApi = build.build();
+        spotifyApi.setAccessToken(tokens.getKey());
 
-            //UserID is needed to obtain playlist track information
-            GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
-            User user = getUserID.execute();
-            String userID = user.getId();
-            //Requesting users playlist information
-            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
-                    .getListOfCurrentUsersPlaylists()
-                    .limit(10)
-                    .offset(0)
-                    .build();
-            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
-            //Searches for the specified playlist for importing
-            for (int i=0; i<playlists.getTotal(); i++){
-                if ((playlists.getItems()[i].getName()).equals(playlistName)){
-                    GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,(playlists.getItems())[i].getId())
-                            .limit(100)
-                            .offset(0)
-                            .build();
-                    final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();
+        //UserID is needed to obtain playlist track information
+        GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
+        User user = getUserID.execute();
+        String userID = user.getId();
+        //Requesting users playlist information
+        final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                .getListOfCurrentUsersPlaylists()
+                .limit(10)
+                .offset(0)
+                .build();
+        final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+        //Searches for the specified playlist for importing
 
-                    for (int j=0;j<tracks.getTotal();j++){
+        PlaylistSimplified[] items = playlists.getItems();
 
-                        Track thisSong = (tracks.getItems())[j].getTrack();
-                        Song s = trackToSong(thisSong);
-                        return_list.add(s);
+        for(PlaylistSimplified item : items){
+            if(item.getName().equals(playlistName)){
+                GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,item.getId())
+                        .limit(100)
+                        .offset(0)
+                        .build();
+                final Paging<PlaylistTrack> trackQuery = getPlaylistTracks.execute();
 
-                        //check if local playlist has the same number of songs as the Spotify list
-                        if (return_list.size() != tracks.getTotal()){
-
-                        }
-                    }
+                PlaylistTrack[] tracks = trackQuery.getItems();
+                for(PlaylistTrack track : tracks){
+                    Song song = trackToSong(track.getTrack());
+                    return_list.add(song);
+                }
+                if (return_list.size() != tracks.length){
+                    System.out.println("Some tracks might be missing from new playlist");
                 }
             }
-
-        }catch (Exception e){
-
         }
+
         return return_list;
     }
 
-    public static List<Song> exportPlaylist(MutablePair<String,String> tokens, Playlist playlist) throws Exception {
+    static List<Song> exportPlaylist(MutablePair<String, String> tokens, Playlist playlist) throws Exception {
         List<String> uris = new ArrayList<>();
         List<Song> failedSongs = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
@@ -180,14 +167,14 @@ public class Spotify extends StreamingService
         addTracks.execute();
         GetPlaylistRequest gpr = spotifyApi.getPlaylist(userID,playlist1.getId()).build();
         com.wrapper.spotify.model_objects.specification.Playlist temp = gpr.execute();
-        if(temp.getTracks().getTotal() != playlist.getSize()){
+        /*if(temp.getTracks().getTotal() != playlist.getSize()){
             Paging<PlaylistTrack> success_list = temp.getTracks();
             for (int j=0; j<success_list.getTotal(); j++){
                 if (uris.contains(success_list.getItems()[j].getTrack().getUri())){
 
                 }
             }
-        }
+        }*/
         return failedSongs;
     }
 
@@ -242,68 +229,57 @@ public class Spotify extends StreamingService
     }
 
     //returns a url that can be used to open the specified song in Spotify
-    public static String listenToSong(Song s) {
+    static String listenToSong(Song s) throws Exception {
         SpotifyApi spotifyApi = build.build();
         ClientCredentialsRequest cc = spotifyApi.clientCredentials().grant_type("client_credentials").build();
-        try {
-            ClientCredentials tokens = cc.execute();
-            Track t;
-            spotifyApi.setAccessToken(tokens.getAccessToken());
-            if (s.spotifyURI!=null) {
-                t = spotifyApi.getTrack(s.spotifyID).build().execute();
-                return t.getExternalUrls().get("spotify");
-            }
-            else {
-                //
-            }
-        } catch (Exception e){e.printStackTrace();}
-        return "";
+
+        ClientCredentials tokens = cc.execute();
+        Track t;
+        spotifyApi.setAccessToken(tokens.getAccessToken());
+        if (s.spotifyURI!=null) {
+            t = spotifyApi.getTrack(s.spotifyID).build().execute();
+            return t.getExternalUrls().get("spotify");
+        }
+        else
+            throw new Exception("No results");
     }
 
     // Added this to get a list of playlists and their spotify id's
-    public static ArrayList<Playlist> getPlaylists(MutablePair<String, String> tokens){
+    static ArrayList<Playlist> getPlaylists(MutablePair<String, String> tokens) throws Exception {
         ArrayList<Playlist> userPlaylists = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
-        try {
-            SpotifyApi spotifyApi = build.build();
-            //The access token must be set to ensure the correct user's playlists are being searched
-            spotifyApi.setAccessToken(tokens.getKey());
+        SpotifyApi spotifyApi = build.build();
+        //The access token must be set to ensure the correct user's playlists are being searched
+        spotifyApi.setAccessToken(tokens.getKey());
 
-            //Requesting playlist information from api
-            final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
-                    .getListOfCurrentUsersPlaylists()
-                    .limit(10)
-                    .offset(0)
-                    .build();
-            final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
+        //Requesting playlist information from api
+        final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
+                .getListOfCurrentUsersPlaylists()
+                .limit(10)
+                .offset(0)
+                .build();
+        final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
 
-            //Parsing playlist names into a string array
-            PlaylistSimplified[] items = playlists.getItems();
-            for(PlaylistSimplified item : items){
-                Playlist playlist = new Playlist();
-                playlist.spotifyId = item.getId();
-                playlist.Name = item.getName();
-                userPlaylists.add(playlist);
-            }
+        //Parsing playlist names into a string array
+        PlaylistSimplified[] items = playlists.getItems();
+        for (PlaylistSimplified item : items) {
+            Playlist playlist = new Playlist();
+            playlist.spotifyId = item.getId();
+            playlist.Name = item.getName();
+            userPlaylists.add(playlist);
+        }
 
-        } catch (Exception e) {e.printStackTrace();}
         return userPlaylists;
     }
 
-    public static Song getSongByID(String id){
-        Song song = new Song();
+    static Song getSongByID(String id) throws Exception {
         SpotifyApi s = build.build();
         ClientCredentialsRequest ccr = s.clientCredentials().build();
-        try{
-            ClientCredentials cc = ccr.execute();
-            s.setAccessToken(cc.getAccessToken());
-            GetTrackRequest getTrack = s.getTrack(id).build();
-            Track t = getTrack.execute();
-            song = trackToSong(t);
-        } catch (Exception e){
+        ClientCredentials cc = ccr.execute();
+        s.setAccessToken(cc.getAccessToken());
+        GetTrackRequest getTrack = s.getTrack(id).build();
+        Track t = getTrack.execute();
 
-        }
-
-        return song;
+        return trackToSong(t);
     }
 }

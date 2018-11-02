@@ -44,6 +44,12 @@ function serverShare(id) {
 	});
 }
 
+function serverRevert(id) {
+	return sendMessage({
+		revert: id
+	});
+}
+
 function serverGetFriendPlaylist(shareCode) {
 	return sendMessage({
 		importshare: shareCode

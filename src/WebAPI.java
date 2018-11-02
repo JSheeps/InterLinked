@@ -13,7 +13,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner;
 
 // How to handle calls to the /data endpoint
 class WebAPI {
@@ -33,7 +32,7 @@ class WebAPI {
 
     // ----------------------------------------  Server Handlers  ------------------------------------------------------
 
-    public void handle(HttpExchange t) throws IOException {
+    void handle(HttpExchange t) throws IOException {
         debug.log("------------------ Start API Connection ------------------");
 
         Headers headers = t.getResponseHeaders();
@@ -270,8 +269,7 @@ class WebAPI {
 
             playlist.save(currentUser);
 
-        } catch (Exception e) {throw new ServerErrorException("Error importing playlist");}
-
+        } catch (Exception e) {throw new ServerErrorException("Error importing playlist: " + e.getMessage());}
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);
@@ -304,20 +302,25 @@ class WebAPI {
             throw new ServerErrorException(e.getMessage());
         }
 
+        debug.log("Failed songs:");
+        failedSongs.forEach(song -> debug.log("  " + song.toString()));
+
+        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", true);
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
-        return jsonResult;
+//        jsonArray.put(jsonSongs); //todo: uncomment to send a list of songs that failed to export
+        jsonArray.put(jsonResult);
+
+        return jsonArray;
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
     private JSONObject signUp(QueryValues query) {
         JSONObject json = new JSONObject();
-
-        String encodedName = query.get("signup");
 
         String username = query.get("username");
         String password = query.get("password");
@@ -632,7 +635,6 @@ class WebAPI {
     }
 
     private HashMap<String, User> getAuthTokens() {
-        Scanner scanner = null;
         List<String> strings = null;
         try {
             strings = Files.readAllLines(Paths.get(tokenFilePath));
@@ -642,9 +644,11 @@ class WebAPI {
 
         HashMap<String,User> map = new HashMap<>();
 
-        for(String line : strings) {
-            String[] columns = line.split("\\s");
-            map.put(columns[0],User.getUserByUserName(columns[1]));
+        if (strings != null) {
+            for(String line : strings) {
+                String[] columns = line.split("\\s");
+                map.put(columns[0],User.getUserByUserName(columns[1]));
+            }
         }
 
         return map;

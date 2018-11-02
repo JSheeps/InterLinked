@@ -33,5 +33,25 @@ function viewRevertList() {
                 );
             }
 	});
-
 }
+
+function revertPlayList(id) {
+    var row = table.getRowByID(id);
+
+    serverRevert(id).done( (result) => {
+        if (result.error) {
+        genericErrorHandlers(result.error);
+
+        alert(result.error);
+        return;
+    }
+
+    if (result.result) {
+        alert("Playlist reverted")
+    } else {
+        alert(result);
+        console.log(result);
+    }
+});
+}
+
