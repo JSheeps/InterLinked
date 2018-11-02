@@ -119,7 +119,7 @@ public class Spotify extends StreamingService
             for (int i=0; i<playlists.getTotal(); i++){
                 if ((playlists.getItems()[i].getName()).equals(playlistName)){
                     GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,(playlists.getItems())[i].getId())
-                            .limit(20)
+                            .limit(100)
                             .offset(0)
                             .build();
                     final Paging<PlaylistTrack> tracks = getPlaylistTracks.execute();

@@ -257,18 +257,20 @@ class WebAPI {
         try {
             // Get songs for selected playlist
             importPlaylist = Spotify.importPlaylist(currentUser.tokens, playlist.Name);
+
+            // Add songs to new playlist
+            playlist.clearSongs();
+            debug.log("Found songs:");
+            for (Song song : importPlaylist) {
+                debug.log(song.toString());
+                playlist.addSong(song);
+                song.save();
+            }
+
+            playlist.save(currentUser);
+
         } catch (Exception e) {throw new ServerErrorException("Error importing playlist");}
 
-        // Add songs to new playlist
-        playlist.clearSongs();
-        debug.log("Found songs:");
-        for(Song song : importPlaylist){
-            debug.log(song.toString());
-            playlist.addSong(song);
-            song.save();
-        }
-
-        playlist.save(currentUser);
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", playlist.Name);
