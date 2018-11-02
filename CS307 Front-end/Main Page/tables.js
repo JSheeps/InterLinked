@@ -27,7 +27,7 @@ class Table {
 		this.orderBy = -1;
 		
 		this.tbody.empty();
-		this.tbody.html("<tr> <th colspan='" + this.columns + "'>" + title + "</th></tr>");
+		this.tbody.html("<tr> <th colspan='" + this.columns + "'>" + (title ? title : "") + "</th></tr>");
 	}
 	
 	/*
@@ -48,6 +48,7 @@ class Table {
 	Each element is either a string or an object like so:
 	{
 		val: %value e.g. string%
+		span: %number, how many columns the element should span (defaults to 1)%
 		attr: {%attributes to assign to the <td>%
 			e.g: "class": "clickable"
 		}
@@ -61,7 +62,14 @@ class Table {
 	addRowAfter(selector, rowAttribs, ...objs) {
 		if (typeOf(objs[0]) == "array")
 			objs = objs[0];
-		if (objs.length != this.columns)
+		
+		var span = 0;
+		for (var i = 0; i < objs.length; i++) {
+			var obj = objs[i];
+			span += (obj.span ? obj.span : 1);
+		}
+			
+		if (span != this.columns)
 			throw "number of objects != " + this.columns;
 
 		
@@ -75,6 +83,9 @@ class Table {
 			html += "<td";
 			if (this.sortColumnsTitles != null && this.sortColumnsTitles[i] != null)
 				html += " sortData=" + getSortData(obj);
+			
+			if (obj.span)
+				html += " colspan='" + obj.span + "'";
 			
 			if (objType == "string") {
 				html +=">" + obj + "</td>";
@@ -102,11 +113,19 @@ class Table {
 		return this.tbody.find("#" + id);
 	}
 	
+	hide() {
+		this.table.hide();
+	}
+	
+	show() {
+		this.table.show();
+	}
+	
 	rows() {
 		return this.tbody.children().length;
 	}
 	
-	makeSortRow() {
+	makeSortRow(tableName = "table") {
 		var row =[];
 		for (var i = 0; i < this.sortColumnsTitles.length; i++) {
 			var title = this.sortColumnsTitles[i];
@@ -116,7 +135,7 @@ class Table {
 			} else {
 				var titleEntry = { val: "<u>" + this.sortColumnsTitles[i] + "</u>" };
 				titleEntry.attr = { 
-					onclick: "'table.sort(" + i + ")'",
+					onclick: "'" + tableName + ".sort(" + i + ")'",
 					"class": "clickable" 
 				};
 			}
@@ -129,6 +148,11 @@ class Table {
 	clear() {
 		this.table.find("tr:gt(0)").remove();
 		return this;
+	}
+	
+	remove(selectorOrIndex) {
+		var type = typeOf(selectorOrIndex);
+		console.log(type);
 	}
 	
 	sort(column) {
