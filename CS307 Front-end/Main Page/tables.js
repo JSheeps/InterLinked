@@ -48,6 +48,7 @@ class Table {
 	Each element is either a string or an object like so:
 	{
 		val: %value e.g. string%
+		sortData: %sort data, defaults to val%
 		span: %number, how many columns the element should span (defaults to 1)%
 		attr: {%attributes to assign to the <td>%
 			e.g: "class": "clickable"
@@ -81,8 +82,11 @@ class Table {
 			var obj = objs[i];
 			var objType = typeOf(obj);
 			html += "<td";
-			if (this.sortColumnsTitles != null && this.sortColumnsTitles[i] != null)
-				html += " sortData=" + getSortData(obj);
+			if (this.sortColumnsTitles != null && this.sortColumnsTitles[i] != null && typeOf) {
+				var sortData = getSortData(obj);
+				if (sortData != "")
+					html += " sortData='" + getSortData(obj) + "'";
+			}
 			
 			if (obj.span)
 				html += " colspan='" + obj.span + "'";
@@ -163,14 +167,23 @@ class Table {
 		
 		
 		var sortFunc = (a, b) => {
-			return compare(
-				$(a).children().eq(column).attr("sortData"),
-				$(b).children().eq(column).attr("sortData"),
-				ascending
-			);	
+			return compare(a, b, ascending, column);	
 		};
 		
-		this.tbody.find("tr:gt(1)").sort(sortFunc).appendTo(this.tbody);
+		var rows = this.tbody.children("tr:gt(1)");//.sort(sortFunc).appendTo(this.tbody);
+		if (rows.length < 2)
+			return;
+		
+		if (binding(rows[0]) == -1)
+			throw "First row is bound to row above it";
+		
+		rollup(rows);
+		
+		rows.sort(sortFunc)
+		
+		rows = unroll(rows);
+		rows.appendTo(this.tbody);
+		
 		this.tbody.attr("order", (ascending ? "asc" : "desc"));
 		return this;
 	}
@@ -211,16 +224,65 @@ class Table {
 	}
 }
 
-function compare(a, b, ascending) {
-	if (a == b) return 0;
-	if (a < b) {
-		return ascending ? -1 : 1;
+function rollup(rows) {
+	for (var i = rows.length - 1; i > 0; i--) {
+		var row = rows[i];
+		var bind = binding(row);
+		if (bind) {
+			if (bind == -1) {
+				var boundRow = rows.splice(i, 1)[0];
+				rows[i - 1].boundRow = boundRow;
+			} else {
+				throw "unsupported bind";
+			}
+		}
 	}
+}
+
+function unroll(rows) {
+	var ret = [];
+	for (var i = 0; i < rows.length; i++) {
+		var row = rows[i];
+		ret.push(row);
+		while (row.boundRow) {
+			row = row.boundRow;
+			ret.push(row);
+		}
+	}
+	
+	return $(ret);
+}
+
+function binding(row) {
+	var bind = $(row).attr("bind");
+	if (bind == "UP")
+		return -1;
+	
+	return 0;
+}
+
+function compare(a, b, ascending, column) {
+	var asd = $(a).children().eq(column).attr("sortData");
+	var bsd = $(b).children().eq(column).attr("sortData");
+	
+	if (asd == bsd)
+		return 0;
+	
+	if (asd < bsd) 
+		return ascending ? -1 : 1;
+	
 	return ascending ? 1 : -1;
 }
 
 function getSortData(obj) {
-	return obj;
+	if (obj.sortData)
+		return obj.sortData;
+	
+	var type = typeOf(obj);
+	if (type == "string")
+		return obj;
+	
+	return undefined;
 }
 
 function typeOf( obj ) {
