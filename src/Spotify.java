@@ -145,14 +145,21 @@ public class Spotify extends StreamingService
             }
         }
         SpotifyApi spotifyApi = build.build();
-        if (Arrays.asList(getPlaylistNames(tokens)).contains(playlist.Name)){
-            playlist.setName(playlist.Name+"(2)");
+
+        List<String> names = Arrays.asList(getPlaylistNames(tokens));
+
+        int version = 1;
+        String playlistName = playlist.Name;
+        while(names.contains(playlistName)){
+            playlistName = playlist.Name + "(" + version + ")";
+            version++;
         }
+
         spotifyApi.setAccessToken(tokens.getKey());
         GetCurrentUsersProfileRequest getUserID = spotifyApi.getCurrentUsersProfile().build();
         User user = getUserID.execute();
         String userID = user.getId();
-        CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlist.Name)
+        CreatePlaylistRequest createPlaylist = spotifyApi.createPlaylist(userID, playlistName)
                 .collaborative(false)
                 .public_(false)
                 .description("InterLinked custom Playlist")

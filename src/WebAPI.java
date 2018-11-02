@@ -305,16 +305,17 @@ class WebAPI {
         debug.log("Failed songs:");
         failedSongs.forEach(song -> debug.log("  " + song.toString()));
 
-        JSONArray jsonArray = new JSONArray();
         JSONObject jsonResult = new JSONObject();
         jsonResult.put("result", true);
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
+//        JSONArray jsonArray = new JSONArray();
 //        jsonArray.put(jsonSongs); //todo: uncomment to send a list of songs that failed to export
-        jsonArray.put(jsonResult);
+//        jsonArray.put(jsonResult);
+//        return jsonArray;
 
-        return jsonArray;
+        return jsonResult;
     }
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
