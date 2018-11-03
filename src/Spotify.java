@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Spotify extends StreamingService
-{
+public class Spotify extends StreamingService {
+
     //SET THIS TO FALSE IF API REQUESTS ARE FAILING
     private static final boolean refreshDebugFlag = true;
 
@@ -136,7 +136,7 @@ public class Spotify extends StreamingService
         List<Song> failedSongs = new ArrayList<>();
         tokens = handleTokenRefresh(tokens);
         for (Song song : playlist.getArrayList()) {
-            if (song.origin == Song.OriginHostName.SPOTIFY && song.getSpotifyURI()!=null) {
+            if (song.origin == Origin.SPOTIFY && song.getSpotifyURI()!=null) {
                 uris.add(song.spotifyURI);
             } else {
                 String uri = findURI(song);
@@ -144,6 +144,7 @@ public class Spotify extends StreamingService
                 else uris.add(uri);
             }
         }
+        if(uris.size() == 0) throw new Exception("Couldn't find any of these songs on Spotify");
         SpotifyApi spotifyApi = build.build();
 
         List<String> names = Arrays.asList(getPlaylistNames(tokens));
@@ -191,7 +192,10 @@ public class Spotify extends StreamingService
         ClientCredentialsRequest ccr = spotifyApi.clientCredentials().grant_type("client_credentials").build();
         ClientCredentials cc = ccr.execute();
         spotifyApi.setAccessToken(cc.getAccessToken());
-        SearchTracksRequest search = spotifyApi.searchTracks(s.getTitle()+" " + s.getArtist()+ " " + s.getAlbum()).build();
+        String searchString = s.getTitle();
+        if(!s.getArtist().equals("unknown")) searchString += " " + s.getArtist();
+        if(!s.getAlbum().equals("unknown")) searchString += " " + s.getAlbum();
+        SearchTracksRequest search = spotifyApi.searchTracks(searchString).build();
         Paging<Track> tracks = search.execute();
         if(tracks.getItems().length == 0) return null;
         else return tracks.getItems()[0].getUri();
@@ -230,7 +234,7 @@ public class Spotify extends StreamingService
         s.setExplicit(t.getIsExplicit());
         s.spotifyURI = t.getUri();
         s.spotifyID = t.getId();
-        s.origin = Song.OriginHostName.SPOTIFY;
+        s.origin = Origin.SPOTIFY;
         s.setTitle(t.getName());
         return s;
     }
@@ -273,6 +277,7 @@ public class Spotify extends StreamingService
             Playlist playlist = new Playlist();
             playlist.spotifyId = item.getId();
             playlist.Name = item.getName();
+            playlist.origin = Origin.SPOTIFY;
             userPlaylists.add(playlist);
         }
 

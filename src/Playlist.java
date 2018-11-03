@@ -11,6 +11,8 @@ class Playlist {
     public int UserID;
     public String Name;
     public String spotifyId;
+    public String youtubeId;
+    Origin origin;
     private List<Song> playlist = new ArrayList<>();
 
     public void clearSongs(){

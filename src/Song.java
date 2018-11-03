@@ -11,7 +11,8 @@ public class Song {
     boolean explicit;
     String spotifyID;
     String spotifyURI;
-    OriginHostName origin;
+    String youtubeId;
+    Origin origin;
 
     public Song(String title) {
         this.title = title;
@@ -61,7 +62,7 @@ public class Song {
         return spotifyURI;
     }
 
-    public OriginHostName getOrigin() {
+    public Origin getOrigin() {
         return origin;
     }
 
@@ -89,15 +90,8 @@ public class Song {
         this.spotifyURI = spotifyURI;
     }
 
-    public void setOrigin(OriginHostName origin) {
+    public void setOrigin(Origin origin) {
         this.origin = origin;
-    }
-
-    enum OriginHostName {
-        AMAZON,
-        ITUNES,
-        SPOTIFY,
-        YOUTUBE
     }
 
     public Song(ResultSet resultSet){
@@ -151,6 +145,14 @@ public class Song {
             // Already in db, no need for action
             return true;
         }
+
+        if(artist == null) artist = "unknown";
+        if(title == null) title = "unknown";
+        if(album == null) album = "unknown";
+        if(spotifyID == null) spotifyID = "unknown";
+        if(spotifyURI == null) spotifyURI = "unknown";
+        if(youtubeId == null) youtubeId = "unknown";
+
         String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
                 "VALUES('" + artist.replaceAll("'","''") + "', '" + title.replaceAll("'","''") + "', '" +
                 album.replaceAll("'","''") + "', " + duration + ", " + (explicit? 1 : 0) + ", '" + spotifyID + "', '" + spotifyURI + "')";
