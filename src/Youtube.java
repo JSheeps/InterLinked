@@ -65,29 +65,31 @@ public class Youtube extends StreamingService {
     }
 
     static List<Playlist> getPlaylists(String token) throws Exception {
-        QueryValues queryValues = new QueryValues();
 
+        // Build query
+        QueryValues queryValues = new QueryValues();
         queryValues.put("maxResults", "25");
         queryValues.put("access_token", token);
         queryValues.put("part", "snippet");
         queryValues.put("mine", "true");
         queryValues.put("key", apiKey);
 
+        // Send http request
         String urlString = baseUrl + "playlists" + queryValues.toQueryString();
-
         URL url = new URL(urlString);
-
         URLConnection connection = url.openConnection();
         InputStream in = connection.getInputStream();
 
+        // Get result and put in string
         Scanner s = new Scanner(in).useDelimiter("\\A");
         String result = s.hasNext() ? s.next() : "";
 
+        // Convert result to json objects
         JSONObject json = new JSONObject(result);
         JSONArray jsonArray = json.getJSONArray("items");
 
+        // Iterate through json playlist objects and convert them to java playlist objects
         List<Playlist> playlists = new ArrayList<>();
-
         for(int i = 0; i < jsonArray.length(); i++){
             Playlist playlist = new Playlist();
             JSONObject jsonPlaylist = jsonArray.getJSONObject(i);
@@ -114,24 +116,28 @@ public class Youtube extends StreamingService {
         }
         if (playlist == null) throw new Exception("Couldn't find youtube playlist: " + playlistName);
 
+        // Build query
         QueryValues queryValues = new QueryValues();
-
         queryValues.put("access_token", token);
         queryValues.put("part", "snippet");
         queryValues.put("key", apiKey);
         queryValues.put("playlistId", playlist.youtubeId);
 
+        // Send http request
         String urlString = baseUrl + "playlistItems" + queryValues.toQueryString();
         URL url = new URL(urlString);
         URLConnection connection = url.openConnection();
         InputStream in = connection.getInputStream();
 
+        // Get result and put in string
         Scanner s = new Scanner(in).useDelimiter("\\A");
         String result = s.hasNext() ? s.next() : "";
 
+        // Convert result into json objects
         JSONObject json = new JSONObject(result);
         JSONArray jsonArray = json.getJSONArray("items");
 
+        // Iterate through json playlist item objects and convert them into java song objects
         List<Song> songs = new ArrayList<>();
         for(int i = 0; i < jsonArray.length(); i++){
             Song song = new Song();
