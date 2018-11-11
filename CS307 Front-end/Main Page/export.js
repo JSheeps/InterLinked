@@ -26,7 +26,7 @@ function viewExportablePlaylists() {
 		for (var i = 0; i < playlists.length; i++) {
             var playlist = playlists[i];
 			table.addRow(
-				null,
+				{ id: playlist.id },
 				"<a class='black' onclick=\"exportPlayList('" + playlist.id + "');\">Export</a>",
 				playlist.name
 			);
@@ -44,30 +44,31 @@ function exportPlayList(id) {
 		return;
 	}
 	
+	var exportButton = table.tbody.find("#" + id).children().eq(0);
+	var oldHtml = exportButton.html();
+	exportButton.html("<a class='black'>Exporting...</a>");
+	
 	
 	exportPlaylist(id, platform).done( (response) => {
-		genericErrorHandlers(response.error);
 		if (response.error) {
+			genericErrorHandlers(response.error);
 			alert(response.error);
-			return;
-		}
-		
-		if (response.result) {
-			alert("Export Successful!");
-			return;
 		} else {
-			alertText =
-				"Could not export every song\n" +
-				"These songs could not be exported:";
-			
-			for (var i = 0; i < response.songs; i++)
-				alertText += "\n" + response.songs[i];
-			
-			alert(alertText);
 			console.log(response);
-			return;
+			if (response.result) {
+				alert("Export Successful!");
+			} else {
+				alertText =
+					"Could not export every song\n" +
+					"These songs could not be exported:";
+				
+				for (var i = 0; i < response.songs; i++)
+					alertText += "\n" + response.songs[i];
+				
+				alert(alertText);
+			}
 		}
 		
-		
+		exportButton.html(oldHtml);
 	});
 }

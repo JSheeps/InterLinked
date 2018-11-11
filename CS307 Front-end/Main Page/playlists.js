@@ -80,20 +80,25 @@ function fillTable(playlists) {
 
 function removePlayList(id) {
 	var row = table.getRowByID(id);
+	var btn = table.tbody.find("#" + id).children().eq(4);
+	var oldHtml = btn.html();
+	btn.html("<a class='black'>Removing...</a>");
 	
 	serverRemovePlaylist(id).done( (result) => {
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
-		}
-		if (result.result) {
-			removeLocalPlaylist(getLocalPlaylistIndex(id));
-			viewPlaylists(false);
-			alert("Successfully removed");
 		} else {
-			alert("Failed to remove playlist");
-			console.log(result);
+			if (result.result) {
+				removeLocalPlaylist(getLocalPlaylistIndex(id));
+				viewPlaylists(false);
+				alert("Successfully removed");
+			} else {
+				alert("Failed to remove playlist");
+				console.log(result);
+			}
 		}
+		btn.html(oldHtml);
 	});
 }
 
@@ -151,14 +156,16 @@ function updateSongTable(index, expandButton = null, afterFunction = () => {}) {
 		expandButton[0].onclick = null;
 	}
 	
-	var oldExpandText = expandButton.text();
-	expandButton.text("[...]");
+	var oldExpandHtml = expandButton.html();
+	expandButton.click(null);
+	expandButton.html("<a class='black'>[...]</a>");
+	expandButton[0].onclick = null;
 	
 	if (playlist.songTable)
 		playlist.songTable.clear();
 	
 	serverGetSongs(id).done( (result) => {
-		expandButton.text(oldExpandText);
+		expandButton.html(oldExpandHtml);
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
@@ -190,10 +197,14 @@ function search() {
 	if (searchResults == null)
 		searchResults = new Table("#searchResults", "Search Results", null);
 	
+	var searchButton = $("#searchbtn");
+	searchButton.attr("disabled", "disabled");
 	
 	var searchText = $("#search").val();
 	if (searchText.length == 0) {
 		searchResults.clear().text("No text to search");
+		searchButton.removeAttr("disabled");
+		return;
 	}
 	
 	searchResults.clear().text("Searching...");
@@ -206,13 +217,15 @@ function search() {
 			if (songs.error == "Unknown Error: null") {
 				searchResults.text("Song not found");
 				searchText = "";
+				searchButton.removeAttr("disabled");
 				return;
 			}
 			alert(songs.error);
+			searchButton.removeAttr("disabled");
 			return;
 		}
 		
-		console.log(songs);
+		// console.log(songs);
 		for (var i = 0; i < songs.length; i++) {
 			var result = songs[i];
 			var resultString = "";
@@ -233,14 +246,21 @@ function search() {
 		}
 		searchedSong = result.SpotifyID;
 		viewPlaylists(false);
+		searchButton.removeAttr("disabled");
 	});
+	
 }
 
 function addSearchedSong(playlistID) {
+	var addButton = table.tbody.find("#" + playlistID).children().eq(2);
+	var oldHtml = addButton.html();
+	addButton.html("<a class='black'>Adding song...</a>");
+	
 	serverAddSong(searchedSong, playlistID).done( (result) => {
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
+			addButton.html(oldHtml);
 			return;
 		}
 		
@@ -250,6 +270,7 @@ function addSearchedSong(playlistID) {
 			var playlist = localPlaylists[index];
 			if (playlist.songTable)
 				updateSongTable(index);
+			addButton.html(oldHtml);
 		}
 	});
 }
@@ -258,6 +279,8 @@ function addSearchedSong(playlistID) {
 // Sharing functionality
 function sharePlayList(id) {
 	var row = table.getRowByID(id);
+	var shareField = row.children("td").eq(3);
+	shareField.html("<a class='black'>Sharing...</a>");
 	
 	serverShare(id).done( (result) => {
 		if (result.error) {
@@ -268,7 +291,6 @@ function sharePlayList(id) {
 		}
 		
 		if (result.result) {
-			var shareField = row.children("td").children("a.shareButton");
 			var shareBoxID = "shareBox" + id;
 			shareField.html(
 				"<div class='tooltip'>" +
@@ -311,24 +333,29 @@ function addFriendPlaylistClear() {
 }
 
 function addFriendPlaylist() {
+	friendPlaylistInput.prop("readonly", true);
 	var shareCode = friendPlaylistInput.val();
 	if (shareCode.length == 0) {
 		alert("No share code provided");
 		return;
 	}
 	
+	var addFriendPlaylistButton = $("#addPlaylistBtn");
+	addFriendPlaylistButton.prop("disabled", true);
+	
 	serverGetFriendPlaylist(shareCode).done( (result) => {
 		if (result.error) {
 			genericErrorHandlers(result);
 			alert(result.error);
-			return;
+		} else {
+			if (result.result == true) {
+				viewPlaylists();
+				alert("Friend's playlist imported");
+			} else {
+				alert("Could not find playlist");
+			}
 		}
-		
-		if (result.result == true) {
-			viewPlaylists();
-			alert("Friend's playlist imported");
-			return;
-		}
-		console.log(result);
+		friendPlaylistInput.prop("readonly", false);
+		addFriendPlaylistButton.prop("disabled", false);
 	});
 }

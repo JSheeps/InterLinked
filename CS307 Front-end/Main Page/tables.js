@@ -174,8 +174,6 @@ class Table {
 		
 		var rows = this.tbody.children("tr:gt(1)");
 		
-		console.log(rows);
-		
 		if (rows.length < 2)
 			return;
 		
@@ -183,9 +181,7 @@ class Table {
 			throw "First row is bound to row above it";
 		
 		rollup(rows);
-		
-		rows.sort(sortFunc)
-		
+		rows.sort(sortFunc);
 		rows = unroll(rows);
 		rows.appendTo(this.tbody);
 		
