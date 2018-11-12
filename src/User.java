@@ -1,6 +1,7 @@
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,12 +33,14 @@ public class User {
 
     // Gets user data from database and creates new user object
     public static User getUserByUserName(String userName){
-        String userQuery = "SELECT * FROM Users WHERE UserName = '" + userName + "'";
         SqlHelper helper = new SqlHelper();
 
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(userQuery);
-
         try{
+            PreparedStatement userStatement = helper.connection.prepareStatement("SELECT * FROM Users WHERE UserName = ?");
+            userStatement.setString(1, userName);
+
+            ResultSet resultSet = userStatement.executeQuery();
+
             if(resultSet.next()){
                 int id = resultSet.getInt("ID");
                 String usrrName = resultSet.getString("UserName");
@@ -60,18 +63,21 @@ public class User {
         java.util.Date currentDate = new java.util.Date();
         Date sqlDate = new Date(currentDate.getTime());
 
-        String insertion = "INSERT INTO Users([UserName], [Email], [CreatedDate]) " +
-                           "VALUES(" + "'" + newUser.userName +"'" +  ", " +"'" +  newUser.email +"'" +  ", " + "'" + sqlDate + "'" + ")";
-
         SqlHelper helper = new SqlHelper();
 
-        helper.ExecuteQuery(insertion);
-
-        // Fetch ID back, make UserPassword instance
-        String idFetchQuery = "SELECT ID FROM Users WHERE UserName = '" + newUser.userName + "'";
-        ResultSet results = helper.ExecuteQueryWithReturn(idFetchQuery);
-
         try{
+            PreparedStatement insertionStatement = helper.connection.prepareStatement("INSERT INTO Users([UserName], [Email], [CreatedDate]) VALUES(?,?,?)");
+            insertionStatement.setString(1, newUser.userName);
+            insertionStatement.setString(2, newUser.email);
+            insertionStatement.setString(3, sqlDate.toString());
+
+            insertionStatement.execute();
+
+            PreparedStatement fetchIDStatement = helper.connection.prepareStatement("SELECT ID FROM Users WHERE UserName = ?");
+            fetchIDStatement.setString(1, newUser.userName);
+
+            ResultSet results = fetchIDStatement.executeQuery();
+
             while(results.next()){
                 newUser.ID = results.getInt("ID");
             }
@@ -95,14 +101,15 @@ public class User {
             // Not in db
             return false;
         }
-
-        String fetchQuery = "SELECT Playlists.* FROM Playlists WHERE UserID = "+ ID;
-
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(fetchQuery);
 
         playlistList = new ArrayList<Playlist>();
         try{
+            PreparedStatement fetchStatement = helper.connection.prepareStatement("SELECT Playlists.* FROM Playlists WHERE UserID = ?");
+            fetchStatement.setInt(1, ID);
+
+            ResultSet resultSet = fetchStatement.executeQuery();
+
             while(resultSet.next()){
                 Playlist playlist = new Playlist();
 

@@ -1,3 +1,4 @@
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -17,15 +18,21 @@ public class PlaylistSong {
             // Already in DB
             return true;
         }else{
-            String insertQuery = "INSERT INTO PlaylistSongs(PlaylistID, SongID) VALUES(" + PlaylistID + ", " + SongID + ")";
             SqlHelper helper = new SqlHelper();
-            helper.ExecuteQuery(insertQuery);
-
-            // Find ID of thing we just inserted
-            String findIDQuery = "SELECT ID FROM PlaylistSongs WHERE PlaylistID = " + PlaylistID + " AND SongID = " + SongID;
-            ResultSet resultSet = helper.ExecuteQueryWithReturn(findIDQuery);
 
             try{
+                PreparedStatement insertStatement = helper.connection.prepareStatement("INSERT INTO PlaylistSongs(PlaylistID, SongID) VALUES(?,?)");
+                insertStatement.setInt(1, PlaylistID);
+                insertStatement.setInt(2, SongID);
+
+                insertStatement.execute();
+
+                PreparedStatement findIDStatement = helper.connection.prepareStatement("SELECT ID FROM PlaylistSongs WHERE PlaylistID = ? AND SongID = ?");
+                findIDStatement.setInt(1, PlaylistID);
+                findIDStatement.setInt(2, SongID);
+
+                ResultSet resultSet = findIDStatement.executeQuery();
+
                 while(resultSet.next()){
                     ID = resultSet.getInt("ID");
                 }
@@ -39,10 +46,18 @@ public class PlaylistSong {
     }
 
     public boolean delete(){
-        String deletionQuery = "DELETE FROM PlaylistSongs WHERE PlaylistID = " + PlaylistID + " AND SongID = " + SongID;
         SqlHelper helper = new SqlHelper();
 
-        helper.ExecuteQuery(deletionQuery);
+        try{
+            PreparedStatement deletionStatement = helper.connection.prepareStatement("DELETE FROM PlaylistSongs WHERE PlaylistID = ? AND SongID = ?");
+            deletionStatement.setInt(1, PlaylistID);
+            deletionStatement.setInt(2, SongID);
+
+            deletionStatement.execute();
+        }catch (SQLException e){
+            System.err.println(e);
+            return false;
+        }
 
         helper.closeConnection();
 

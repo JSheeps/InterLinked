@@ -1,3 +1,4 @@
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -60,15 +61,24 @@ class Playlist {
             // Not in db
             return null;
         }
-        String fetchQuery = "SELECT Songs.* " +
-                "FROM Playlists " +
-                "JOIN PlaylistSongs ON PlaylistSongs.PlaylistID = Playlists.ID " +
-                "JOIN Songs ON Songs.ID = PlaylistSongs.SongID " +
-                "WHERE Playlists.ID = " + ID;
+        //String fetchQuery = "SELECT Songs.* " +
+        //        "FROM Playlists " +
+        //        "JOIN PlaylistSongs ON PlaylistSongs.PlaylistID = Playlists.ID " +
+        //        "JOIN Songs ON Songs.ID = PlaylistSongs.SongID " +
+        //        "WHERE Playlists.ID = " + ID;
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(fetchQuery);
+        //ResultSet resultSet = helper.ExecuteQueryWithReturn(fetchQuery);
         List<Song> songList = new ArrayList<Song>();
         try {
+            PreparedStatement fetchStatement = helper.connection.prepareStatement("SELECT Songs.* " +
+                    "FROM Playlists " +
+                    "JOIN PlaylistSongs ON PlaylistSongs.PlaylistID = Playlists.ID " +
+                    "JOIN Songs ON Songs.ID = PlaylistSongs.SongID " +
+                    "WHERE Playlists.ID = ?");
+            fetchStatement.setInt(1, ID);
+
+            ResultSet resultSet = fetchStatement.executeQuery();
+
             while (resultSet.next()) {
                 Song song = new Song(resultSet);
 
@@ -86,13 +96,21 @@ class Playlist {
         if (ID == 0) {
             // Playlist hasn't been saved to DB yet
             int currentUserID = currentUser.ID;
-            String playlistInsertQuery = "INSERT INTO Playlists(UserID, Name) VALUES(" + currentUserID + ", '" + Name.replaceAll("'","''") + "')";
             SqlHelper helper = new SqlHelper();
-            helper.ExecuteQuery(playlistInsertQuery);
-            // Send query to find ID of playlist we just inserted
-            String findIDQuery = "SELECT ID FROM Playlists WHERE Name = '" + Name.replaceAll("'","''") + "'";
-            ResultSet results = helper.ExecuteQueryWithReturn(findIDQuery);
+
             try {
+                PreparedStatement playlistInsertStatement = helper.connection.prepareStatement("INSERT INTO Playlists(UserID, Name) VALUES(?,?)");
+                playlistInsertStatement.setInt(1, currentUserID);
+                playlistInsertStatement.setString(2, Name);
+
+                playlistInsertStatement.execute();
+
+                // Send query to find ID of playlist we just inserted
+                PreparedStatement findIDStatement = helper.connection.prepareStatement("SELECT ID FROM Playlists WHERE Name = ?");
+                findIDStatement.setString(1, Name);
+
+                ResultSet results = findIDStatement.executeQuery();
+
                 while(results.next()){
                     ID = results.getInt("ID");
                 }
@@ -110,11 +128,21 @@ class Playlist {
             return true;
         }else{
             // Send update query that may or may not actually do anything
-            String updateQuery = "UPDATE Playlists "+
-                                 "SET Name = '"+ Name.replaceAll("'","''") + "'"+
-                                 "WHERE ID = " + ID;
             SqlHelper helper = new SqlHelper();
-            helper.ExecuteQuery(updateQuery);
+
+            try{
+                PreparedStatement updateStatement = helper.connection.prepareStatement("UPDATE Playlists "+
+                        "SET Name = ?"+
+                        "WHERE ID = ?");
+
+                updateStatement.setString(1, Name);
+                updateStatement.setInt(2, ID);
+
+                updateStatement.execute();
+            }catch (SQLException e){
+                System.err.println(e);
+                return false;
+            }
             helper.closeConnection();
         }
         // We've confirmed that the playlist has an ID at this point, so now we save the songs one by one
@@ -164,17 +192,31 @@ class Playlist {
         if(ID == 0){
             return true;
         }else{
-            String deletionQuery1 = "DELETE PlaylistHistorySongs FROM PlaylistHistorySongs JOIN PlaylistHistory ON PlaylistHistorySongs.PlaylistHistoryID = PlaylistHistory.ID "+
-                    "WHERE PlaylistHistory.PlaylistID =" + ID;
-            String deletionQuery2 = "DELETE FROM PlaylistHistory WHERE PlaylistID = " + ID;
-            String deletionQuery3 = "DELETE FROM PlaylistSongs WHERE PlaylistID = "+ ID;
-            String deletionQuery4 = "DELETE FROM Playlists WHERE ID ="+ ID;
-
             SqlHelper helper = new SqlHelper();
-            helper.ExecuteQuery(deletionQuery1);
-            helper.ExecuteQuery(deletionQuery2);
-            helper.ExecuteQuery(deletionQuery3);
-            helper.ExecuteQuery(deletionQuery4);
+
+            try{
+                PreparedStatement deletionStatement1 = helper.connection.prepareStatement("DELETE PlaylistHistorySongs FROM PlaylistHistorySongs " +
+                        "JOIN PlaylistHistory ON PlaylistHistory.ID = PlaylistHistorySongs.PlaylistHistoryID WHERE PlaylistHistory.PlaylistID = ?");
+                deletionStatement1.setInt(1, ID);
+
+                PreparedStatement deletionStatement2 = helper.connection.prepareStatement("DELETE FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = ?");
+                deletionStatement2.setInt(1, ID);
+
+                PreparedStatement deletionStatement3 = helper.connection.prepareStatement("DELETE FROM PlaylistSongs WHERE PlaylistID = ?");
+                deletionStatement3.setInt(1, ID);
+
+                PreparedStatement deletionStatement4 = helper.connection.prepareStatement("DELETE FROM Playlists WHERE ID = ?");
+                deletionStatement4.setInt(1, ID);
+
+                deletionStatement1.execute();
+                deletionStatement2.execute();
+                deletionStatement3.execute();
+                deletionStatement4.execute();
+            }catch (SQLException e){
+                System.err.println(e);
+                return false;
+            }
+
             helper.closeConnection();
 
             return true;
@@ -223,17 +265,21 @@ class Playlist {
         String currentTime = Timestamp.valueOf(LocalDateTime.now()).toString();
         String currentTimeTrunc = currentTime.substring(0, currentTime.indexOf('.') + 4);
 
-        String playlistHistoryInsert = "INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(" + this.ID + ", '" + currentTimeTrunc + "')";
-
         SqlHelper helper = new SqlHelper();
-        helper.ExecuteQuery(playlistHistoryInsert);
 
-        // Fetch ID of playlistHistory object
-        String idFetch = "SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = " + this.ID + " ORDER BY CreatedTime DESC";
-
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(idFetch);
         int historyID = 0;
         try{
+            PreparedStatement playlistHistoryStatement = helper.connection.prepareStatement("INSERT INTO PlaylistHistory(PlaylistID, CreatedTime) VALUES(?,?)");
+            playlistHistoryStatement.setInt(1, ID);
+            playlistHistoryStatement.setString(2, currentTimeTrunc);
+
+            playlistHistoryStatement.executeQuery();
+
+            PreparedStatement idFetchStatement = helper.connection.prepareStatement("SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = ? ORDER BY CreatedTime DESC");
+            idFetchStatement.setInt(1, ID);
+
+            ResultSet resultSet = idFetchStatement.executeQuery();
+
             while(resultSet.next()){
                 historyID = resultSet.getInt("ID");
                 break;
@@ -246,9 +292,16 @@ class Playlist {
         if(historyID == 0) return false;
 
         for(Song song : currentSongs){
-            String playlistHistorySongInsert = "INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(" + historyID + ", " + song.ID + ")";
+            try{
+                PreparedStatement playlistHistorySongInsertStatement = helper.connection.prepareStatement("INSERT INTO PlaylistHistorySongs(PlaylistHistoryID, SongID) VALUES(?,?)");
+                playlistHistorySongInsertStatement.setInt(1, historyID);
+                playlistHistorySongInsertStatement.setInt(2, song.ID);
 
-            helper.ExecuteQuery(playlistHistorySongInsert);
+                playlistHistorySongInsertStatement.execute();
+            }catch (SQLException e){
+                System.err.println(e);
+                return false;
+            }
         }
 
         helper.closeConnection();
@@ -259,14 +312,16 @@ class Playlist {
     public List<Playlist> fetchPreviousStates(){
 
         // Start by getting each playlistHistory ID
-        String playlistHistoryIDFetch = "SELECT * FROM PlaylistHistory WHERE PlaylistID =" + ID + " ORDER BY CreatedTime DESC";
-
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(playlistHistoryIDFetch);
 
         List<Integer> playlistHistoryIDs = new ArrayList<>();
 
         try{
+            PreparedStatement fetchIDStatement = helper.connection.prepareStatement("SELECT * FROM PlaylistHistory WHERE PlaylistID = ? ORDER BY CreatedTime DESC");
+            fetchIDStatement.setInt(1, ID);
+
+            ResultSet resultSet = fetchIDStatement.executeQuery();
+
             while(resultSet.next()){
                 playlistHistoryIDs.add(resultSet.getInt("ID"));
             }
@@ -278,15 +333,16 @@ class Playlist {
         // Next, fetch the songs in each playlistHistory state and make a new playlist using them
         List<Playlist> previousPlaylistStates = new ArrayList<>();
         for(int historyID : playlistHistoryIDs){
-            String songFetch = "SELECT * FROM PlaylistHistorySongs WHERE PlaylistHistoryID = " + historyID;
-
-            ResultSet resultSet1 = helper.ExecuteQueryWithReturn(songFetch);
-
             Playlist previousState = new Playlist();
             previousState.Name = this.Name;
             previousState.ID = this.ID;
 
             try{
+                PreparedStatement songFetchStatement = helper.connection.prepareStatement("SELECT * FROM PlaylistHistorySongs WHERE PlaylistHistoryID = ?");
+                songFetchStatement.setInt(1, historyID);
+
+                ResultSet resultSet1 = songFetchStatement.executeQuery();
+
                 while(resultSet1.next()){
                     int songID = resultSet1.getInt("SongID");
                     previousState.playlist.add(Song.fetchSongByID(songID));
@@ -309,12 +365,14 @@ class Playlist {
     public int getNumSongs(){return playlist.size();}
 
     public static Playlist getPlaylistById(int id){
-        String userQuery = "SELECT * FROM Playlists WHERE ID = '" + id + "'";
         SqlHelper helper = new SqlHelper();
 
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(userQuery);
-
         try{
+            PreparedStatement idFetchQuery = helper.connection.prepareStatement("SELECT * FROM Playlists WHERE ID = ?");
+            idFetchQuery.setInt(1, id);
+
+            ResultSet resultSet = idFetchQuery.executeQuery();
+
             if(resultSet.next()){
                 Playlist playlist = new Playlist();
                 playlist.ID = resultSet.getInt("ID");
@@ -324,7 +382,6 @@ class Playlist {
                 return null;
             }
         }catch (SQLException e){
-            // TODO
             System.err.println(e);
             return null;
         }
