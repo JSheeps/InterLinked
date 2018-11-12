@@ -1,6 +1,3 @@
-import javafx.scene.effect.Light;
-import javafx.util.Pair;
-import org.apache.commons.lang3.*;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 public class SpotifyTest {

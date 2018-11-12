@@ -26,6 +26,12 @@ function serverSignup(username, password, email) {
 	});
 }
 
+function serverForgetPassword(username) {
+	return sendMessage({
+		forgotPassword: username
+	});
+}
+
 function getPlaylistsFromServer() {
 	return sendMessage({
 		get: "playlists"

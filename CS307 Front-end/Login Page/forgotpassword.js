@@ -1,55 +1,34 @@
 "use strict";
 
 // Global variables to reduce Querying
-var emailField;
-var newPasswordField;
-var codeField;
+var usernameField;
 
-function field_focus(field, defaultString) {
-	// Default behavior
-}
 
-function field_blur(field, defaultString) {
-	// Default behavior
-}
-
-function sendCode() {
-    var email=emailField[0].value;
+function requestCode() {
+	var username = usernameField.val();
+	if (username.length == 0) {
+		alert("Must input a username");
+		return;
+	}
     
-    console.log("Sent code to: "+email);
-}
-
-function changePassword(){
-    var email = emailField[0].value;
-    var code = codeField[0].value;
-	var newPassword = newPasswordField[0].value;
-
-	console.log(email);
-	console.log(code);
-    console.log(newPassword)
-	
-	// TODO: Login to server here
-	console.log("Password Reset!");
+	serverForgetPassword(username).done(result => {
+		console.log(result);
+		if (result.error) {
+			alert(result.error);
+		} else {
+			console.log(result);
+			alert("Email to reset the password is at " + result.email);
+		}
+	});
 }
 
 $(document).ready( () => {
 	// initailize Field variables
-	emailField = $("#emailInput");
-	newPasswordField = $("#newPasswordInput");
-    codeField = $("#codeInput");
+	usernameField = $("#usernameInput");
 	
 	// Add event listeners to the input fields
-	
-	var enterPressed = "enterPressed"
-	
-	// On enter while in the username field, change focus to the code field
-	emailField.on(enterPressed, event => codeField.focus());
-    
-    // On enter while in the code field, change focus to the new password field
-	codeField.on(enterPressed, event => newPasswordField.focus());
-    
-    // On enter while in the newpassword field, chang password
-	newPasswordField.on(enterPressed, changePassword);
+	var enterPressed = "enterPressed";
+	usernameField.on(enterPressed, requestCode);
     
 	// Establish a 'Enter' key listener	
 	$("input").on("keyup", function (event) {
@@ -58,11 +37,4 @@ $(document).ready( () => {
 			$(this).trigger("enterPressed");
 		}
 	});
-	
-	
-	
-
-
-
-
 });

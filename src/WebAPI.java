@@ -3,30 +3,61 @@ import com.sun.net.httpserver.HttpExchange;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 // How to handle calls to the /data endpoint
 class WebAPI {
-    // List of currently logged in users and their socket addresses
-    private HashMap<String, User> userAuthTokens;
+    private UserSessions userAuthTokens;
     private User currentUser;
     private Debug debug;
-    final private String tokenFilePath = "data/tokens.txt";
+
+    // For emails:
+    private final static String emailFrom = "noreply@localhost";
+    private static Session emailSession;
+
+    static {
+        String user = "interlinkednoreply";
+        String password = "Interlinked";
+
+        Properties prop = new Properties();
+        prop.put("mail.smtp.auth", true);
+        prop.put("mail.debug", true);
+        prop.put("mail.smtp.host", "smtp.gmail.com");
+        prop.put("mail.smtp.port", 587);
+        prop.put("mail.smtp.user", user);
+        prop.put("mail.smtp.password", password);
+        // SSL
+        prop.put("mail.smtp.starttls.enable", "true");
+        prop.put("mail.smtp.ssl.enable", false);
+
+
+
+        // Authentication for SMTP server
+        emailSession = Session.getDefaultInstance(prop
+                ,new javax.mail.Authenticator() {
+                    protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+                        return new javax.mail.PasswordAuthentication(user, password);
+                    }
+                }
+        );
+    }
 
     private static final int UNPROCESSABLE_ENTITY = 422;
     private static final int GOOD = 200;
 
-    WebAPI() {
-        userAuthTokens = getAuthTokens();
+    WebAPI(UserSessions sessions) {
+        this.userAuthTokens = sessions;
         debug = new Debug(true, true);
     }
 
@@ -173,6 +204,8 @@ class WebAPI {
 
         else if(query.containsKey("revert"))
             return revert(query);
+        else if(query.containsKey("forgotPassword"))
+            return forgotPassword(query);
 
         throw new BadQueryException("Query has no meaning");
     }
@@ -349,7 +382,7 @@ class WebAPI {
                 User user = User.getUserByUserName(username);
 
                 if (user != null) {
-                    String authString = generateAuthToken(user);
+                    String authString = userAuthTokens.generateAuthToken(user);
                     json.put("authenticate", authString);
                 }
                 else
@@ -597,6 +630,72 @@ class WebAPI {
         return jsonObject;
     }
 
+    private Object forgotPassword(QueryValues query) throws Exception {
+        JSONObject result = new JSONObject();
+
+        String username = query.get("forgotPassword");
+        User user = User.getUserByUserName(username);
+        if (user == null) {
+            result.put("error", "User does not exist");
+            return result;
+        }
+
+        String email = user.email;
+        String obfuscatedEmail;
+        try {
+             obfuscatedEmail = obfuscateEmail(email);
+        } catch (IllegalArgumentException e) {
+            result.put("error", "Invalid email provided at creation.");
+            return result;
+        }
+
+        try {
+            // Send email
+            MimeMessage message = new MimeMessage(emailSession);
+            message.setFrom(new InternetAddress("localhost"));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
+            message.setSubject("Interlinked - Reset Password");
+
+            StringBuilder contents = new StringBuilder("Hello ");
+            contents.append(username).append(",\n");
+            String resetToken = userAuthTokens.generateResetToken(user);
+            URI redirectURI = new URI("http", "localhost", "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
+            contents.append("To reset your password, goto ").append(redirectURI);
+            message.setText(contents.toString());
+            Transport.send(message);
+        } catch(MessagingException e) {
+            e.printStackTrace();
+            result.put("error", "Could not send email to " + obfuscatedEmail);
+            return result;
+        } catch (Exception e) {
+            result.put("error", "Could not send email to " + obfuscatedEmail);
+            return result;
+        }
+
+        result.put("email", obfuscatedEmail);
+        return result;
+    }
+
+    // "abcde"... "@domain" -> "ab...@domain"
+    private static String obfuscateEmail(String email) {
+        int atIndex = email.lastIndexOf('@');
+        if (atIndex == -1)
+            throw new IllegalArgumentException("Invalid email: no @ sign");
+        String localPart = email.substring(0, atIndex);
+        String domain = email.substring(atIndex);
+
+        StringBuilder obfuscatedEmail = new StringBuilder();
+        if (localPart.length() < 2)
+            obfuscatedEmail.append(localPart);
+        else {
+            for (int i = 0; i < 2; i++)
+                obfuscatedEmail.append(localPart.charAt(i));
+        }
+        obfuscatedEmail.append("...");
+
+        obfuscatedEmail.append(domain);
+        return obfuscatedEmail.toString();
+    }
 
     // ----------------------------------------  Authentication  ------------------------------------------------------
     private void authenticate(QueryValues query) {
@@ -607,54 +706,6 @@ class WebAPI {
         }
         currentUser = userAuthTokens.get(authToken);
     }
-
-    private String generateAuthToken(User user) {
-        String s = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        SecureRandom random = new SecureRandom();
-        String token;
-         do {
-             StringBuilder stringBuilder = new StringBuilder();
-             for (int i = 0; i < 10; i++) {
-                 stringBuilder.append(s.charAt(random.nextInt(s.length())));
-             }
-
-             token = stringBuilder.toString();
-         } while(userAuthTokens.containsKey(token));
-
-        debug.log("Created token: " + token);
-
-        userAuthTokens.put(token, user);
-        String save = token + "\t" + user.userName + "\n";
-
-        try {
-            Files.write(Paths.get(tokenFilePath), save.getBytes(), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return token;
-    }
-
-    private HashMap<String, User> getAuthTokens() {
-        List<String> strings = null;
-        try {
-            strings = Files.readAllLines(Paths.get(tokenFilePath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        HashMap<String,User> map = new HashMap<>();
-
-        if (strings != null) {
-            for(String line : strings) {
-                String[] columns = line.split("\\s");
-                map.put(columns[0],User.getUserByUserName(columns[1]));
-            }
-        }
-
-        return map;
-    }
-
 
     // ------------------------------------------  Responses  ---------------------------------------------------------
 
