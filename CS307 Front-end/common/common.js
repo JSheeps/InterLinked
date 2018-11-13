@@ -1,7 +1,7 @@
 "use strict";
 
 function displayUsername(){
-	$("#displayUsername").html(sessionStorage.getItem("username"));
+	$("#displayUsername").html(localStorage.getItem("username"));
 }
 
 // Page redirects
