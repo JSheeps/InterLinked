@@ -132,8 +132,8 @@ class Playlist {
 
             try{
                 PreparedStatement updateStatement = helper.connection.prepareStatement("UPDATE Playlists "+
-                        "SET Name = ?"+
-                        "WHERE ID = ?");
+                        "SET Name = ? "+
+                        "WHERE ID = ? ");
 
                 updateStatement.setString(1, Name);
                 updateStatement.setInt(2, ID);
@@ -273,7 +273,7 @@ class Playlist {
             playlistHistoryStatement.setInt(1, ID);
             playlistHistoryStatement.setString(2, currentTimeTrunc);
 
-            playlistHistoryStatement.executeQuery();
+            playlistHistoryStatement.execute();
 
             PreparedStatement idFetchStatement = helper.connection.prepareStatement("SELECT ID FROM PlaylistHistory WHERE PlaylistHistory.PlaylistID = ? ORDER BY CreatedTime DESC");
             idFetchStatement.setInt(1, ID);
