@@ -14,6 +14,8 @@ function clearTable(tableSelector) {
 
 class Table {
 	constructor(id, title, ...sortColumnsTitles) {
+		this.title = title;
+		
 		this.id = id;
 		this.table = $(id);
 		this.tbody = this.table.children();
@@ -170,7 +172,8 @@ class Table {
 			return compare(a, b, ascending, column);	
 		};
 		
-		var rows = this.tbody.children("tr:gt(1)");//.sort(sortFunc).appendTo(this.tbody);
+		var rows = this.tbody.children("tr:gt(1)");
+		
 		if (rows.length < 2)
 			return;
 		
@@ -178,9 +181,7 @@ class Table {
 			throw "First row is bound to row above it";
 		
 		rollup(rows);
-		
-		rows.sort(sortFunc)
-		
+		rows.sort(sortFunc);
 		rows = unroll(rows);
 		rows.appendTo(this.tbody);
 		

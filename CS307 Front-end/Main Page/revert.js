@@ -1,10 +1,14 @@
 "use strict";
 var table;
+const iconWidth = 15;
+const iconHeight = 15;
 
 $(document).ready( () => {
 	table = new Table("#revertablePlaylistTable", "Revertable Playlists", null, "Playlist Name");
 	viewRevertList();
 });
+
+
 
 function viewRevertList() {
 	table.loading();
@@ -22,13 +26,12 @@ function viewRevertList() {
             }
 
             table.makeSortRow();
-            //var img = "<img src=\"revert playlists.png\"/>";
 
             for (var i = 0; i < playlists.length; i++) {
                 var playlist = playlists[i];
                 table.addRow(
-                    null,
-                    "<a class='black' onclick=\"revertPlayList(" + playlist.id + ");\"><img src=\"revert playlists.png\"/ alt=\"Revert\" width=\"15\" height=\"15\"></a>",
+					{ id: playlist.id },
+                    "<a><img onclick='revertPlayList(" + playlist.id + ")' src='revert playlists.png' alt='Revert' width='" + iconWidth + "' height='" + iconHeight + "'></a>",
                     playlist.name
                 );
             }
@@ -36,22 +39,24 @@ function viewRevertList() {
 }
 
 function revertPlayList(id) {
-    var row = table.getRowByID(id);
+	var revertButton = table.tbody.find("#" + id).children().eq(0);
+	console.log(revertButton);
+	var oldHtml = revertButton.html();
+	revertButton.html("<img src='loading.png' alt='Loading...' width='" + iconWidth + "' height='" + iconHeight + "'>");
 
     serverRevert(id).done( (result) => {
         if (result.error) {
-        genericErrorHandlers(result.error);
-
-        alert(result.error);
-        return;
-    }
-
-    if (result.result) {
-        alert("Playlist reverted")
-    } else {
-        alert(result);
-        console.log(result);
-    }
-});
+			genericErrorHandlers(result.error);
+			alert(result.error);
+		} else {
+			if (result.result) {
+				alert("Playlist reverted")
+			} else {
+				alert(result);
+				console.log(result);
+			}
+		}
+		revertButton.html(oldHtml);
+	});
 }
 

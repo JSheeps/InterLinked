@@ -1,3 +1,4 @@
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -138,7 +139,6 @@ public class Song {
     }
 
     // Used to save to db, doesn't save if song already has an ID
-    // TODO add functionality for updating songs, possibly only for certain fields
     // Returns true on success, false on failure
     public boolean save() {
         if (ID != 0) {
@@ -146,22 +146,26 @@ public class Song {
             return true;
         }
 
-        if(artist == null) artist = "unknown";
-        if(title == null) title = "unknown";
-        if(album == null) album = "unknown";
-        if(spotifyID == null) spotifyID = "unknown";
-        if(spotifyURI == null) spotifyURI = "unknown";
-        if(youtubeId == null) youtubeId = "unknown";
-
-        String insertQuery = "INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) " +
-                "VALUES('" + artist.replaceAll("'","''") + "', '" + title.replaceAll("'","''") + "', '" +
-                album.replaceAll("'","''") + "', " + duration + ", " + (explicit? 1 : 0) + ", '" + spotifyID + "', '" + spotifyURI + "')";
         SqlHelper helper = new SqlHelper();
-        helper.ExecuteQuery(insertQuery);
-        // Get ID of thing we just inserted
-        String idQuery = "SELECT ID FROM Songs WHERE Artist = '" + artist.replaceAll("'","''") + "' AND Title = '" + title.replaceAll("'","''") + "'";
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(idQuery);
+
         try {
+            PreparedStatement insertStatement = helper.connection.prepareStatement("INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) VALUES(?,?,?,?,?,?,?)");
+            insertStatement.setString(1, (artist!=null)? artist : "unknown");
+            insertStatement.setString(2, (title!=null)? title : "unknown");
+            insertStatement.setString(3, (album!=null)? album : "unknown");
+            insertStatement.setInt(4, duration);
+            insertStatement.setBoolean(5, explicit);
+            insertStatement.setString(6, (spotifyID!=null)? spotifyID : "unknown"));
+            insertStatement.setString(7, (spotifyURI!=null)? spotifyURI : "unknown"));
+
+            insertStatement.execute();
+
+            PreparedStatement fetchIDStatement = helper.connection.prepareStatement("SELECT ID FROM Songs WHERE Artist = ? AND Title = ?");
+            fetchIDStatement.setString(1, artist);
+            fetchIDStatement.setString(2, title);
+
+            ResultSet resultSet = fetchIDStatement.executeQuery();
+
             while(resultSet.next()){
                 ID = resultSet.getInt("ID");
             }
@@ -174,12 +178,14 @@ public class Song {
     }
 
     public static Song fetchSongByID(int songID){
-        String query = "SELECT * FROM Songs WHERE ID=" + songID;
-
         SqlHelper helper = new SqlHelper();
-        ResultSet resultSet = helper.ExecuteQueryWithReturn(query);
 
         try{
+            PreparedStatement fetchStatement = helper.connection.prepareStatement("SELECT * FROM Songs WHERE ID= ?");
+            fetchStatement.setInt(1, songID);
+
+            ResultSet resultSet = fetchStatement.executeQuery();
+
             while(resultSet.next()){
                 return new Song(resultSet);
             }

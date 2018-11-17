@@ -62,6 +62,10 @@ function mergePlaylists() {
 		return;
 	}
 	
+	mergeListNameBox.prop("readonly", true);
+	var mergeListButton = $("#mergebtn");
+	mergeListButton.prop("disabled", true);
+	
 	var ids = [];
 	for (var i = 2; i < table.rows(); i++) {
 		var row = table.getRow(i);

@@ -2,6 +2,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -44,11 +45,21 @@ public class UserPassword {
 
 			// Save to DB
 			SqlHelper helper = new SqlHelper();
-			String insertion = "INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(" + up.UserID + ", '" + up.Salt + "', '" + up.SaltedPassword + "')";
-			helper.ExecuteQuery(insertion);
+
+			try{
+				PreparedStatement insertionStatement = helper.connection.prepareStatement("INSERT INTO UserPasswords(UserID, Salt, SaltedPassword) VALUES(?,?,?)");
+				insertionStatement.setInt(1, up.UserID);
+				insertionStatement.setString(2, up.Salt);
+				insertionStatement.setString(3, up.SaltedPassword);
+
+				insertionStatement.execute();
+			}catch (SQLException e){
+				System.err.println(e);
+				return false;
+			}
+
 			helper.closeConnection();
 		}catch(NoSuchAlgorithmException e) {
-			// TODO
             System.err.println(e);
 			return false;
 		}
@@ -59,23 +70,24 @@ public class UserPassword {
 	// Returns true on successful login, false on unsuccessful login
 	public static boolean IsPasswordCorrect(String userName, String password){
         // Get UserPassword object associated with userName
-		String upFetch = "SELECT UserPasswords.* FROM UserPasswords JOIN Users on Users.ID = UserPasswords.UserID WHERE Users.UserName = '" + userName +"'";
-
 		SqlHelper helper = new SqlHelper();
-		ResultSet results = helper.ExecuteQueryWithReturn(upFetch);
-
 		String Salt = "";
 		String SaltedPassword = "";
 
 		try{
+			PreparedStatement upFetchStatement = helper.connection.prepareStatement("SELECT UserPasswords.* FROM UserPasswords JOIN Users on Users.ID = UserPasswords.UserID WHERE Users.UserName = ?");
+			upFetchStatement.setString(1, userName);
+
+			ResultSet results = upFetchStatement.executeQuery();
+
 			while(results.next()){
 				Salt = results.getString("Salt");
 				SaltedPassword = results.getString("SaltedPassword");
 			}
 			helper.closeConnection();
 		}catch(SQLException e){
-			// TODO
 			System.err.println(e);
+			return false;
 		}
 
 		// Append salt to Password

@@ -3,7 +3,6 @@ import org.junit.Test;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class UnitTests {
@@ -25,6 +24,8 @@ public class UnitTests {
 
         boolean actual = UserPassword.IsPasswordCorrect(userName, password);
 
+        Assert.assertEquals(true, actual);
+
         SqlHelper helper = new SqlHelper();
         String deletionQuery = "DELETE FROM UserPasswords WHERE UserID = '" + user.ID + "'";
         String deletionQuery2 = "DELETE FROM Users WHERE ID = '" + user.ID + "'";
@@ -33,8 +34,6 @@ public class UnitTests {
         helper.ExecuteQuery(deletionQuery2);
 
         helper.closeConnection();
-
-        Assert.assertEquals(true, actual);
     }
 
     @Test(timeout = 100)

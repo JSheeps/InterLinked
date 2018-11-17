@@ -5,7 +5,7 @@ public class SqlHelper {
     private final String userName = "interlinkeddb";
     private final String password = "Tk5VQ73~0O?F";
     private final String url = "jdbc:sqlserver://den1.mssql2.gear.host;databaseName=interlinkeddb;user="+userName+";password="+password;
-    private Connection connection;
+    public Connection connection;
 
     public SqlHelper(){
         // Opens a connection to the database

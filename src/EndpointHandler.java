@@ -11,9 +11,10 @@ public class EndpointHandler implements HttpHandler {
     Semaphore semaphore;
 
     public EndpointHandler(String httpDocs) {
-        webAPI = new WebAPI();
-        http = new Http(httpDocs);
         debug = new Debug(true, false);
+        UserSessions authTokens = new UserSessions(debug);
+        webAPI = new WebAPI(authTokens);
+        http = new Http(httpDocs, authTokens);
         semaphore = new Semaphore(1);
     }
 

@@ -43,7 +43,7 @@ function login() {
 	}
 	
 	//used for displaying usernames on each page
-	sessionStorage.setItem("username", userName);
+	localStorage.setItem("username", userName);
 	
 	serverLogin(userName, password).done( (accessToken) => {
 		if (!accessToken.result) {

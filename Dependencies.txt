@@ -1,8 +1,10 @@
 Maven
 	com.microsoft.sqlserver:mssql-jdbc:6.2.2.jre8
+	javax.mail:mail:1.5.0-b01
+	org.apache.commons:commons-lang3:3.8.1
 	org.jetbrains:annotations:16.0.2
 	org.json:json:20180813
 	se.michaelthelin.spotify:spotify-web-api-java:2.0.5
-	org.apache.commons:commons-lang3:3.8.1
+	
 Java
 	lib/junit.jar

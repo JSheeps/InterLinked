@@ -11,8 +11,10 @@ import java.nio.file.Paths;
 public class Http {
     private Path httpDocs;
     private String defaultExpand;
+    private UserSessions authTokens;
 
-    public Http(String httpDocs, String defaultRootFolder, String defaultFirstPage) {
+    public Http(String httpDocs, String defaultRootFolder, String defaultFirstPage, UserSessions authTokens) {
+        this.authTokens = authTokens;
         this.httpDocs = Paths.get(httpDocs).normalize();
         Path test = this.httpDocs.resolve(defaultRootFolder).resolve(defaultFirstPage).toAbsolutePath();
         if (!test.toFile().exists()) {
@@ -23,10 +25,10 @@ public class Http {
         defaultExpand = Paths.get(defaultRootFolder, defaultFirstPage).toString();
     }
 
-    public Http(String httpDocs) {
-        this(httpDocs, ".");
+    public Http(String httpDocs, UserSessions authTokens) {
+        this(httpDocs, ".", authTokens);
     }
-    public Http(String httpDocs, String defaultRootFolder) { this(httpDocs, defaultRootFolder, "index.html"); }
+    public Http(String httpDocs, String defaultRootFolder, UserSessions authTokens) { this(httpDocs, defaultRootFolder, "index.html", authTokens); }
 
     public void handle(HttpExchange httpExchange) throws IOException {
         URI requestURI = httpExchange.getRequestURI().normalize();
