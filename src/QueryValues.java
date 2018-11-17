@@ -1,3 +1,5 @@
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 public class QueryValues extends HashMap<String, String> {
@@ -14,6 +16,8 @@ public class QueryValues extends HashMap<String, String> {
         add(queryString);
     }
 
+    public QueryValues(){}
+
     public void add(String query) {
         int equalIndex = query.indexOf('=');
         String variable = query.substring(0, equalIndex);
@@ -21,4 +25,15 @@ public class QueryValues extends HashMap<String, String> {
 
         put(variable, value);
     }
+
+    String toQueryString() {
+        StringBuilder queryString = new StringBuilder("?");
+        for(String key : this.keySet()){
+            queryString.append(key).append("=").append(URLEncoder.encode(get(key), StandardCharsets.UTF_8)).append("&");
+        }
+        queryString = new StringBuilder(queryString.substring(0, queryString.length() - 1));
+
+        return queryString.toString();
+    }
+
 }

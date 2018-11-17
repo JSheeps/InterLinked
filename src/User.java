@@ -12,14 +12,15 @@ public class User {
     int ID;
     String userName;
     String email;
-    MutablePair<String, String> tokens;
+    MutablePair<String, String> spotifyTokens;
+    String youtubeToken;
     ArrayList<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){
         this.ID = ID;
         this.userName = userName;
         this.email = email;
-        tokens = null;
+        spotifyTokens = null;
     }
 
     public Playlist getPlaylistById(int id){

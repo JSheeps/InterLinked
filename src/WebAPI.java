@@ -131,7 +131,7 @@ class WebAPI {
 
         String platformID = query.get("platformID");
 
-        // Code sent from Spotify, used to get user's tokens
+        // Code sent from Spotify, used to get user's spotifyTokens
         String code = query.get("code");
 
         // State contains user's interlinked auth token
@@ -148,14 +148,18 @@ class WebAPI {
 
         // Attempt to login using provided code
         try {
-            user.tokens = Spotify.Login(code);
+            if(platformID.equals("Spotify"))
+                user.spotifyTokens = Spotify.Login(code);
+            else if(platformID.equals("Youtube"))
+                user.youtubeToken = Youtube.GetToken(code);
         } catch (Exception e) {
             debug.log("~~~Login failed: " + e.getMessage());
             debug.printStackTrace(e);
             return;
         }
 
-        debug.log("~~~Set user's tokens: " + user.tokens.toString());
+
+        debug.log("~~~Set user's tokens: " + ((platformID.equals("Spotify"))? user.spotifyTokens.toString():user.youtubeToken));
 
         debug.log("~~~Finished Login");
     }   
@@ -246,13 +250,20 @@ class WebAPI {
     private JSONArray importQuery(QueryValues query) throws Exception {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.tokens == null)
+        if(currentUser.spotifyTokens == null && currentUser.youtubeToken == null)
             throw new NotLoggedInToService("User needs to log in to streaming service");
 
         JSONArray jsonArray = new JSONArray();
 
+        ArrayList<Playlist> playlists = new ArrayList<>();
+
         // Get playlists from spotify
-        ArrayList<Playlist> playlists = Spotify.getPlaylists(currentUser.tokens);
+        if(currentUser.spotifyTokens != null)
+            playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
+
+        // Get playlists from youtube
+        if(currentUser.youtubeToken != null)
+            playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
 
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
@@ -267,46 +278,52 @@ class WebAPI {
         }
 
         // Find playlist to import
-        Playlist playlist = null;
+        Playlist selectedPlaylist = null;
         for(Playlist p : playlists){
             if(p.Name.equals(query.get("playlist")))
-                playlist = p;
+                selectedPlaylist = p;
         }
 
-        if(playlist == null) throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
+        if(selectedPlaylist == null) throw new ServerErrorException("Playlist " + query.get("Playlist") + " not found");
+
+        Playlist playlistToImport = selectedPlaylist;
 
         // Check if playlist already exists
         currentUser.FetchPlaylists();
-        if(currentUser.playlistList.contains(playlist)) {
+        if(currentUser.playlistList.contains(selectedPlaylist)) {
             if(!query.containsKey("force"))
                 throw new ServerErrorException("Playlist already exists in database " +
                                                 "(to import anyway, send query: force)");
             else
-                playlist = currentUser.getPlaylistByName(playlist.Name);
+                playlistToImport = currentUser.getPlaylistByName(selectedPlaylist.Name);
         }
 
-        List<Song> importPlaylist;
+        List<Song> songList;
         try {
             // Get songs for selected playlist
-            importPlaylist = Spotify.importPlaylist(currentUser.tokens, playlist.Name);
+            if(selectedPlaylist.origin == Origin.SPOTIFY)
+                songList = Spotify.importPlaylist(currentUser.spotifyTokens, selectedPlaylist.Name);
+            else if(selectedPlaylist.origin == Origin.YOUTUBE)
+                songList = Youtube.importPlaylist(currentUser.youtubeToken, selectedPlaylist.Name);
+            else
+                throw new Exception("Failed to determine playlist origin");
 
             // Add songs to new playlist
-            playlist.clearSongs();
+            playlistToImport.clearSongs();
             debug.log("Found songs:");
-            for (Song song : importPlaylist) {
+            for (Song song : songList) {
                 debug.log(song.toString());
-                playlist.addSong(song);
+                playlistToImport.addSong(song);
                 song.save();
             }
-            
 
-            playlist.save(currentUser);
+            playlistToImport.save(currentUser);
 
         } catch (Exception e) {throw new ServerErrorException("Error importing playlist: " + e.getMessage());}
 
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("name", playlist.Name);
-        jsonObject.put("id", playlist.ID);
+        jsonObject.put("name", selectedPlaylist.Name);
+        jsonObject.put("id", selectedPlaylist.ID);
         jsonArray.put(jsonObject);
 
         return jsonArray;
@@ -316,8 +333,8 @@ class WebAPI {
     private Object exportQuery(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.tokens == null)
-            throw new NotLoggedInToService("User needs to log in to streaming service");
+        if(currentUser.spotifyTokens == null)
+            throw new NotLoggedInToService("Spotify login is required for export");
 
         String pid = query.get("export");
         int id = Integer.parseInt(pid);
@@ -330,7 +347,7 @@ class WebAPI {
 
         List<Song> failedSongs;
         try {
-            failedSongs = Spotify.exportPlaylist(currentUser.tokens, playlist);
+            failedSongs = Spotify.exportPlaylist(currentUser.spotifyTokens, playlist);
         } catch (Exception e){
             throw new ServerErrorException(e.getMessage());
         }

@@ -12,7 +12,8 @@ public class Song {
     boolean explicit;
     String spotifyID;
     String spotifyURI;
-    OriginHostName origin;
+    String youtubeId;
+    Origin origin;
 
     public Song(String title) {
         this.title = title;
@@ -62,7 +63,7 @@ public class Song {
         return spotifyURI;
     }
 
-    public OriginHostName getOrigin() {
+    public Origin getOrigin() {
         return origin;
     }
 
@@ -90,15 +91,8 @@ public class Song {
         this.spotifyURI = spotifyURI;
     }
 
-    public void setOrigin(OriginHostName origin) {
+    public void setOrigin(Origin origin) {
         this.origin = origin;
-    }
-
-    enum OriginHostName {
-        AMAZON,
-        ITUNES,
-        SPOTIFY,
-        YOUTUBE
     }
 
     public Song(ResultSet resultSet){
@@ -156,13 +150,13 @@ public class Song {
 
         try {
             PreparedStatement insertStatement = helper.connection.prepareStatement("INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) VALUES(?,?,?,?,?,?,?)");
-            insertStatement.setString(1, artist);
-            insertStatement.setString(2, title);
-            insertStatement.setString(3, album);
+            insertStatement.setString(1, (artist!=null)? artist : "unknown");
+            insertStatement.setString(2, (title!=null)? title : "unknown");
+            insertStatement.setString(3, (album!=null)? album : "unknown");
             insertStatement.setInt(4, duration);
             insertStatement.setBoolean(5, explicit);
-            insertStatement.setString(6, spotifyID);
-            insertStatement.setString(7, spotifyURI);
+            insertStatement.setString(6, (spotifyID!=null)? spotifyID : "unknown"));
+            insertStatement.setString(7, (spotifyURI!=null)? spotifyURI : "unknown"));
 
             insertStatement.execute();
 
