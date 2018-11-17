@@ -154,7 +154,12 @@ public class Youtube extends StreamingService {
             for (int i = 0; i < jsonArray.length(); i++) {
                 Song song = new Song();
                 JSONObject songJson = jsonArray.getJSONObject(i);
-                song.title = songJson.getJSONObject("snippet").getString("title");
+                String title = songJson.getJSONObject("snippet").getString("title");
+
+                // Remove parts in brackets (was usually stuff like (official music video))
+                title = title.replaceAll("\\[.*]","");
+                title = title.replaceAll("\\(.*\\)","");
+                song.title = title;
                 song.youtubeId = songJson.getString("id");
                 song.origin = Origin.YOUTUBE;
 
