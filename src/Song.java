@@ -149,14 +149,20 @@ public class Song {
         SqlHelper helper = new SqlHelper();
 
         try {
+            if(artist == null) artist = "unknown";
+            if(title == null) title = "unknown";
+            if(album == null) album = "unknown";
+            if(spotifyURI == null) spotifyURI = "unknown";
+            if(spotifyID == null) spotifyID = "unknown";
+
             PreparedStatement insertStatement = helper.connection.prepareStatement("INSERT INTO Songs(Artist, Title, Album, Duration, Explicit, SpotifyID, SpotifyURI) VALUES(?,?,?,?,?,?,?)");
-            insertStatement.setString(1, (artist!=null)? artist : "unknown");
-            insertStatement.setString(2, (title!=null)? title : "unknown");
-            insertStatement.setString(3, (album!=null)? album : "unknown");
+            insertStatement.setString(1, artist);
+            insertStatement.setString(2, title);
+            insertStatement.setString(3, album);
             insertStatement.setInt(4, duration);
             insertStatement.setBoolean(5, explicit);
-            insertStatement.setString(6, (spotifyID!=null)? spotifyID : "unknown"));
-            insertStatement.setString(7, (spotifyURI!=null)? spotifyURI : "unknown"));
+            insertStatement.setString(6, spotifyID);
+            insertStatement.setString(7, spotifyURI);
 
             insertStatement.execute();
 

@@ -395,20 +395,21 @@ class WebAPI {
         boolean b;
         try {
             b = UserPassword.IsPasswordCorrect(username, password);
-            if (b) {
-                User user = User.getUserByUserName(username);
 
-                if (user != null) {
-                    String authString = userAuthTokens.generateAuthToken(user);
-                    json.put("authenticate", authString);
-                }
-                else
-                    b = false;
-            }
         } catch (Exception e){
             throw new UnauthenticatedException(e.getMessage());
         }
 
+        if (b) {
+            User user = User.getUserByUserName(username);
+
+            if (user != null) {
+                String authString = userAuthTokens.generateAuthToken(user);
+                json.put("authenticate", authString);
+            }
+            else
+                b = false;
+        }
         json.put("result", b);
         return json;
     }

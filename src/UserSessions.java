@@ -11,7 +11,7 @@ import java.util.*;
 public class UserSessions extends HashMap<String, User> {
     Debug debug;
     private HashMap<String, ResetInfo> passwordResetSessions = new HashMap<>();
-    private String path;
+    private String path = "data/tokens.txt";
 
     public UserSessions(Debug d) {
         this(d, "data/tokens.txt");
