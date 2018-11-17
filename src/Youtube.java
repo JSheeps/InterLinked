@@ -121,32 +121,45 @@ public class Youtube extends StreamingService {
         queryValues.put("access_token", token);
         queryValues.put("part", "snippet");
         queryValues.put("key", apiKey);
+        queryValues.put("maxResults", "25");
         queryValues.put("playlistId", playlist.youtubeId);
 
-        // Send http request
-        String urlString = baseUrl + "playlistItems" + queryValues.toQueryString();
-        URL url = new URL(urlString);
-        URLConnection connection = url.openConnection();
-        InputStream in = connection.getInputStream();
+        JSONObject json;
+        List<JSONArray> songJsonArrays = new ArrayList<>();
 
-        // Get result and put in string
-        Scanner s = new Scanner(in).useDelimiter("\\A");
-        String result = s.hasNext() ? s.next() : "";
+        do {
+            // Send http request
+            String urlString = baseUrl + "playlistItems" + queryValues.toQueryString();
+            URL url = new URL(urlString);
+            URLConnection connection = url.openConnection();
+            InputStream in = connection.getInputStream();
 
-        // Convert result into json objects
-        JSONObject json = new JSONObject(result);
-        JSONArray jsonArray = json.getJSONArray("items");
+            // Get result and put in string
+            Scanner s = new Scanner(in).useDelimiter("\\A");
+            String result = s.hasNext() ? s.next() : "";
+
+            // Convert result into json objects
+            json = new JSONObject(result);
+            songJsonArrays.add(json.getJSONArray("items"));
+
+            // Put the next page token in for the next query
+            if(json.has("nextPageToken"))
+                queryValues.put("pageToken", json.getString("nextPageToken"));
+
+        } while(json.has("nextPageToken"));
 
         // Iterate through json playlist item objects and convert them into java song objects
         List<Song> songs = new ArrayList<>();
-        for(int i = 0; i < jsonArray.length(); i++){
-            Song song = new Song();
-            JSONObject songJson = jsonArray.getJSONObject(i);
-            song.title = songJson.getJSONObject("snippet").getString("title");
-            song.youtubeId = songJson.getString("id");
-            song.origin = Origin.YOUTUBE;
+        for(JSONArray jsonArray : songJsonArrays) {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                Song song = new Song();
+                JSONObject songJson = jsonArray.getJSONObject(i);
+                song.title = songJson.getJSONObject("snippet").getString("title");
+                song.youtubeId = songJson.getString("id");
+                song.origin = Origin.YOUTUBE;
 
-            songs.add(song);
+                songs.add(song);
+            }
         }
 
         return songs;
