@@ -398,7 +398,6 @@ class WebAPI {
         boolean b;
         try {
             b = UserPassword.IsPasswordCorrect(username, password);
-
         } catch (Exception e){
             throw new UnauthenticatedException(e.getMessage());
         }

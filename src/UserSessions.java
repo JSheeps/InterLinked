@@ -2,6 +2,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
@@ -11,20 +12,24 @@ import java.util.*;
 public class UserSessions extends HashMap<String, User> {
     Debug debug;
     private HashMap<String, ResetInfo> passwordResetSessions = new HashMap<>();
-    private String path = "data/tokens.txt";
+    private String path;
 
     public UserSessions(Debug d) {
-        this(d, "data/tokens.txt");
+        this(d, "tokens.txt");
     }
 
     public UserSessions(Debug d, String path) {
         this.debug = d;
+        this.path = path;
 
         List<String> strings = null;
         try {
             strings = Files.readAllLines(Paths.get(path));
         } catch (IOException e) {
-            e.printStackTrace();
+            if (e instanceof java.nio.file.NoSuchFileException) {
+                System.out.println("Could not find " + path);
+            } else
+                e.printStackTrace();
         }
 
         if (strings != null) {
@@ -47,10 +52,16 @@ public class UserSessions extends HashMap<String, User> {
         this.put(token, user);
         String save = token + "\t" + user.userName + "\n";
 
+        Path tokensPath = Paths.get(".", path);
         try {
-            Files.write(Paths.get(path), save.getBytes(), StandardOpenOption.APPEND);
+            Files.write(tokensPath, save.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                Files.write(tokensPath, save.getBytes(), StandardOpenOption.CREATE);
+            } catch (IOException f) {
+                e.printStackTrace();
+                f.printStackTrace();
+            }
         }
 
         return token;
