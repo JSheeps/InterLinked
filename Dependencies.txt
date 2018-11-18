@@ -5,6 +5,7 @@ Maven
 	org.jetbrains:annotations:16.0.2
 	org.json:json:20180813
 	se.michaelthelin.spotify:spotify-web-api-java:2.0.5
+	com.google.api-client:google-api-client:1.27.0
 	
 Java
 	lib/junit.jar
