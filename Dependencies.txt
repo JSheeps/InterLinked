@@ -6,6 +6,7 @@ Maven
 	org.json:json:20180813
 	se.michaelthelin.spotify:spotify-web-api-java:2.0.5
 	com.google.api-client:google-api-client:1.27.0
+	com.github.felixgail:gplaymusic:0.3.62
 	
 Java
 	lib/junit.jar
