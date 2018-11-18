@@ -306,7 +306,7 @@ function serialize(obj) {
 			ret += serialize(obj[i]);
 	} else if (objType == "object") {
 		for (var attrib in obj) {
-			ret += " " + attrib + "=" + obj[attrib];
+			ret += " " + attrib + "=\"" + obj[attrib] + "\"";
 		}
 	} else throw objType;
 	return ret;

@@ -10,13 +10,14 @@ function requestCode() {
 		alert("Must input a username");
 		return;
 	}
+	
+	var button = $("#codebtn");
+	button.prop("disabled");
     
 	serverForgetPassword(username).done(result => {
-		console.log(result);
 		if (result.error) {
 			alert(result.error);
 		} else {
-			console.log(result);
 			alert("Email to reset the password is at " + result.email);
 		}
 	});

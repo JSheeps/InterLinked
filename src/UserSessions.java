@@ -69,11 +69,16 @@ public class UserSessions extends HashMap<String, User> {
 
     public User getUserWithResetToken(String token) throws TokenExpiredException {
         ResetInfo r =  passwordResetSessions.get(token);
+        if (r == null)
+            return null;
+
         if (!Calendar.getInstance().before(r.expiration))
             throw new TokenExpiredException("Token has expired");
 
         return r.user;
     }
+
+    public void deleteResetSession(String token) { passwordResetSessions.remove(token); }
 
     public void save() throws IOException { this.save(path); }
     public void save(String path) throws IOException {

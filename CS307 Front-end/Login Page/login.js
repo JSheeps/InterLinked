@@ -4,13 +4,6 @@
 
 var userNameField;
 var passwordField;
-function field_focus(field, defaultString) {
-	// Default behavior
-}
-
-function field_blur(field, defaultString) {
-	// Default behavior
-}
 
 function userNameError(msg) {
 	alert(msg);
@@ -20,17 +13,9 @@ function passWordError(msg) {
 	alert(msg);
 }
 
-function getUserName() {
-	return userNameField[0].value;
-}
-
-function getPassword() {
-	return passwordField[0].value;
-}
-
 function login() {
-	var userName = getUserName();
-	var password = getPassword();
+	var userName = userNameField.val();
+	var password = passwordField.val();
 	
 	if (userName.length == 0) {
 		userNameError("Need to input a username");
@@ -42,16 +27,32 @@ function login() {
 		return;
 	}
 	
-	//used for displaying usernames on each page
-	localStorage.setItem("username", userName);
+	var buttons = $("div.btnRef");
+	console.log(buttons);
+	
+	var onclicks = [];
+	var texts = [];
+	for (var i = 0; i < buttons.length; i++) {
+		var button = buttons[i];
+		onclicks.push(button.onclick);
+		texts.push(button.innerHTML);
+		button.innerHTML = "Loading...";
+		button.onclick = null;
+	}
+	
 	
 	serverLogin(userName, password).done( (accessToken) => {
 		if (!accessToken.result) {
 			alert("Error: Invalid login");
 		} else {
 			var token = accessToken.authenticate;
-			setAuthToken(token);
+			setAuthData(userName, token);
 			playlistRedirect();
+		}
+		
+		for (var i = 0; i < buttons.length; i++) {
+			buttons[i].onclick = onclicks[i];
+			buttons[i].innerHTML = texts[i];
 		}
 	});
 }
@@ -77,7 +78,7 @@ $(document).ready( () => {
 	
 	// On enter while in the username field, change focus to the password field
 	userNameField.on(enterPressed, (event) => {
-		if (getUserName().length != 0)
+		if (userNameField.val().length != 0)
 			passwordField.focus();
 		else
 			userNameError("Need to input a username");

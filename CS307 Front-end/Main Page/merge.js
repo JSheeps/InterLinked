@@ -51,6 +51,7 @@ function viewMergeList() {
 }
 
 function mergePlaylists() {
+	debugger;
 	var name = mergeListNameBox.val();
 	if (name.length == 0) {
 		alert("You need to name the playlist");

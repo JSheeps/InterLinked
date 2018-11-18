@@ -1,12 +1,14 @@
 "use strict";
 const url = "/";
 
-function setAuthToken(token) {
-	createCookie("accessToken", token);
+function setAuthData(userName, token) {
+	localStorage.setItem("username", userName);
+	localStorage.setItem("authToken", token);
 }
 
-function getAuthToken() {
-	return readCookie("accessToken");
+function clearAuthData() {
+	localStorage.removeItem("username");
+	localStorage.removeItem("authToken");
 }
 
 function serverLogin(username, password) {
@@ -29,6 +31,13 @@ function serverSignup(username, password, email) {
 function serverForgetPassword(username) {
 	return sendMessage({
 		forgotPassword: username
+	});
+}
+
+function serverResetPassword(resetToken, newPassword) {
+	return sendMessage({
+		resetToken: resetToken,
+		newPassword: newPassword
 	});
 }
 
@@ -117,9 +126,10 @@ function serverSearch(searchText) {
 }
 
 function sendMessage(myData) {
-	var authToken = getAuthToken();
-	if (authToken) {
-		myData.authenticate = authToken;
+	var authData = getAuthData();
+	if (authData.authToken) {
+		myData.authenticate = authData.authToken;
+		myData.user = authData.authToken;
 	}
 	
 	return $.ajax(url + "data", {

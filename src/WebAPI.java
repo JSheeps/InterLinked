@@ -23,7 +23,6 @@ class WebAPI {
     private Debug debug;
 
     // For emails:
-    private final static String emailFrom = "noreply@localhost";
     private static Session emailSession;
 
     static {
@@ -208,8 +207,12 @@ class WebAPI {
 
         else if(query.containsKey("revert"))
             return revert(query);
+
         else if(query.containsKey("forgotPassword"))
             return forgotPassword(query);
+
+        else if(query.containsKey("resetToken"))
+            return resetPassword(query);
 
         throw new BadQueryException("Query has no meaning");
     }
@@ -678,7 +681,8 @@ class WebAPI {
             contents.append(username).append(",\n");
             String resetToken = userAuthTokens.generateResetToken(user);
             URI redirectURI = new URI("http", "localhost", "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
-            contents.append("To reset your password, goto ").append(redirectURI);
+            contents.append("To reset your password, goto ").append(redirectURI).append('\n');
+            contents.append("This link will be valid for 1 hour");
             message.setText(contents.toString());
             Transport.send(message);
         } catch(MessagingException e) {
@@ -691,6 +695,38 @@ class WebAPI {
         }
 
         result.put("email", obfuscatedEmail);
+        return result;
+    }
+
+    private Object resetPassword(QueryValues query) throws Exception {
+        String resetToken = query.get("resetToken");
+        String newPassword = query.get("newPassword");
+
+        if (resetToken == null)
+            throw new BadQueryException("Missing reset token");
+
+        if (newPassword == null)
+            throw new BadQueryException("Missing new password");
+
+        User user = userAuthTokens.getUserWithResetToken(resetToken);
+        JSONObject result = new JSONObject();
+
+        if (user == null) {
+            result.put("error", "Session expired");
+            return result;
+        }
+
+        /* TODO
+        if (user.changePassword(newPassword)) {
+            result.put("result", true);
+            userAuthTokens.deleteResetSession(resetToken);
+            return result;
+        } else {
+            result.put("error", "Bad password");
+            return result;
+        }
+        */
+        result.put("error", "Unimplemented");
         return result;
     }
 

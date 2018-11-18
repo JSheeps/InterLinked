@@ -37,7 +37,7 @@ function viewImportList() {
 }
 
 function importPlayList(platformID, playlistName, force = false) {
-	var button = table.tbody.find("#import" + playlistName).children().eq(0);
+	var button = table.tbody.children("[id='import" + playlistName + "']").children().eq(0);
 	var oldHtml = button.html();
 	
 	button.html("<a class='black'>Importing...</a>");

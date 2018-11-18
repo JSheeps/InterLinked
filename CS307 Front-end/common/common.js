@@ -1,12 +1,28 @@
 "use strict";
 
 function displayUsername(){
-	$("#displayUsername").html(localStorage.getItem("username"));
+	$("#displayUsername").html(getUserName());
+}
+
+
+function getUserName() { return localStorage.getItem("username"); }
+function getAuthToken() { return localStorage.getItem("authToken"); }
+
+function getAuthData() {
+	return {
+		username: getUserName(),
+		authToken: getAuthToken()
+	}
+}
+
+function removeAuthData() {
+	localStorage.removeItem("username");
+	localStorage.removeItem("authToken");
 }
 
 // Page redirects
 function logoutRedirect() {
-	eraseCookie("accessToken");
+	removeAuthData();
 	redirect("/");
 }
 
@@ -14,7 +30,7 @@ function loginRedirect() {
 	redirect("/Main Page/viewPlaylists.html");
 }
 
-function  signupRedirect() {
+function signupRedirect() {
 	redirect("/Login Page/signup.html");
 }
 
@@ -33,7 +49,8 @@ function exportRedirect() {
 function mergeRedirect() {
 	redirect("/Main Page/merge.html");
 }
-function revertRedirect(){
+
+function revertRedirect() {
     redirect("/Main Page/revert.html")
 }
 
@@ -43,29 +60,4 @@ function grantServerAccessRedirect() {
 
 function redirect(URI) {
 	window.location.href = URI;
-}
-
-// Cookies
-function createCookie(name, value = "", expiration = -1, path = "/") {
-	var expires = (expiration === -1) ?
-		"" :
-		"; expires=" + expiration.toGMTString();
-	var cookieString = name + "=" + value + expires + "; path=" + path;
-	document.cookie = cookieString;
-}
-
-function readCookie(name) {
-	// console.log(document.cookie);
-	var nameEQ = name + "=";
-	var ca = document.cookie.split(';');
-	for (var i=0; i < ca.length; i++) {
-		var c = ca[i];
-		while (c.charAt(0)==' ') c = c.substring(1, c.length);
-		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-	}
-	return null;
-}
-
-function eraseCookie(name) {
-	createCookie(name, "", new Date(0), "/");
 }
