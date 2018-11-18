@@ -1,6 +1,7 @@
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -12,6 +13,7 @@ public class UnitTests {
         ShareTokenTest();
         PlaylistStateTest();
         PlaylistSearchTest();
+        AuthTokenTest();
     }
 
     @Test(timeout = 100)
@@ -236,5 +238,32 @@ public class UnitTests {
         Assert.assertEquals(true, startList.getSong(1).title.equals(song2.title));
         Assert.assertEquals(true, startList.getSong(2).title.equals(song3.title));
         Assert.assertEquals(true, startList.getSong(3).title.equals(song4.title));
+    }
+
+    public static void AuthTokenTest(){
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement userFetch = helper.connection.prepareStatement("SELECT TOP 1 * FROM Users");
+
+            ResultSet resultSet = userFetch.executeQuery();
+
+            User user = null;
+            while(resultSet.next()){
+                user = new User(resultSet);
+            }
+
+            Assert.assertEquals(true, user.ID != 0);
+
+            // Set Auth Token
+            user.setAuthToken("abc123");
+
+            // Check Auth Token
+            Assert.assertEquals(true, user.isAuthTokenValid("abc123"));
+
+        }catch (SQLException e){
+            System.err.println(e);
+            assert false;
+        }
     }
 }

@@ -3,7 +3,7 @@ CREATE TABLE dbo.Users(
   UserName nvarchar(50) not null,
   CreatedDate datetime not null,
   Email nvarchar(100) not null,
-  AuthTokenSalt nvarchar(50) null,
+  AuthTokenSalt nvarchar(200) null,
   AuthToken nvarchar(200) null
 )
 

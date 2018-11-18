@@ -28,6 +28,16 @@ public class User {
         spotifyTokens = null;
     }
 
+    public User(ResultSet resultSet){
+        try{
+            ID = resultSet.getInt("ID");
+            userName = resultSet.getString("UserName");
+            email = resultSet.getString("Email");
+        }catch (SQLException e){
+            System.err.println(e);
+        }
+    }
+
     public Playlist getPlaylistById(int id){
         for(Playlist p : playlistList){
             if(p.ID == id)
@@ -48,11 +58,7 @@ public class User {
             ResultSet resultSet = userStatement.executeQuery();
 
             if(resultSet.next()){
-                int id = resultSet.getInt("ID");
-                String usrrName = resultSet.getString("UserName");
-                String email = resultSet.getString("Email");
-
-                return new User(id, usrrName, email);
+                return new User(resultSet);
             }else{
                 return null;
             }
