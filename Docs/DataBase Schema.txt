@@ -2,7 +2,9 @@ CREATE TABLE dbo.Users(
   ID int PRIMARY KEY IDENTITY(1,1),
   UserName nvarchar(50) not null,
   CreatedDate datetime not null,
-  Email nvarchar(100) not null
+  Email nvarchar(100) not null,
+  AuthTokenSalt nvarchar(50) null,
+  AuthToken nvarchar(200) null
 )
 
 CREATE TABLE dbo.UserPasswords(

@@ -1,5 +1,10 @@
+import groovy.sql.Sql;
 import org.apache.commons.lang3.tuple.MutablePair;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -141,5 +146,100 @@ public class User {
                 return playlist;
         }
         return null;
+    }
+
+    public boolean setAuthToken(String token){
+        SqlHelper helper = new SqlHelper();
+
+        // Generate Salt
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[50];
+        random.nextBytes(salt);
+
+        // Append salt to Token
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < salt.length; ++i) {
+            sb.append(Integer.toHexString((salt[i] & 0xFF) | 0x100).substring(1, 3));
+        }
+        String saltString = sb.toString();
+        String saltPlusPass = saltString + token;
+
+        // Hash Salt + token
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] saltedHash = digest.digest(saltPlusPass.getBytes(StandardCharsets.UTF_8));
+            sb = new StringBuilder();
+            for (int i = 0; i < saltedHash.length; ++i) {
+                sb.append(Integer.toHexString((saltedHash[i] & 0xFF) | 0x100).substring(1, 3));
+            }
+
+            try {
+                PreparedStatement statement = helper.connection.prepareStatement("UPDATE Users SET AuthToken = ? WHERE ID = ?");
+                statement.setString(1, sb.toString());
+                statement.setInt(2, ID);
+
+                PreparedStatement statement2 = helper.connection.prepareStatement("UPDATE Users SET AuthTokenSalt = ? WHERE ID = ?");
+                statement2.setString(1, saltString);
+                statement2.setInt(2, ID);
+
+                statement.execute();
+                statement2.execute();
+            }catch (SQLException e){
+                System.err.println(e);
+                return false;
+            }
+
+        }catch (NoSuchAlgorithmException e){
+            System.err.println(e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isAuthTokenValid(String token){
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement fetchStatement = helper.connection.prepareStatement("SELECT * FROM USERS WHERE ID = ?");
+            fetchStatement.setInt(1, ID);
+
+            ResultSet resultSet = fetchStatement.executeQuery();
+
+            String AuthToken = "";
+            String Salt = "";
+            while(resultSet.next()){
+                AuthToken = resultSet.getString("AuthToken");
+                Salt = resultSet.getString("AuthTokenSalt");
+            }
+
+            // Append salt to Password
+            String saltPlusPass = Salt + token;
+
+            // Hash Salt + Password
+            String userInputtedPasswordHashed = "";
+            try{
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] saltedHash = digest.digest(saltPlusPass.getBytes(StandardCharsets.UTF_8));
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < saltedHash.length; ++i) {
+                    sb.append(Integer.toHexString((saltedHash[i] & 0xFF) | 0x100).substring(1, 3));
+                }
+
+                if(sb.toString().equals(AuthToken)){
+                    return true;
+                }else{
+                    return false;
+                }
+
+            }catch(NoSuchAlgorithmException e) {
+                System.err.println(e);
+                return false;
+            }
+
+        }catch (SQLException e){
+            System.err.println(e);
+            return false;
+        }
     }
 }
