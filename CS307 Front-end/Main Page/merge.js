@@ -51,7 +51,6 @@ function viewMergeList() {
 }
 
 function mergePlaylists() {
-	debugger;
 	var name = mergeListNameBox.val();
 	if (name.length == 0) {
 		alert("You need to name the playlist");
@@ -65,6 +64,8 @@ function mergePlaylists() {
 	
 	mergeListNameBox.prop("readonly", true);
 	var mergeListButton = $("#mergebtn");
+	var oldHtml = mergeListButton.html();
+	mergeListButton.html("Merging...");
 	mergeListButton.prop("disabled", true);
 	
 	var ids = [];
@@ -90,9 +91,10 @@ function mergePlaylists() {
 		} else {
 			alert("Merge successful!");
 			viewMergeList();
-			return;
 		}
-		
+		mergeListNameBox.prop("readonly", false);
+		mergeListButton.prop("disabled", false);
+		mergeListButton.html(oldHtml);
 		console.log(result);
 	});
 }

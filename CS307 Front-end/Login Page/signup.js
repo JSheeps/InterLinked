@@ -55,37 +55,48 @@ function signUp() {
 		return;
 	}
 	
+	var buttons = $("div.btnRef");
+	var buttonTexts = [];
+	var buttonClicks = [];
+	for (var i = 0; i < buttons.length; i++) {
+		var button = buttons[i];
+		buttonTexts.push(button.innerHTML);
+		button.innerHTML = "Loading...";
+		buttonClicks.push(button.onclick);
+		button.onclick = null;
+	}
+	
+	$("input").prop("readonly", true);
+	
 	serverSignup(userName, password, email).done( (accessToken) => {
+		console.log(accessToken);
 		if (!accessToken.result) {
 			alert("Invalid signup details");
 		} else {
 			console.log(accessToken.accessToken);
-			createCookie("accessToken", accessToken.accessToken);
 			playlistRedirect();
-			
-			//used for displaying usernames on each page
-			sessionStorage.setItem("username", userName);
 			
 			serverLogin(userName, password).done( (accessToken) => {
 				if (!accessToken.result) {
 					alert("Error: Invalid login");
 				} else {
 					var token = accessToken.authenticate;
-					setAuthToken(token);
+					setAuthData(token, userName);
 					playlistRedirect();
 				}
 			});
 		}
+		
+		$("input").prop("readonly", false);
+		for (var i = 0; i < buttons.length; i++) {
+			var button = buttons[i];
+			button.innerHTML = buttonTexts[i];
+			button.onclick = buttonClicks[i];
+		}
 	});
 }
 
-$(document).ready( () => {
-	// check if already has session token
-	document.cookie = "";
-	var token = readCookie("accessToken");
-	if (token)
-		playlistRedirect();
-	
+$(document).ready( () => {	
 	// initailize Field variables
 	userNameField = $("#userNameInput");
 	passwordField = $("#passwordInput");

@@ -15,6 +15,7 @@ function viewImportList() {
 		
 		var error = playlists.error;
 		if (error) {
+			debugger;
 			genericErrorHandlers(error);
 			alert(error);
 			return;
