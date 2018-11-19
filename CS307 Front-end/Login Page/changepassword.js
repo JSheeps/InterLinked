@@ -4,33 +4,58 @@
 var usernameField;
 var newPasswordField;
 var currentPasswordField;
-
-function field_focus(field, defaultString) {
-	// Default behavior
-}
-
-function field_blur(field, defaultString) {
-	// Default behavior
-}
+var confirmPasswordField;
 
 function changePassword(){
-    var currentusername = usernameField[0].value;
-    var currentpassword = currentPasswordField[0].value;
-	var newPassword = newPasswordField[0].value;
-
+    var currentusername = usernameField.val();
+    var currentpassword = currentPasswordField.val();
+	var newPassword = newPasswordField.val();
+	var confirmPassword = confirmPasswordField.val();
+	
+	if (currentusername.length == 0) {
+		alert("Need to input a username");
+		return;
+	}
+	
+	if (currentpassword.length == 0) {
+		alert("Need to input the login password");
+		return;
+	}
+	
+	if (newPassword.length == 0) {
+		alert("Need to input a new password");
+		return;
+	}
+	
+	if (confirmPassword.length == 0) {
+		alert("Need to confirm the new password");
+		return;
+	}
+	
+	if (confirmPassword != newPassword) {
+		alert("Error: the new password does not match the confirming password");
+		return;
+	}
+	
 	console.log(currentusername);
-	console.log(currentpassword);
-    console.log(newPassword)
+	console.log(currentpassword + " -> " + newPassword);
 
 	// TODO: Login to server here
-	console.log("Password Reset!");
+	serverChangePassword(currentusername, currentpassword, newPassword).done( (result) => {
+		if (result.error) {
+			alert(result.error);
+			return;
+		}
+		console.log(result);
+	});
 }
 
 $(document).ready( () => {
 	// initailize Field variables
 	usernameField = $("#usernameInput");
-	newPasswordField = $("#newPasswordInput");
     currentPasswordField = $("#currentPasswordInput");
+	newPasswordField = $("#newPasswordInput");
+	confirmPasswordField = $("#confirmPasswordInput");
 
 	// Add event listeners to the input fields
 
@@ -43,20 +68,15 @@ $(document).ready( () => {
 	currentPasswordField.on(enterPressed, event => newPasswordField.focus());
 
     // On enter while in the newpassword field, chang password
-	newPasswordField.on(enterPressed, changePassword);
+	newPasswordField.on(enterPressed, event => confirmPasswordField.focus());
+	
+	confirmPasswordField.on(enterPressed, changePassword);
 
 	// Establish a 'Enter' key listener
 	$("input").on("keyup", function (event) {
 		// if the 'Enter' key is pressed
 		if (event.which == 13) {
-			$(this).trigger("enterPressed");
+			$(this).trigger(enterPressed);
 		}
 	});
-
-
-
-
-
-
-
 });
