@@ -41,6 +41,14 @@ function serverResetPassword(resetToken, newPassword) {
 	});
 }
 
+function serverChangePassword(username, password, newPassword) {
+	return sendMessage({
+		changePassword: username,
+		password: password,
+		newPassword: newPassword
+	});
+}
+
 function getPlaylistsFromServer() {
 	return sendMessage({
 		get: "playlists"
@@ -129,7 +137,7 @@ function sendMessage(myData) {
 	var authData = getAuthData();
 	if (authData.authToken) {
 		myData.authenticate = authData.authToken;
-		myData.user = authData.authToken;
+		myData.user = authData.username;
 	}
 	
 	return $.ajax(url + "data", {

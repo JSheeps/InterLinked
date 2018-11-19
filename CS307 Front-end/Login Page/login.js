@@ -28,7 +28,6 @@ function login() {
 	}
 	
 	var buttons = $("div.btnRef");
-	console.log(buttons);
 	
 	var onclicks = [];
 	var texts = [];

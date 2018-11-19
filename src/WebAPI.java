@@ -40,8 +40,6 @@ class WebAPI {
         prop.put("mail.smtp.starttls.enable", "true");
         prop.put("mail.smtp.ssl.enable", false);
 
-
-
         // Authentication for SMTP server
         emailSession = Session.getDefaultInstance(prop
                 ,new javax.mail.Authenticator() {
@@ -213,6 +211,9 @@ class WebAPI {
 
         else if(query.containsKey("resetToken"))
             return resetPassword(query);
+
+        else if(query.containsKey("changePassword"))
+            return changePassword(query);
 
         throw new BadQueryException("Query has no meaning");
     }
@@ -398,7 +399,6 @@ class WebAPI {
         boolean b;
         try {
             b = UserPassword.IsPasswordCorrect(username, password);
-
         } catch (Exception e){
             throw new UnauthenticatedException(e.getMessage());
         }
@@ -409,6 +409,7 @@ class WebAPI {
             if (user != null) {
                 String authString = userAuthTokens.generateAuthToken(user);
                 json.put("authenticate", authString);
+                user.setAuthToken(authString);
             }
             else
                 b = false;
@@ -730,6 +731,33 @@ class WebAPI {
         return result;
     }
 
+    private Object changePassword(QueryValues query) throws Exception {
+        String userName = query.get("changePassword");
+        String password = query.get("password");
+        String newPassword = query.get("newPassword");
+        if (userName == null)
+            throw new BadQueryException("Missing changePassword value [username]");
+
+        if (password == null)
+            throw new BadQueryException("Missing password");
+
+        if (newPassword == null)
+            throw new BadQueryException("Missing newPassword");
+
+        JSONObject ret = new JSONObject();
+
+        if (!UserPassword.IsPasswordCorrect(userName, password)) {
+            ret.put("error", "Invalid login");
+            return ret;
+        }
+
+        User user = User.getUserByUserName(userName);
+
+        // TODO: change username
+        ret.put("error", "Unimplemented");
+        return ret;
+    }
+
     // "abcde"... "@domain" -> "ab...@domain"
     private static String obfuscateEmail(String email) {
         int atIndex = email.lastIndexOf('@');
@@ -758,7 +786,16 @@ class WebAPI {
             currentUser = null;
             return;
         }
-        currentUser = userAuthTokens.get(authToken);
+        User user = User.getUserByUserName(query.get("user"));
+        if (user == null) {
+            currentUser = null;
+            return;
+        }
+
+        currentUser =  (user.isAuthTokenValid(query.get("authenticate"))) ?
+            currentUser = user :
+            null;
+        // currentUser = userAuthTokens.get(authToken);
     }
 
     // ------------------------------------------  Responses  ---------------------------------------------------------
