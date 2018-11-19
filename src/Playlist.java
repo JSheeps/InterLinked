@@ -13,6 +13,7 @@ class Playlist {
     public String Name;
     public String spotifyId;
     public String youtubeId;
+    public String googleId;
     Origin origin;
     private List<Song> playlist = new ArrayList<>();
 
@@ -83,11 +84,10 @@ class Playlist {
 
             while (resultSet.next()) {
                 Song song = new Song(resultSet);
-
                 songList.add(song);
             }
         } catch (SQLException e) {
-            System.err.println(e);
+            System.out.println(e);
             return null;
         }
         return songList;

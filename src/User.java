@@ -1,4 +1,3 @@
-import groovy.sql.Sql;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.nio.charset.StandardCharsets;
@@ -128,7 +127,6 @@ public class User {
                 playlist.ID = resultSet.getInt("ID");
                 playlist.Name = resultSet.getString("Name");
                 playlist.UserID = resultSet.getInt("UserID");
-
                 List<Song> songs = playlist.FetchSongs();
 
                 for(Song song : songs){

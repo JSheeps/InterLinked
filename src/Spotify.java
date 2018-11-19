@@ -1,8 +1,10 @@
+import com.github.felixgail.gplaymusic.model.*;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
+import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.User;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
@@ -280,7 +282,6 @@ public class Spotify extends StreamingService {
             playlist.origin = Origin.SPOTIFY;
             userPlaylists.add(playlist);
         }
-
         return userPlaylists;
     }
 

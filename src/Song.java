@@ -13,6 +13,7 @@ public class Song {
     String spotifyID;
     String spotifyURI;
     String youtubeId;
+    String googleId;
     Origin origin;
 
     public Song(String title) {
@@ -90,6 +91,8 @@ public class Song {
     public void setSpotifyURI(String spotifyURI) {
         this.spotifyURI = spotifyURI;
     }
+
+    public void setGoogleId(String googleId){this.googleId = googleId;}
 
     public void setOrigin(Origin origin) {
         this.origin = origin;
