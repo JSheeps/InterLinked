@@ -47,3 +47,13 @@ function YoutubeInit() {
 
     YoutubeLink.attr("href", YoutubeUrl);
 }
+
+function getGoogleInfo(){
+    var username = prompt("Please enter your GooglePlayMusic Username", "Enter username here");
+    var password = prompt("Please enter your GooglePlayMusic Password", "Enter password here");
+    var androidId = prompt("Please enter the IMEI of an android device that had GooglePlayMusic installed", "Enter IMEI here");
+
+    console.log(username);
+    console.log(password);
+    console.log(androidId);
+}

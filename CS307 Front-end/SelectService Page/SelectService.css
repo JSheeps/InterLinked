@@ -6,8 +6,26 @@
     width:300px;
 }
 
-div{
+.YoutubeConnect{
     position: relative;
-    top: 200px;
+    margin-left: auto;
+	margin-right: auto;
+    width:150px;
+    height:100px;
+    top:90px;
+}
+.GoogleConnect{
+    position: relative;
+    margin-left: auto;
+	margin-right: auto;
+    width:200px;
+    height:200px;
+    top:150px;
+    cursor:pointer;
+}
+
+.dclass{
+    position: relative;
+    top: 50px;
 }
 
