@@ -40,8 +40,6 @@ class WebAPI {
         prop.put("mail.smtp.starttls.enable", "true");
         prop.put("mail.smtp.ssl.enable", false);
 
-
-
         // Authentication for SMTP server
         emailSession = Session.getDefaultInstance(prop
                 ,new javax.mail.Authenticator() {
@@ -408,6 +406,7 @@ class WebAPI {
             if (user != null) {
                 String authString = userAuthTokens.generateAuthToken(user);
                 json.put("authenticate", authString);
+                user.setAuthToken(authString);
             }
             else
                 b = false;
@@ -757,7 +756,16 @@ class WebAPI {
             currentUser = null;
             return;
         }
-        currentUser = userAuthTokens.get(authToken);
+        User user = User.getUserByUserName(query.get("user"));
+        if (user == null) {
+            currentUser = null;
+            return;
+        }
+
+        currentUser =  (user.isAuthTokenValid(query.get("authenticate"))) ?
+            currentUser = user :
+            null;
+        // currentUser = userAuthTokens.get(authToken);
     }
 
     // ------------------------------------------  Responses  ---------------------------------------------------------

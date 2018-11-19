@@ -129,7 +129,7 @@ function sendMessage(myData) {
 	var authData = getAuthData();
 	if (authData.authToken) {
 		myData.authenticate = authData.authToken;
-		myData.user = authData.authToken;
+		myData.user = authData.username;
 	}
 	
 	return $.ajax(url + "data", {

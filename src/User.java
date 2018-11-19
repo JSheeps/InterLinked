@@ -1,4 +1,3 @@
-import groovy.sql.Sql;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import java.nio.charset.StandardCharsets;
