@@ -156,11 +156,6 @@ class Table {
 		return this;
 	}
 	
-	remove(selectorOrIndex) {
-		var type = typeOf(selectorOrIndex);
-		console.log(type);
-	}
-	
 	sort(column) {
 		if (this.sortColumnsTitles == null)
 			return;

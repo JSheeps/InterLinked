@@ -127,6 +127,13 @@ function serverRemovePlaylist(id) {
 	});
 }
 
+function serverRemoveSong(playlistID, songIndex) {
+	return sendMessage({
+		removeSong: songIndex,
+		playlist: playlistID
+	});
+}
+
 function serverSearch(searchText) {
 	return sendMessage({
 		search: searchText

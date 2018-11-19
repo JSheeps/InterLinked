@@ -179,6 +179,9 @@ class WebAPI {
         else if (query.containsKey("import"))
             return importQuery(query);
 
+        else if(query.containsKey("removeSong"))
+            return removeSong(query);
+
         else if(query.containsKey("playlist"))
             return playlist(query);
 
@@ -496,6 +499,41 @@ class WebAPI {
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("result",true);
+
+        return jsonObject;
+    }
+
+    private Object removeSong(QueryValues query) throws Exception {
+        if (currentUser == null)
+            throw new UnauthenticatedException("User needs to log into interlinked");
+
+        int removeIndex;
+        try {
+            removeIndex = Integer.parseInt(query.get("removeSong"));
+        } catch (Exception e) {
+            throw new BadQueryException("Expected type of removeSong key is int");
+        }
+
+        int playlistID;
+        try {
+            playlistID = Integer.parseInt(query.get("playlist"));
+        } catch (Exception e) {
+            throw new BadQueryException("Expected type of removeSong key is int");
+        }
+
+        currentUser.FetchPlaylists();
+
+        Playlist playlist = currentUser.getPlaylistById(playlistID);
+        if (playlist == null)
+            throw new ServerErrorException("Couldn't find playlist with id: " + playlistID);
+        else {
+            if (playlist.removeSong(removeIndex) == null)
+                throw new ServerErrorException("Error deleting song");
+            playlist.save(currentUser);
+        }
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("result", true);
 
         return jsonObject;
     }

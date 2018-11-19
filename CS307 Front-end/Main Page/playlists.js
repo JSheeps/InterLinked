@@ -110,11 +110,11 @@ function viewSongs(id) {
 	var expandButton = row.children().eq(0).children().eq(0);
 	
 	if (playlist.songTable) {
-		expandSongs(playlist);
+		expandSongs(playlist, expandButton);
 	}
 	
 	if (playlist.songs) {
-		makeSongTable(playlist);
+		makeSongTable(index);
 		expandSongs(playlist, expandButton);
 		return;
 	}
@@ -134,15 +134,20 @@ function makeSongTable(index) {
 	
 	table.addRowAfter("#" + id, { bind: "UP" }, songTable);
 	
-	var songTable = new Table("#" + id + "songs", null, "Title", "Artist");
+	var songTable = new Table("#" + id + "songs", null, null, "Title", "Artist");
 	playlist.songTable = songTable;
 	songTable.table.addClass("subTable");
+	
+	if (playlist.songs.length == 0) {
+		songTable.text("Playlist Empty");
+		return;
+	}
 	
 	songTable.makeSortRow("localPlaylists[" + index + "].songTable");
 	
 	for (var i = 0; i < playlist.songs.length; i++) {
 		var song = playlist.songs[i];
-		songTable.addRow(null, song.title, song.artist);
+		songTable.addRow({id: "i" + i}, "<a class='black' onclick='removeSong(" + i + ", " + id + ")'> Remove </a>", song.title, song.artist);
 	}
 }
 
@@ -153,19 +158,22 @@ function updateSongTable(index, expandButton = null, afterFunction = () => {}) {
 	if (expandButton == null) {
 		var row = table.getRowByID(id);
 		expandButton = row.children().eq(0).children().eq(0);
-		expandButton[0].onclick = null;
 	}
 	
 	var oldExpandHtml = expandButton.html();
-	expandButton.click(null);
+	var oldClick = expandButton[0].onclick;
 	expandButton.html("<a class='black'>[...]</a>");
 	expandButton[0].onclick = null;
 	
-	if (playlist.songTable)
-		playlist.songTable.clear();
+	if (playlist.songTable) {
+		var row = playlist.songTable.table.parent().parent();
+		row.remove();
+		console.log(row);
+	}
 	
 	serverGetSongs(id).done( (result) => {
 		expandButton.html(oldExpandHtml);
+		expandButton[0].onclick = oldClick;
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);
@@ -190,6 +198,27 @@ function collapseSongs(playlist, expandButton) {
 	
 	expandButton.text("[+]");
 	expandButton[0].onclick = function(event) { expandSongs(playlist, expandButton); };
+}
+
+function removeSong(index, playlistID) {
+	var removeButton = $("table#" + playlistID + "songs").find("tr#i" + index).children().eq(0);
+	var oldHtml = removeButton.html();
+	removeButton.html("<a class='black'> Removing... </a>");
+	
+	serverRemoveSong(playlistID, index).done( result => {
+		if (result.error) {
+			genericErrorHandlers(result.error);
+			alert(result.error);
+			removeButton.html(oldHtml);
+		} else {
+			console.log(result);
+			updateSongTable(
+				getLocalPlaylistIndex(playlistID),
+				null,
+				() => removeButton.html(oldHtml)
+			);
+		}
+	});
 }
 
 // search functionality
