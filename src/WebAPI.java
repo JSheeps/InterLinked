@@ -9,6 +9,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.management.Query;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -211,6 +212,9 @@ class WebAPI {
 
         else if(query.containsKey("resetToken"))
             return resetPassword(query);
+
+        else if(query.containsKey("changePassword"))
+            return changePassword(query);
 
         throw new BadQueryException("Query has no meaning");
     }
@@ -726,6 +730,33 @@ class WebAPI {
         */
         result.put("error", "Unimplemented");
         return result;
+    }
+
+    private Object changePassword(QueryValues query) throws Exception {
+        String userName = query.get("changePassword");
+        String password = query.get("password");
+        String newPassword = query.get("newPassword");
+        if (userName == null)
+            throw new BadQueryException("Missing changePassword value [username]");
+
+        if (password == null)
+            throw new BadQueryException("Missing password");
+
+        if (newPassword == null)
+            throw new BadQueryException("Missing newPassword");
+
+        JSONObject ret = new JSONObject();
+
+        if (!UserPassword.IsPasswordCorrect(userName, password)) {
+            ret.put("error", "Invalid login");
+            return ret;
+        }
+
+        User user = User.getUserByUserName(userName);
+
+        // TODO: change username
+        ret.put("error", "Unimplemented");
+        return ret;
     }
 
     // "abcde"... "@domain" -> "ab...@domain"

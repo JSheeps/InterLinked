@@ -41,6 +41,14 @@ function serverResetPassword(resetToken, newPassword) {
 	});
 }
 
+function serverChangePassword(username, password, newPassword) {
+	return sendMessage({
+		changePassword: username,
+		password: password,
+		newPassword: newPassword
+	});
+}
+
 function getPlaylistsFromServer() {
 	return sendMessage({
 		get: "playlists"
