@@ -377,14 +377,30 @@ class WebAPI {
 
     // Method to handle "signup" query. Returns json with true on success and false on failure
     @SuppressWarnings("unchecked")
-    private JSONObject signUp(QueryValues query) {
+    private JSONObject signUp(QueryValues query) throws BadQueryException {
         JSONObject json = new JSONObject();
 
         String username = query.get("username");
         String password = query.get("password");
         String email = query.get("email");
 
-        User user = User.CreateUser(username, password, email);
+        if (username == null || username.equals(""))
+            throw new BadQueryException("Username is empty");
+
+        if (password == null || password.equals(""))
+            throw new BadQueryException("Password is empty");
+
+        if (email == null || email.equals(""))
+            throw new BadQueryException("Email is empty");
+
+        User user = User.getUserByUserName(username);
+        if (user != null) {
+            json.put("result", false);
+            json.put("error", "User already exists");
+            return json;
+        }
+
+        user = User.CreateUser(username, password, email);
 
         json.put("result", user != null);
 

@@ -68,19 +68,21 @@ function signUp() {
 	
 	$("input").prop("readonly", true);
 	
-	serverSignup(userName, password, email).done( (accessToken) => {
-		console.log(accessToken);
-		if (!accessToken.result) {
-			alert("Invalid signup details");
+	serverSignup(userName, password, email).done( (result) => {
+		if (!result.result) {
+			if (result.error)
+				alert(result.error);
+			else				
+				alert("Invalid signup details");
 		} else {
-			console.log(accessToken.accessToken);
-			playlistRedirect();
-			
-			serverLogin(userName, password).done( (accessToken) => {
-				if (!accessToken.result) {
-					alert("Error: Invalid login");
+			serverLogin(userName, password).done( (result) => {
+				if (!result.result) {
+					if (result.error)
+						alert(result.error);
+					else
+						alert("Error: Invalid login");
 				} else {
-					var token = accessToken.authenticate;
+					var token = result.authenticate;
 					setAuthData(token, userName);
 					playlistRedirect();
 				}
