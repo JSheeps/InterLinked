@@ -37,6 +37,8 @@ class Playlist {
         return playlist.size();
     }
 
+    public String getName(){return Name;}
+
     public List<Song> getArrayList() {
         return new ArrayList<>(playlist);
     }

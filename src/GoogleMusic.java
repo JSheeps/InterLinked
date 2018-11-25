@@ -1,10 +1,11 @@
 import com.github.felixgail.gplaymusic.api.GPlayMusic;
 import com.github.felixgail.gplaymusic.api.PlaylistApi;
-import com.github.felixgail.gplaymusic.model.PlaylistEntry;
-import com.github.felixgail.gplaymusic.model.Track;
+import com.github.felixgail.gplaymusic.model.*;
+import com.github.felixgail.gplaymusic.model.enums.ResultType;
+import com.github.felixgail.gplaymusic.model.requests.SearchTypes;
+import com.github.felixgail.gplaymusic.model.responses.SearchResponse;
 import com.github.felixgail.gplaymusic.util.TokenProvider;
 import svarzee.gps.gpsoauth.AuthToken;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,5 +64,47 @@ public class GoogleMusic {
             }
         } catch (java.io.IOException e){e.printStackTrace();}
         return returnList;
+    }
+
+    public static void exportPlaylist(String auth, Playlist playlist){
+        if (playlist.getNumSongs() == 0 || playlist == null){
+            GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
+            PlaylistApi api = gApi.getPlaylistApi();
+            try{
+                com.github.felixgail.gplaymusic.model.Playlist google_list = api.create(playlist.getName(),"InterLinked playlist", com.github.felixgail.gplaymusic.model.Playlist.PlaylistShareState.PRIVATE);
+                List<String> trackids = new ArrayList<>();
+                for (int i=0;i<playlist.getNumSongs(); i++){
+                    if (playlist.getSong(i).getOrigin() == Origin.GOOGLE){
+                        trackids.add(playlist.getSong(i).googleId);
+                    }
+                    else{
+                        Song s = playlist.getSong(i);
+                        String query = s.getTitle() + " " + s.getArtist();
+                        trackids.add(getSongId(query));
+                    }
+                }
+                api.addTracksToPlaylistById(google_list,trackids);
+            }catch (java.io.IOException e){}
+        }
+    }
+
+    //Used in export method when only the googleId is needed for a song
+    public static String getSongId(String query){
+        return findSong(query).googleId;
+    }
+
+    public static Song findSong(String query){
+        Song s = new Song();
+        try {
+            SearchResponse response = build.build().search(query,1,new SearchTypes(ResultType.TRACK));
+            Track t = response.getTracks().get(0);
+            //copy attributes to the Song that will be returned
+            s.setTitle(t.getTitle());
+            s.setAlbum(t.getAlbum());
+            s.setArtist(t.getArtist());
+            s.setOrigin(Origin.GOOGLE);
+            s.setGoogleId(t.getID());
+        }catch (java.io.IOException e){}
+        return s;
     }
 }
