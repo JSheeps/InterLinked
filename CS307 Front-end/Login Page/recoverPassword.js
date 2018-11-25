@@ -17,12 +17,14 @@ function resetPassword() {
 		return;
 	}
 	
-	console.log(password);
 	serverResetPassword(resetToken, password).done( (result) => {
-		console.log(result);
 		if (result.error) {
 			alert(result.error);
 		} else {
+			if (result.result)
+				alert("Password successfully changed");
+			else
+				alert("Could not change password");
 		}
 	});
 }

@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UserPassword {
-
 	public int UserID;
 	public String Salt;
 	public String SaltedPassword;

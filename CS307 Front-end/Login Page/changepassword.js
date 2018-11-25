@@ -36,17 +36,17 @@ function changePassword(){
 		alert("Error: the new password does not match the confirming password");
 		return;
 	}
-	
-	console.log(currentusername);
-	console.log(currentpassword + " -> " + newPassword);
 
-	// TODO: Login to server here
 	serverChangePassword(currentusername, currentpassword, newPassword).done( (result) => {
 		if (result.error) {
 			alert(result.error);
 			return;
+		} else {
+			if (result.result)
+				alert("Password Successfully Changed");
+			else
+				alert("Password could not be changed");
 		}
-		console.log(result);
 	});
 }
 

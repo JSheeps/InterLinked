@@ -502,6 +502,7 @@ class WebAPI {
             throw new BadQueryException("Expected type of remove key is int");
         }
 
+        currentUser.FetchPlaylists();
         Playlist playlistById = currentUser.getPlaylistById(removeId);
 
         if(playlistById == null){
@@ -763,25 +764,17 @@ class WebAPI {
         if (newPassword == null)
             throw new BadQueryException("Missing new password");
 
-        User user = userAuthTokens.getUserWithResetToken(resetToken);
         JSONObject result = new JSONObject();
-
+        User user = userAuthTokens.getUserWithResetToken(resetToken);
         if (user == null) {
-            result.put("error", "Session expired");
+            result.put("result", false);
+            result.put("error", "No longer able to reset user's password with this link");
             return result;
         }
 
-        /* TODO
-        if (user.changePassword(newPassword)) {
-            result.put("result", true);
+        if (changePassword(user, newPassword, result))
             userAuthTokens.deleteResetSession(resetToken);
-            return result;
-        } else {
-            result.put("error", "Bad password");
-            return result;
-        }
-        */
-        result.put("error", "Unimplemented");
+
         return result;
     }
 
@@ -798,18 +791,32 @@ class WebAPI {
         if (newPassword == null)
             throw new BadQueryException("Missing newPassword");
 
-        JSONObject ret = new JSONObject();
+        JSONObject result = new JSONObject();
 
         if (!UserPassword.IsPasswordCorrect(userName, password)) {
-            ret.put("error", "Invalid login");
-            return ret;
+            result.put("error", "Invalid login details");
+            return result;
         }
 
-        User user = User.getUserByUserName(userName);
 
-        // TODO: change username
-        ret.put("error", "Unimplemented");
-        return ret;
+        User user = User.getUserByUserName(userName);
+        changePassword(user, newPassword, result);
+
+        return result;
+    }
+
+    private static boolean changePassword(User user, String password, JSONObject result) throws BadQueryException {
+        if (user == null)
+            throw new BadQueryException("User does not exist");
+
+        if (UserPassword.CreateUserPassword(user.ID, password)) {
+            result.put("result", true);
+            return true;
+        } else {
+            result.put("result", false);
+            result.put("error", "Bad password");
+            return false;
+        }
     }
 
     // "abcde"... "@domain" -> "ab...@domain"
