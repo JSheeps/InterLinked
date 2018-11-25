@@ -5,6 +5,7 @@ import com.github.felixgail.gplaymusic.model.enums.ResultType;
 import com.github.felixgail.gplaymusic.model.requests.SearchTypes;
 import com.github.felixgail.gplaymusic.model.responses.SearchResponse;
 import com.github.felixgail.gplaymusic.util.TokenProvider;
+import com.github.felixgail.gplaymusic.api.GPlayMusic.Builder;
 import svarzee.gps.gpsoauth.AuthToken;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +16,10 @@ public class GoogleMusic {
     public static String Login(String username, String password, String ANDROID_ID) {
         String auth = "";
         try {
+
             AuthToken authToken = TokenProvider.provideToken(username, password, ANDROID_ID);
             auth = authToken.getToken();
+            build.setAndroidID(ANDROID_ID);
         } catch (java.io.IOException e){e.printStackTrace();}
         catch (svarzee.gps.gpsoauth.Gpsoauth.TokenRequestFailed e){
             e.printStackTrace();
@@ -107,4 +110,5 @@ public class GoogleMusic {
         }catch (java.io.IOException e){}
         return s;
     }
+
 }
