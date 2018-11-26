@@ -16,9 +16,9 @@ public class Server {
          */
         System.out.printf(
                 "usage: Server [<httpDocsFolder>] [<port>]\n" +
-                "default values:\n" +
-                "   port = %d\n" +
-                "   httpDocsFolder = %s\n",
+                        "default values:\n" +
+                        "   port = %d\n" +
+                        "   httpDocsFolder = %s\n",
                 defaultPort,
                 defaultHttpDocs
         );

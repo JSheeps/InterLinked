@@ -8,12 +8,12 @@ import java.util.List;
 
 public class UnitTests {
     public static void main(String[] args){
-        //UserCreationTest();
-        //PlaylistTest();
-        //ShareTokenTest();
-        //PlaylistStateTest();
-        //PlaylistSearchTest();
-        //AuthTokenTest();
+        UserCreationTest();
+        PlaylistTest();
+        ShareTokenTest();
+        PlaylistStateTest();
+        PlaylistSearchTest();
+        AuthTokenTest();
         SQLInjectionTest();
     }
 
