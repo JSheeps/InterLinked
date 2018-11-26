@@ -8,12 +8,13 @@ import java.util.List;
 
 public class UnitTests {
     public static void main(String[] args){
-        UserCreationTest();
-        PlaylistTest();
-        ShareTokenTest();
-        PlaylistStateTest();
-        PlaylistSearchTest();
-        AuthTokenTest();
+        //UserCreationTest();
+        //PlaylistTest();
+        //ShareTokenTest();
+        //PlaylistStateTest();
+        //PlaylistSearchTest();
+        //AuthTokenTest();
+        SQLInjectionTest();
     }
 
     @Test(timeout = 100)
@@ -264,6 +265,46 @@ public class UnitTests {
         }catch (SQLException e){
             System.err.println(e);
             assert false;
+        }
+    }
+
+    public static void SQLInjectionTest(){
+        SqlHelper helper = new SqlHelper();
+
+        // Make sure User Creation is working correctly
+        UserCreationTest();
+
+        try{
+            // SQL Injection on userName
+            User user = User.CreateUser(";DROP TABLE PlaylistHistorySongs;","whatever","whataver@whatever.com");
+
+            // Send useless query to PlaylistHistorySongs
+            PreparedStatement useless = helper.connection.prepareStatement("SELECT TOP 1 * FROM PlaylistHistorySongs");
+            ResultSet dontCare = useless.executeQuery();
+
+            // If query doesn't error then SQL Injection didn't work
+        }catch (SQLException e){
+            // SQLException thrown because the PlaylistHistorySongs table no longer exists
+            System.err.println(e);
+            System.err.println("\n               SQL TEST ERROR                    \n");
+
+            try{
+                // Send query to restore table
+                PreparedStatement restorer = helper.connection.prepareStatement("CREATE TABLE dbo.PlaylistHistorySongs(\n" +
+                        "\tID int PRIMARY KEY IDENTITY(1,1),\n" +
+                        "\tPlaylistHistoryID int FOREIGN KEY REFERENCES PlaylistHistory(ID) not null,\n" +
+                        "\tSongID int FOREIGN KEY REFERENCES Songs(ID) not null\n" +
+                        ") ");
+                restorer.execute();
+            }catch (SQLException ruhRoh){
+                System.err.println("\n               RUH ROH                  \n");
+                System.err.println(ruhRoh);
+            }
+
+            // Can't forget to fail the test now can we
+            assert false;
+        }finally{
+            helper.closeConnection();
         }
     }
 }
