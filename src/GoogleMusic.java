@@ -70,7 +70,7 @@ public class GoogleMusic {
     }
 
     public static void exportPlaylist(String auth, Playlist playlist){
-        if (playlist.getNumSongs() == 0 || playlist == null){
+        if (playlist.getNumSongs() != 0 && playlist != null){
             GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
             PlaylistApi api = gApi.getPlaylistApi();
             try{
