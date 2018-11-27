@@ -18,6 +18,8 @@ public class User {
     String email;
     MutablePair<String, String> spotifyTokens;
     String youtubeToken;
+    String spotifyToken;
+    String googleMusicToken;
     ArrayList<Playlist> playlistList = new ArrayList<>();
 
     public User(int ID, String userName, String email){
@@ -32,6 +34,9 @@ public class User {
             ID = resultSet.getInt("ID");
             userName = resultSet.getString("UserName");
             email = resultSet.getString("Email");
+            spotifyToken = resultSet.getString("SpotifyToken");
+            youtubeToken = resultSet.getString("YoutubeToken");
+            googleMusicToken = resultSet.getString("GoogleMusicToken");
         }catch (SQLException e){
             System.err.println(e);
         }
@@ -245,5 +250,56 @@ public class User {
             System.err.println(e);
             return false;
         }
+    }
+
+    public boolean updateSpotifyToken(String token){
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement update = helper.connection.prepareStatement("UPDATE USERS SET SpotifyToken = ? WHERE ID = ?");
+            update.setString(1, token);
+            update.setInt(2, ID);
+
+            update.execute();
+        }catch (SQLException e){
+            System.err.println(e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean updateGoogleMusicToken(String token){
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement update = helper.connection.prepareStatement("UPDATE USERS SET GoogleMusicToken = ? WHERE ID = ?");
+            update.setString(1, token);
+            update.setInt(2, ID);
+
+            update.execute();
+        }catch (SQLException e){
+            System.err.println(e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean updateYoutubeToken(String token){
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement update = helper.connection.prepareStatement("UPDATE USERS SET YoutubeToken = ? WHERE ID = ?");
+            update.setString(1, token);
+            update.setInt(2, ID);
+
+            update.execute();
+        }catch (SQLException e){
+            System.err.println(e);
+            return false;
+        }
+
+        return true;
     }
 }

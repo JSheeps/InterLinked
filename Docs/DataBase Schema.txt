@@ -4,7 +4,10 @@ CREATE TABLE dbo.Users(
   CreatedDate datetime not null,
   Email nvarchar(100) not null,
   AuthTokenSalt nvarchar(200) null,
-  AuthToken nvarchar(200) null
+  AuthToken nvarchar(200) null,
+  YoutubeToken nvarchar(300) null,
+  GoogleMusicToken nvarchar(300) null,
+  SpotifyToken nvarchar(300) null
 )
 
 CREATE TABLE dbo.UserPasswords(
@@ -38,7 +41,9 @@ CREATE TABLE dbo.Songs(
   Duration int null,
   Explicit bit not null default 0,
   SpotifyID nvarchar(300) null,
-  SpotifyURI nvarchar(300) null
+  SpotifyURI nvarchar(300) null,
+  GoogleMusicID nvarchar(300) null,
+  YoutubeID nvarchar(300) null,
   OriginHostID FOREIGN KEY REFERENCES OriginHosts(ID)
 )
 
