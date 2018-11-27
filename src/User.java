@@ -302,4 +302,22 @@ public class User {
 
         return true;
     }
+
+    public boolean changePassword(String newPassword){
+        // First, delete UserPassword entry
+        SqlHelper helper = new SqlHelper();
+
+        try{
+            PreparedStatement deletion = helper.connection.prepareStatement("DELETE FROM UserPasswords WHERE UserID = ?");
+            deletion.setInt(1, ID);
+
+            deletion.execute();
+        }catch (SQLException e){
+            System.err.println(e);
+            return  false;
+        }
+
+        // Create New UserPassword
+        return UserPassword.CreateUserPassword(ID, newPassword);
+    }
 }
