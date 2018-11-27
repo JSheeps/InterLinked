@@ -307,4 +307,16 @@ public class UnitTests {
             helper.closeConnection();
         }
     }
+
+    public static void changePasswordTest(){
+        User user = User.CreateUser("changePasswordTest", "originalPassword", "whatever@whatever.com");
+
+        Assert.assertEquals(true, user != null);
+
+        Assert.assertEquals(false, UserPassword.IsPasswordCorrect("changePasswordTest", "newPassword"));
+
+        Assert.assertEquals(true, user.changePassword("newPassword"));
+
+        Assert.assertEquals(true, UserPassword.IsPasswordCorrect("changePasswordTest", "newPassword"));
+    }
 }
