@@ -51,6 +51,7 @@ public class User {
     }
 
     public Playlist getPlaylistById(int id){
+        FetchPlaylists();
         for(Playlist p : playlistList){
             if(p.ID == id)
                 return p;
