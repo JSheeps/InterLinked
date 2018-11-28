@@ -62,5 +62,8 @@ Query Specifications
 
 		revert      <playlistID>                            Result true or false
 		                                                    Reverts playlist to most previous state
+
+		googlePlayLogin                                     Result true or false
+		            <username>:<password>:<imei>
 		
 		One thing to note is that for many of these, an access token will also be provided. The details of this will be determined later (perhaps in sprint 2).

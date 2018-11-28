@@ -179,6 +179,9 @@ class WebAPI {
         else if (query.containsKey("signup"))
             return signUp(query);
 
+        else if (query.containsKey("googlePlayLogin"))
+            return googlePlayLogin(query);
+
         else if (query.containsKey("login"))
             return logIn(query);
 
@@ -263,8 +266,8 @@ class WebAPI {
     private JSONArray importQuery(QueryValues query) throws Exception {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.spotifyTokens == null && currentUser.youtubeToken == null)
-            throw new NotLoggedInToService("User needs to log in to streaming service");
+        if(currentUser.spotifyTokens == null && currentUser.youtubeToken == null && currentUser.googleMusicToken == null)
+            throw new NotLoggedInToService("User needs to log in to a streaming service");
 
         JSONArray jsonArray = new JSONArray();
 
@@ -277,6 +280,10 @@ class WebAPI {
         // Get playlists from youtube
         if(currentUser.youtubeToken != null)
             playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
+
+        // Get playlists from google play
+        if(currentUser.googleMusicToken != null)
+            playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
 
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
@@ -342,12 +349,37 @@ class WebAPI {
         return jsonArray;
     }
 
+    private Object googlePlayLogin(QueryValues query) throws Exception {
+        if(currentUser == null)
+            throw new UnauthenticatedException("User needs to log in to interLinked");
+
+        String info = query.get("googlePlayLogin");
+
+        String[] split = info.split(":");
+
+        String username = split[0];
+        String password = split[1];
+        String imei = split[2];
+
+        String playToken = GoogleMusic.Login(username, password, imei);
+
+        currentUser.updateGoogleMusicToken(playToken);
+
+        return new JSONObject().put("result", true);
+    }
+
     @SuppressWarnings("unchecked")
     private Object exportQuery(QueryValues query) throws Exception{
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
-        if(currentUser.spotifyTokens == null)
-            throw new NotLoggedInToService("Spotify login is required for export");
+
+        String exportPlatform = query.get("platformID");
+
+        if(exportPlatform.equals("GooglePlayMusic") && currentUser.googleMusicToken == null)
+            throw new NotLoggedInToService("Service login is required for export");
+        if(exportPlatform.equals("Spotify") && currentUser.spotifyTokens == null)
+            throw new NotLoggedInToService("Service login is required for export");
+
 
         String pid = query.get("export");
         int id = Integer.parseInt(pid);
@@ -358,9 +390,12 @@ class WebAPI {
             throw new ServerErrorException("Playlist not found");
         }
 
-        List<Song> failedSongs;
+        List<Song> failedSongs = new ArrayList<>();
         try {
-            failedSongs = Spotify.exportPlaylist(currentUser.spotifyTokens, playlist);
+            if(exportPlatform.equals("Spotify"))
+                failedSongs = Spotify.exportPlaylist(currentUser.spotifyTokens, playlist);
+            else if(exportPlatform.equals("GooglePlayMusic"))
+                failedSongs = GoogleMusic.exportPlaylist(currentUser.googleMusicToken, playlist);
         } catch (Exception e){
             throw new ServerErrorException(e.getMessage());
         }
