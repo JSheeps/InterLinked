@@ -34,6 +34,14 @@ public class User {
             ID = resultSet.getInt("ID");
             userName = resultSet.getString("UserName");
             email = resultSet.getString("Email");
+
+            String spotifyTokenUnparsed = resultSet.getString("SpotifyToken");
+
+            if(spotifyTokenUnparsed != null) {
+                String[] split = spotifyTokenUnparsed.split(";");
+                spotifyTokens = new MutablePair<>(split[0], split[1]);
+            }
+
             spotifyToken = resultSet.getString("SpotifyToken");
             youtubeToken = resultSet.getString("YoutubeToken");
             googleMusicToken = resultSet.getString("GoogleMusicToken");
@@ -252,8 +260,11 @@ public class User {
         }
     }
 
-    public boolean updateSpotifyToken(String token){
+    // Expects spotify tokens to be of format: "<token1>;<token2>"
+    public boolean updateSpotifyToken(MutablePair<String, String> tokenPair){
         SqlHelper helper = new SqlHelper();
+
+        String token = tokenPair.left + ";" + tokenPair.right;
 
         try{
             PreparedStatement update = helper.connection.prepareStatement("UPDATE USERS SET SpotifyToken = ? WHERE ID = ?");

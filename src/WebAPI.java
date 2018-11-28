@@ -15,6 +15,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // How to handle calls to the /data endpoint
 class WebAPI {
@@ -144,21 +146,25 @@ class WebAPI {
         debug.log("~~~Associated user: " + user.userName);
 
         // Attempt to login using provided code
-        try {
-            if(platformID.equals("Spotify"))
-                user.spotifyTokens = Spotify.Login(code);
-            else if(platformID.equals("Youtube"))
-                user.youtubeToken = Youtube.GetToken(code);
-        } catch (Exception e) {
-            debug.log("~~~Login failed: " + e.getMessage());
-            debug.printStackTrace(e);
-            return;
-        }
+        Runnable runnable = () -> {
+            try {
+                if (platformID.equals("Spotify"))
+                    user.updateSpotifyToken(Spotify.Login(code));
+                else if (platformID.equals("Youtube"))
+                    user.updateYoutubeToken(Youtube.GetToken(code));
 
+                debug.log("~~~Set user's tokens: " + ((platformID.equals("Spotify")) ? user.spotifyTokens.toString() : user.youtubeToken));
 
-        debug.log("~~~Set user's tokens: " + ((platformID.equals("Spotify"))? user.spotifyTokens.toString():user.youtubeToken));
+                debug.log("~~~Finished Login");
 
-        debug.log("~~~Finished Login");
+            } catch (Exception e) {
+                debug.log("~~~Login failed: " + e.getMessage());
+                debug.printStackTrace(e);
+            }
+        };
+
+        ExecutorService execute = Executors.newCachedThreadPool();
+        execute.execute(runnable);
     }
 
     private Object commandRedirect(QueryValues query) throws Exception {

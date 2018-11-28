@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 public class EndpointHandler implements HttpHandler {
-    WebAPI webAPI;
-    Http http;
-    Debug debug;
-    Semaphore semaphore;
+    private WebAPI webAPI;
+    private Http http;
+    private Debug debug;
+    private Semaphore semaphore;
 
-    public EndpointHandler(String httpDocs) {
+    EndpointHandler(String httpDocs) {
         debug = new Debug(true, false);
         UserSessions authTokens = new UserSessions(debug);
         webAPI = new WebAPI(authTokens);

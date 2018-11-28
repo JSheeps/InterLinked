@@ -40,7 +40,7 @@ public class Youtube extends StreamingService {
         params.add(new BasicNameValuePair("code", code));
         params.add(new BasicNameValuePair("client_id", client_id));
         params.add(new BasicNameValuePair("client_secret", client_secret));
-        params.add(new BasicNameValuePair("redirect_uri", "http://localhost/login/?platformID=Youtube"));
+        params.add(new BasicNameValuePair("redirect_uri", "https://" + Server.domain + "/login/?platformID=Youtube"));
         params.add(new BasicNameValuePair("grant_type", "authorization_code"));
 
         // Add Parameters
@@ -51,7 +51,7 @@ public class Youtube extends StreamingService {
 
         // If failed, throw exception
         if(response.getStatusLine().getStatusCode() != HttpStatusCodes.STATUS_CODE_OK)
-            throw new Exception("Got status code: " + response.getStatusLine().getStatusCode());
+            throw new Exception("Got status code: " + response.getStatusLine().toString());
 
         // Get response in string
         HttpEntity entity = response.getEntity();

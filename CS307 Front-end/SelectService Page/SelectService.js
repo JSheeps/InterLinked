@@ -9,11 +9,12 @@ $(document).ready( () => {
 });
 
 function SpotifyInit() {
-	var SpotifyLink = $("#SpotifyLink");
+    var domain = "localhost";
+    var SpotifyLink = $("#SpotifyLink");
 	var SpotifyUrl = SpotifyLink.attr("href");
 	console.log(SpotifyUrl);
 
-	var redirectURI = "http://localhost/login/?platformID=Spotify";
+	var redirectURI = "https://" + domain + "/login/?platformID=Spotify";
 	console.log(redirectURI);
 	
 	SpotifyUrl += encodeURIComponent(redirectURI);
@@ -34,11 +35,13 @@ $(document).ready( () => {
 });
 
 function YoutubeInit() {
+    var domain = "localhost";
     var YoutubeLink = $("#YoutubeLink");
     var YoutubeUrl = YoutubeLink.attr("href");
     console.log(YoutubeUrl);
 
-    var redirectURI = "http://localhost/login/?platformID=Youtube";
+    var redirectURI = "https://" + domain + "/login/?platformID=Youtube";
+    YoutubeUrl += encodeURIComponent(redirectURI);
     console.log(redirectURI);
 
     YoutubeUrl += "&state=";

@@ -1,11 +1,9 @@
-import com.github.felixgail.gplaymusic.model.*;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.*;
-import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.model_objects.specification.User;
+import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
@@ -30,7 +28,7 @@ public class Spotify extends StreamingService {
     private static final String scopes = "user-read-birthdate,user-read-email,playlist-modify-private,playlist-read-collaborative,playlist-read-private";
 
     //This is the URL that the user will be sent to after authorizing us to access their account
-    private static final URI redirectURI = SpotifyHttpManager.makeUri("http://localhost/login/?platformID=Spotify");
+    private static final URI redirectURI = SpotifyHttpManager.makeUri("https://" + Server.domain + "/login/?platformID=Spotify");
 
     private static SpotifyApi.Builder build = new SpotifyApi.Builder()
             .setClientId(client_ID)

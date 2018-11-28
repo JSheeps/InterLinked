@@ -9,9 +9,10 @@ import java.security.KeyStore;
 import java.util.concurrent.Executor;
 
 public class Server {
-    public final static int defaultHttpsPort = 443;
-    public final static int defaultHttpPort = 80;
-    public final static String defaultHttpDocs = "CS307 Front-end";
+    private final static int defaultHttpsPort = 443;
+    private final static int defaultHttpPort = 80;
+    private final static String defaultHttpDocs = "CS307 Front-end";
+    final static String domain = "localhost";
 
     private static void usage(int exitStatus) {
         /*
@@ -72,7 +73,7 @@ public class Server {
         server.createContext("/", t -> {
             Headers headers = t.getResponseHeaders();
             String requestURI = t.getRequestURI().toString();
-            String response = "https://localhost" + requestURI;
+            String response = "https://" + domain + requestURI;
             headers.set("Location", response);
             t.sendResponseHeaders(302, 0);
 
@@ -90,7 +91,7 @@ public class Server {
         // initialise the keystore
         char[] password = "interlinked".toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
-        FileInputStream fis = new FileInputStream("keystore");
+        FileInputStream fis = new FileInputStream("certificates/keystore");
         ks.load(fis, password);
 
         // setup the key manager factory
