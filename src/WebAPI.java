@@ -104,7 +104,7 @@ class WebAPI {
             debug.log("------------------ Connection Completed ------------------");
             return;
         } catch (Exception e) {
-            exceptionHandler(t, callback, "Unknown Error: " + e.getMessage());
+            exceptionHandler(t, callback, e.getMessage());
             t.close();
             debug.printStackTrace(e);
             debug.log("------------------ Connection Completed ------------------");
@@ -373,10 +373,14 @@ class WebAPI {
         JSONObject jsonSongs = new JSONObject();
         jsonSongs.put("songs", failedSongs);
 
-//        JSONArray jsonArray = new JSONArray();
-//        jsonArray.put(jsonSongs); //todo: uncomment to send a list of songs that failed to export
-//        jsonArray.put(jsonResult);
-//        return jsonArray;
+        if(failedSongs.size() > 0){
+            StringBuilder msg = new StringBuilder("" + failedSongs.size() + " failed song(s):\n");
+
+            for(Song song : failedSongs)
+                msg.append("    ").append(song.title).append(" - ").append(song.artist).append("\n");
+
+            throw new Exception(msg.toString());
+        }
 
         return jsonResult;
     }
@@ -924,7 +928,7 @@ class UnauthenticatedException extends Exception{
 
 class NotLoggedInToService extends Exception{
     NotLoggedInToService(String message) {
-        super("NotLoggedInToService: " + message);
+        super("Not logged in: " + message);
     }
 }
 
