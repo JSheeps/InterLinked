@@ -274,6 +274,10 @@ function search() {
 					if (result.SpotifyURL) {
 						searchResults.addRow(null, "<a class='black' target='_blank' href=" + result.SpotifyURL + ">Spotify</a>");
 					}
+
+                    if (result.YoutubeURL) {
+                        searchResults.addRow(null, "<a class='black' target='_blank' href=" + result.YoutubeURL + ">Youtube</a>");
+                    }
 				}
 			}
 			searchedSong = result.SpotifyID;

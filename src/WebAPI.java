@@ -238,6 +238,8 @@ class WebAPI {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
+        JSONObject jsonObject = new JSONObject();
+
         String search = query.get("search");
         String platform = query.get("platformID");
         if (platform == null)
@@ -245,19 +247,29 @@ class WebAPI {
 
         // Search for song on Spotify
         Song song;
+        String url;
 
         try {
             switch (platform) {
                 case "Spotify":
                     song = Spotify.findSong(search);
+                    url = Spotify.listenToSong(song);
+                    jsonObject.put("SpotifyURL", url);
+                    jsonObject.put("artist", song.artist);
+                    jsonObject.put("title", song.title);
                     break;
 
                 case "GooglePlayMusic":
                     song = GoogleMusic.findSong(search);
+                    jsonObject.put("artist", song.artist);
+                    jsonObject.put("title", song.title);
                     break;
 
                 case "Youtube":
                     song = Youtube.findSong(search);
+                    url = Youtube.listenToSong(song);
+                    jsonObject.put("YoutubeURL", url);
+                    jsonObject.put("title", song.title);
                     break;
 
                 default:
@@ -268,18 +280,8 @@ class WebAPI {
             throw new ServerErrorException(e.getMessage());
         }
 
-        if (song == null)
-            throw new ServerErrorException("No results");
-
         // Build Json response
-
-        JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-
-        jsonObject.put("title", song.getTitle());
-        jsonObject.put("artist", song.getArtist());
-        jsonObject.put("SpotifyURL", Spotify.listenToSong(song));
-        jsonObject.put("SpotifyID", song.spotifyID);
         jsonArray.put(jsonObject);
 
         return jsonArray;
@@ -975,9 +977,11 @@ class WebAPI {
         message.append(callback);
         message.append("(");
 
-        message.append(j.toString());
+        String sUnsanitized = j.toString();
+        String s = sUnsanitized.replaceAll("'", "\\\\'");
+        message.append(s);
 
-        debug.log("Response json:" + j.toString());
+        debug.log("Response json:" + message);
 
         message.append(")");
 

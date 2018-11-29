@@ -50,7 +50,7 @@ public class Youtube extends StreamingService {
         HttpResponse response = httpclient.execute(httpPost);
 
         // If failed, throw exception
-        if(response.getStatusLine().getStatusCode() != HttpStatusCodes.STATUS_CODE_OK)
+        if (response.getStatusLine().getStatusCode() != HttpStatusCodes.STATUS_CODE_OK)
             throw new Exception("Got status code: " + response.getStatusLine().toString());
 
         // Get response in string
@@ -76,23 +76,13 @@ public class Youtube extends StreamingService {
 
         // Send http request
         String urlString = baseUrl + "playlists" + queryValues.toQueryString();
-        URL url = new URL(urlString);
-        URLConnection connection = url.openConnection();
-        InputStream in = connection.getInputStream();
-
-        // Get result and put in string
-        Scanner s = new Scanner(in).useDelimiter("\\A");
-        String result = s.hasNext() ? s.next() : "";
-
-        // Convert result to json objects
-        JSONObject json = new JSONObject(result);
-        JSONArray jsonArray = json.getJSONArray("items");
+        JSONArray jsonResult = execute(urlString).getJSONArray("items");
 
         // Iterate through json playlist objects and convert them to java playlist objects
         List<Playlist> playlists = new ArrayList<>();
-        for(int i = 0; i < jsonArray.length(); i++){
+        for (int i = 0; i < jsonResult.length(); i++) {
             Playlist playlist = new Playlist();
-            JSONObject jsonPlaylist = jsonArray.getJSONObject(i);
+            JSONObject jsonPlaylist = jsonResult.getJSONObject(i);
             String name = jsonPlaylist.getJSONObject("snippet").getString("title");
             String id = jsonPlaylist.getString("id");
             playlist.setName(name);
@@ -108,8 +98,8 @@ public class Youtube extends StreamingService {
         // Find the right playlist
         List<Playlist> playlists = getPlaylists(token);
         Playlist playlist = null;
-        for(Playlist p : playlists){
-            if(p.Name.equals(playlistName)){
+        for (Playlist p : playlists) {
+            if (p.Name.equals(playlistName)) {
                 playlist = p;
                 break;
             }
@@ -130,35 +120,28 @@ public class Youtube extends StreamingService {
         do {
             // Send http request
             String urlString = baseUrl + "playlistItems" + queryValues.toQueryString();
-            URL url = new URL(urlString);
-            URLConnection connection = url.openConnection();
-            InputStream in = connection.getInputStream();
-
-            // Get result and put in string
-            Scanner s = new Scanner(in).useDelimiter("\\A");
-            String result = s.hasNext() ? s.next() : "";
+            json = execute(urlString);
 
             // Convert result into json objects
-            json = new JSONObject(result);
             songJsonArrays.add(json.getJSONArray("items"));
 
             // Put the next page token in for the next query
-            if(json.has("nextPageToken"))
+            if (json.has("nextPageToken"))
                 queryValues.put("pageToken", json.getString("nextPageToken"));
 
-        } while(json.has("nextPageToken"));
+        } while (json.has("nextPageToken"));
 
         // Iterate through json playlist item objects and convert them into java song objects
         List<Song> songs = new ArrayList<>();
-        for(JSONArray jsonArray : songJsonArrays) {
+        for (JSONArray jsonArray : songJsonArrays) {
             for (int i = 0; i < jsonArray.length(); i++) {
                 Song song = new Song();
                 JSONObject songJson = jsonArray.getJSONObject(i);
                 String title = songJson.getJSONObject("snippet").getString("title");
 
                 // Remove parts in brackets (was usually stuff like (official music video))
-                title = title.replaceAll("\\[.*]","");
-                title = title.replaceAll("\\(.*\\)","");
+                title = title.replaceAll("\\[.*]", "");
+                title = title.replaceAll("\\(.*\\)", "");
                 song.title = title;
                 song.youtubeId = songJson.getString("id");
                 song.origin = Origin.YOUTUBE;
@@ -168,5 +151,42 @@ public class Youtube extends StreamingService {
         }
 
         return songs;
+    }
+
+    public static Song findSong(String query) throws Exception {
+
+        // Build query
+        QueryValues queryValues = new QueryValues();
+        queryValues.put("maxResults", "1");
+        queryValues.put("q", query);
+        queryValues.put("part", "snippet");
+        queryValues.put("key", apiKey);
+
+        // Send http request
+        String urlString = baseUrl + "search" + queryValues.toQueryString();
+        JSONObject jsonSong = execute(urlString).getJSONArray("items").getJSONObject(0);
+
+        Song song = new Song();
+        song.youtubeId = jsonSong.getJSONObject("id").getString("videoId");
+        song.title = jsonSong.getJSONObject("snippet").getString("title");
+
+        return song;
+    }
+
+    static String listenToSong(Song s) throws Exception {
+        if (s.youtubeId == null) throw new Exception("No youtube id found");
+        return "https://www.youtube.com/watch?v=" + s.youtubeId;
+    }
+
+    private static JSONObject execute(String urlString) throws Exception {
+        URL url = new URL(urlString);
+        URLConnection connection = url.openConnection();
+        InputStream in = connection.getInputStream();
+
+        // Get result and put in string
+        Scanner s = new Scanner(in).useDelimiter("\\A");
+        String result = s.hasNext() ? s.next() : "";
+
+        return new JSONObject(result);
     }
 }
