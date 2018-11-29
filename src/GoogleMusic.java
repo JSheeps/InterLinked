@@ -17,7 +17,6 @@ public class GoogleMusic {
 
     public static String Login(String username, String password, String ANDROID_ID) throws svarzee.gps.gpsoauth.Gpsoauth.TokenRequestFailed, IOException {
         String auth;
-
         AuthToken authToken = TokenProvider.provideToken(username, password, ANDROID_ID);
         auth = authToken.getToken();
         build.setAndroidID(ANDROID_ID);
@@ -27,7 +26,8 @@ public class GoogleMusic {
     //returns a list of playlists and their GoogleId's
     public static List<Playlist> getPlaylists(String auth) throws IOException {
         List<Playlist> playlists = new ArrayList<Playlist>();
-        GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
+        AuthToken tok = TokenProvider.provideToken(auth);
+        GPlayMusic gApi = build.setAuthToken(tok).build();
         PlaylistApi plist = gApi.getPlaylistApi();
         List<com.github.felixgail.gplaymusic.model.Playlist> googleLists = plist.listPlaylists();
         //plist.deletePlaylists(googleLists.get(0)); used this to delete invisible playlist, keep for future reference
@@ -42,7 +42,8 @@ public class GoogleMusic {
     }
 
     public static List<Song> importPlaylist(String auth, String id) throws Exception {
-        GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
+        AuthToken tok = TokenProvider.provideToken(auth);
+        GPlayMusic gApi = build.setAuthToken(tok).build();
         PlaylistApi plist = gApi.getPlaylistApi();
         List<Song> returnList = new ArrayList<>();
 
@@ -64,7 +65,8 @@ public class GoogleMusic {
     public static List<Song> exportPlaylist(String auth, Playlist playlist) throws java.io.IOException {
         List<Song> failedSongs = new ArrayList<>();
         if (playlist.getNumSongs() != 0){
-            GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
+            AuthToken tok = TokenProvider.provideToken(auth);
+            GPlayMusic gApi = build.setAuthToken(tok).build();
             PlaylistApi api = gApi.getPlaylistApi();
             com.github.felixgail.gplaymusic.model.Playlist google_list = api.create(playlist.getName(),"InterLinked playlist", com.github.felixgail.gplaymusic.model.Playlist.PlaylistShareState.PRIVATE);
             List<String> trackids = new ArrayList<>();
