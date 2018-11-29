@@ -48,7 +48,6 @@ function exportPlayList(id) {
 	var oldHtml = exportButton.html();
 	exportButton.html("<a class='black'>Exporting...</a>");
 	
-	
 	exportPlaylist(id, platform).done( (response) => {
 		if (response.error) {
 			genericErrorHandlers(response.error);

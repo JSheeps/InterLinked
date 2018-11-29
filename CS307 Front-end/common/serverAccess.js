@@ -136,9 +136,10 @@ function serverRemoveSong(playlistID, songIndex) {
 	});
 }
 
-function serverSearch(searchText) {
+function serverSearch(searchText, searchPlatform) {
 	return sendMessage({
-		search: searchText
+		search: searchText,
+		platformID: searchPlatform
 	});
 }
 

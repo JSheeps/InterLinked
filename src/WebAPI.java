@@ -239,19 +239,37 @@ class WebAPI {
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
         String search = query.get("search");
+        String platform = query.get("platformID");
+        if (platform == null)
+            throw new BadQueryException("No platform provided");
 
         // Search for song on Spotify
         Song song;
+
         try {
-            song = Spotify.findSong(search);
+            switch (platform) {
+                case "Spotify":
+                    song = Spotify.findSong(search);
+                    break;
+
+                case "GooglePlayMusic":
+                    song = GoogleMusic.findSong(search);
+                    break;
+
+                case "Youtube":
+                    song = Youtube.findSong(search);
+                    break;
+
+                default:
+                    throw new Exception("Unknown platform");
+            }
         } catch (Exception e) {
             debug.printStackTrace(e);
             throw new ServerErrorException(e.getMessage());
         }
 
-        if(song == null){
-            throw new Exception("Song not found.");
-        }
+        if (song == null)
+            throw new ServerErrorException("No results");
 
         // Build Json response
 
@@ -278,24 +296,17 @@ class WebAPI {
 
         ArrayList<Playlist> playlists = new ArrayList<>();
 
-
         // Get playlists from spotify
-        try {
-            if (currentUser.spotifyTokens != null)
-                playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
-        } catch (Exception e){ throw new Exception("You have been logged out of Spotify, please log in again."); }
+        if(currentUser.spotifyTokens != null)
+            playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
 
         // Get playlists from youtube
-        try {
-            if (currentUser.youtubeToken != null)
-                playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
-        } catch (Exception e){ throw new Exception("You have been logged out of Youtube, please log in again."); }
+        if(currentUser.youtubeToken != null)
+            playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
 
         // Get playlists from google play
-        try {
-            if (currentUser.googleMusicToken != null)
-                playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
-        } catch (Exception e){ throw new Exception("You have been logged out of Google Play, please log in again."); }
+        if(currentUser.googleMusicToken != null)
+            playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
 
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){

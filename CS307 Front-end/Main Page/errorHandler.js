@@ -1,5 +1,5 @@
 function genericErrorHandlers(error) {
-	if (error == "NotLoggedInToService: User needs to log in to streaming service") {
+	if (error == "Not logged in: User needs to log in to a streaming service") {
 		grantServerAccessRedirect();
 		return;
 	}
