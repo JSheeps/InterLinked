@@ -58,3 +58,9 @@ th{
 .sharebox {
 	width: 50%
 }
+
+.searchBox {
+	display: inline-block;
+	background-color: white;
+	border: 2px black solid;
+}

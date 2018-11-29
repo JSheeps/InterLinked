@@ -50,13 +50,15 @@ function viewPlaylists(refresh = true) {
 
 function fillTable(playlists) {
 	table.clear();
+	
+	if (playlists == null || playlists.length == 0) {
+		table.text("No Playlists Imported");
+		return;
+	}
+	
 	if (playlists.error) {
 		genericErrorHandlers(playlists.error);
 		table.text(playlists.error);
-		return;
-	}
-	if (playlists.length == 0) {
-		table.text("No Playlists Imported");
 		return;
 	}
 	
@@ -74,7 +76,6 @@ function fillTable(playlists) {
 			"<a class='black' onclick=\"removePlayList('" + playlist.id + "');\">Remove</a></td>"
 		);
 	}
-	
 	localPlaylists = playlists;
 }
 
@@ -226,6 +227,10 @@ function search() {
 	if (searchResults == null)
 		searchResults = new Table("#searchResults", "Search Results", null);
 	
+	var searchPlatform = $("input[name='platform']:checked").val();
+	if (!searchPlatform)
+		throw "could not find search platform";
+	
 	var searchButton = $("#searchbtn");
 	searchButton.attr("disabled", "disabled");
 	
@@ -238,43 +243,42 @@ function search() {
 	
 	searchResults.clear().text("Searching...");
 	
-	serverSearch(searchText).done( (songs) => {
+	serverSearch(searchText, searchPlatform).done( (songs) => {
 		searchResults.clear();
 		if (songs.error) {
 			genericErrorHandlers(songs.error);
 			
-			if (songs.error == "Unknown Error: null") {
+			if (songs.error == "Server Error: No results" || songs.error == "No results") {
 				searchResults.text("Song not found");
 				searchText = "";
-				searchButton.removeAttr("disabled");
-				return;
+			} else if (songs.error == "Server Error: AuthToken is not allowed to be null. Use TokenProvider.provideToken if you need to generate one.") {
+				searchResults.text("Need to sign in to Google Play Music");
+				searchText = "";
+			} else {				
+				alert(songs.error);
 			}
-			alert(songs.error);
-			searchButton.removeAttr("disabled");
-			return;
-		}
-		
-		// console.log(songs);
-		for (var i = 0; i < songs.length; i++) {
-			var result = songs[i];
-			var resultString = "";
-			if (result.title) {
-				resultString += result.title;
+		} else {
+			for (var i = 0; i < songs.length; i++) {
+				var result = songs[i];
+				var resultString = "";
+				if (result.title) {
+					resultString += result.title;
+					
+					if (result.artist)
+						resultString += ", by " + result.artist;
+				}
 				
-				if (result.artist)
-					resultString += ", by " + result.artist;
-			}
-			
-			if (resultString.length != 0) {
-				searchResults.addRow(null, "<p class='black'>" + resultString + "</p>");
-				
-				if (result.SpotifyURL) {
-					searchResults.addRow(null, "<a class='black' target='_blank' href=" + result.SpotifyURL + ">Spotify</a>");
+				if (resultString.length != 0) {
+					searchResults.addRow(null, "<p class='black'>" + resultString + "</p>");
+					
+					if (result.SpotifyURL) {
+						searchResults.addRow(null, "<a class='black' target='_blank' href=" + result.SpotifyURL + ">Spotify</a>");
+					}
 				}
 			}
+			searchedSong = result.SpotifyID;
+			viewPlaylists(false);
 		}
-		searchedSong = result.SpotifyID;
-		viewPlaylists(false);
 		searchButton.removeAttr("disabled");
 	});
 	

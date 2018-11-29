@@ -17,7 +17,6 @@
 		<script src="/common/common.js"></script>		
 	</head>
 	<body>
-    
         <link href='https://fonts.googleapis.com/css?family=Open+Sans:700,600' rel='stylesheet' type='text/css'>
         
         <a class="usernameDisplay">Logged in as: </a>
@@ -38,9 +37,13 @@
         <!-- Search bar -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         
-        <div class="search">
+        <div class="searchBox">
             <input type="text" placeholder="Search for a song..." id="search">
             <button id="searchbtn" type="submit" onclick="search()"><i class="fa fa-search"></i></button>
+			<br>
+			<input name="platform" type="radio" value="Spotify" checked>Spotify
+			<input name="platform" type="radio" value="GooglePlayMusic">Google Play Music
+			<input name="platform" type="radio" value="Youtube">Youtube
 			<table id="searchResults"></table>
         </div>
         <!-- End Search bar -->
