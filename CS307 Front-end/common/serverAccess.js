@@ -1,6 +1,7 @@
 "use strict";
 const url = "/";
 
+// Auth data
 function setAuthData(userName, token) {
 	localStorage.setItem("username", userName);
 	localStorage.setItem("authToken", token);
@@ -19,6 +20,7 @@ function serverLogin(username, password) {
 	});
 }
 
+// Server Access
 function serverSignup(username, password, email) {
 	return sendMessage({
 		signup: "signup",
@@ -140,14 +142,22 @@ function serverSearch(searchText) {
 	});
 }
 
-function sendMessage(myData) {
+function serverSendGoogleInfo(username, password, imei) {
+	return sendMessage({
+		googlePlayLogin: username,
+		password: password,
+		imei: imei
+	});
+}
+
+function sendMessage(myData, endpoint="data") {
 	var authData = getAuthData();
 	if (authData.authToken) {
 		myData.authenticate = authData.authToken;
 		myData.user = authData.username;
 	}
 	
-	return $.ajax(url + "data", {
+	return $.ajax(url + endpoint, {
 		data: myData,
 		dataType: "jsonp"
 	});

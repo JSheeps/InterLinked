@@ -2,6 +2,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import svarzee.gps.gpsoauth.Gpsoauth;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -353,15 +354,16 @@ class WebAPI {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
-        String info = query.get("googlePlayLogin");
+        String username = query.get("googlePlayLogin");
+        String password = query.get("password");
+        String imei = query.get("imei");
 
-        String[] split = info.split(":");
-
-        String username = split[0];
-        String password = split[1];
-        String imei = split[2];
-
-        String playToken = GoogleMusic.Login(username, password, imei);
+        String playToken;
+        try {
+            playToken = GoogleMusic.Login(username, password, imei);
+        } catch (Gpsoauth.TokenRequestFailed e) {
+            return new JSONObject().put("result", false).put("error", "Invalid authorization details");
+        }
 
         currentUser.updateGoogleMusicToken(playToken);
 

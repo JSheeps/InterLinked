@@ -1,4 +1,5 @@
 "use strict";
+const domain = window.location.origin;
 
 function sendToSpotify(){
     console.log("Sent user to Spotify!");
@@ -9,19 +10,15 @@ $(document).ready( () => {
 });
 
 function SpotifyInit() {
-    var domain = "localhost";
     var SpotifyLink = $("#SpotifyLink");
 	var SpotifyUrl = SpotifyLink.attr("href");
-	console.log(SpotifyUrl);
 
-	var redirectURI = "https://" + domain + "/login/?platformID=Spotify";
-	console.log(redirectURI);
+	var redirectURI = domain + "/login/?platformID=Spotify";
 	
 	SpotifyUrl += encodeURIComponent(redirectURI);
 
 	SpotifyUrl += "&state=";
 	SpotifyUrl += getAuthToken();
-	console.log(SpotifyUrl);
 
 	SpotifyLink.attr("href", SpotifyUrl);
 }
@@ -35,28 +32,78 @@ $(document).ready( () => {
 });
 
 function YoutubeInit() {
-    var domain = "localhost";
     var YoutubeLink = $("#YoutubeLink");
     var YoutubeUrl = YoutubeLink.attr("href");
-    console.log(YoutubeUrl);
 
-    var redirectURI = "https://" + domain + "/login/?platformID=Youtube";
+    var redirectURI = domain + "/login/?platformID=Youtube";
     YoutubeUrl += encodeURIComponent(redirectURI);
-    console.log(redirectURI);
 
     YoutubeUrl += "&state=";
     YoutubeUrl += getAuthToken();
-    console.log(YoutubeUrl);
 
     YoutubeLink.attr("href", YoutubeUrl);
 }
 
 function getGoogleInfo(){
-    var username = prompt("Please enter your GooglePlayMusic Username", "Enter username here");
-    var password = prompt("Please enter your GooglePlayMusic Password", "Enter password here");
-    var androidId = prompt("Please enter the IMEI of an android device that had GooglePlayMusic installed", "Enter IMEI here");
+	var connectImage = $(".GoogleConnect").parent();
+	connectImage.empty();
+	
+	connectImage.append(makeInputField("GoogleUsernameInput", "username", { placeholder: "Google Music Username"} ));
+	connectImage.append(makeInputField("GooglePasswordInput", "password", { placeholder: "Google Music Password"} ));
+	
+	var input = makeInputField("GoogleIMEIinput", "text", { placeholder: "IMEI from mobile device" } );
+	input.on("enterPressed", sendGoogleInfo);
+	connectImage.append(input);
+	connectImage.append("<br>");
+	connectImage.append(makeInputField("GoogleSubmit", "submit", { onclick: "sendGoogleInfo()" } ));
+}
 
-    console.log(username);
-    console.log(password);
-    console.log(androidId);
+function makeInputField(id, type, other = null, internal = "") {
+	return $("<input>" + internal + "</input>").attr({
+		id: id,
+		type: type,
+	}).attr(other)
+	.on("keyup", function (event) {
+		if (event.which == 13)
+			$(this).trigger("enterPressed");
+	});
+}
+
+var authorizing = false;
+function sendGoogleInfo() {
+	if (authorizing)
+		return;
+	
+	var username = $("input#GoogleUsernameInput").val();
+	if (username.length == 0) {
+		alert("Need to input a username");
+		return;
+	}
+	
+	var password = $("input#GooglePasswordInput").val();
+	if (password.length == 0) {
+		alert("Need to input password");
+		return;
+	}
+	
+	var imei = $("input#GoogleIMEIinput").val();
+	if (imei == 0) {
+		alert("Need to input IMEI of an android device that had GooglePlayMusic installed");
+		return;
+	}
+	
+	authorizing = true;
+	serverSendGoogleInfo(username, password, imei).done( (result) => {
+		if (result.error) {
+			alert(result.error);
+		} else {
+			if (result.result)
+				alert("Success!");
+			else {
+				alert("Bug found. Check console")
+				console.log(result.error);
+			}
+		}
+		authorizing = false;
+	});
 }
