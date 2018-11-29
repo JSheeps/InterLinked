@@ -72,10 +72,14 @@ public class GoogleMusic {
                 if (playlist.getSong(i).getOrigin() == Origin.GOOGLE){
                     trackids.add(playlist.getSong(i).googleId);
                 }
-                else{
+                else {
                     Song s = playlist.getSong(i);
                     String query = s.getTitle() + " " + s.getArtist();
-                    trackids.add(getSongId(query));
+                    if (getSongId(query) == null) {
+                        //song not found
+                    } else {
+                        trackids.add(getSongId(query));
+                    }
                 }
             }
             api.addTracksToPlaylistById(google_list,trackids);
@@ -85,13 +89,21 @@ public class GoogleMusic {
 
     //Used in export method when only the googleId is needed for a song
     public static String getSongId(String query) throws IOException {
+        Song s = findSong(query);
+        if (s == null){
+            return null;
+        }
         return findSong(query).googleId;
     }
 
     public static Song findSong(String query) throws java.io.IOException {
         Song s = new Song();
         SearchResponse response = build.build().search(query,1,new SearchTypes(ResultType.TRACK));
-        Track t = response.getTracks().get(0);
+        System.out.println("Search Query: "+ query);
+        if (response.getTracks().size() == 0){
+            return null;
+        }
+        Track t = (response.getTracks()).get(0);
         //copy attributes to the Song that will be returned
         s.setTitle(t.getTitle());
         s.setAlbum(t.getAlbum());
