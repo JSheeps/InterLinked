@@ -31,19 +31,22 @@ public class GoogleMusicTest {
       System.out.println("Artist: " + s.artist + "\nSong title: " + s.title + "\nAlbum: " + s.album + "\ngoogle id: " + s.googleId);
 
       //import test
-      Playlist importedList = new Playlist();
-      importedList = (Playlist) GoogleMusic.importPlaylist(auth, importedPlaylistsID.get(0));
-      System.out.println("\nImported playlist: " + importedList.Name + " - with id: " + importedPlaylistsID.get(0) + "\n");
+      List<Song> importedSongs;
+      importedSongs = GoogleMusic.importPlaylist(auth, importedPlaylistsID.get(0));
+      System.out.println("\nImported playlist name: " +playlists.get(0)+"id: " + importedPlaylistsID.get(0) +"\n");
+      System.out.println("Songs include: "+importedSongs+"\n");
 
       //export test
       //exporting same playlist that was imported, should basically clone it
-      GoogleMusic.exportPlaylist(auth, importedList);
+      List<Song> failedSongs = GoogleMusic.exportPlaylist(auth, playlists.get(0));
+
       //get playlists again
       playlists.clear();
       playlists = GoogleMusic.getPlaylists(auth);
       System.out.println("User's Playlists after exporting are: ");
       for (int i = 0; i < playlists.size(); i++) {
        System.out.println(playlists.get(i).Name + " " + playlists.get(i).googleId);
+
       }
 
       System.out.println("\n");
