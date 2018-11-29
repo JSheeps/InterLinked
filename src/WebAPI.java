@@ -300,19 +300,19 @@ class WebAPI {
         try {
             if (currentUser.spotifyTokens != null)
                 playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
-        } catch (Exception e){ throw new Exception("You have been logged out of Spotify, please log in again."); }
+        } catch (Exception e){ }
 
         // Get playlists from youtube
         try {
             if (currentUser.youtubeToken != null)
                 playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
-        } catch (Exception e){ throw new Exception("You have been logged out of Youtube, please log in again."); }
+        } catch (Exception f){ }
 
         // Get playlists from google play
         try {
             if (currentUser.googleMusicToken != null)
                 playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
-        } catch (Exception e){ throw new Exception("You have been logged out of Google Play, please log in again."); }
+        } catch (Exception h){ }
 
 
         // If not importing a specific playlist, return a list of possible playlists to import
@@ -374,7 +374,9 @@ class WebAPI {
 
             playlistToImport.save(currentUser);
 
-        } catch (Exception e) {throw new ServerErrorException("Error importing playlist: " + e.getMessage());}
+        } catch (Exception e) {
+            debug.printStackTrace(e);
+            throw new ServerErrorException("Error importing playlist: " + e.getMessage());}
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", selectedPlaylist.Name);
