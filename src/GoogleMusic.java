@@ -40,25 +40,23 @@ public class GoogleMusic {
         return playlists;
     }
 
-    public static Playlist importPlaylist(String auth, String id){
+    public static List<Song> importPlaylist(String auth, String id) throws Exception {
         GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
         PlaylistApi plist = gApi.getPlaylistApi();
-        Playlist returnList = new Playlist();
-        try{
-            com.github.felixgail.gplaymusic.model.Playlist p = plist.getPlaylist(id);
-            returnList.setName(p.getName());
-            List<PlaylistEntry> googleSongs = p.getContents(100);
-            for(int i = 0;i<googleSongs.size(); i++){
-                Song s = new Song();
-                Track googleS = googleSongs.get(i).getTrack();
-                s.setAlbum(googleS.getAlbum());
-                s.setTitle(googleS.getTitle());
-                s.setArtist(googleS.getArtist());
-                s.setOrigin(Origin.GOOGLE);
-                s.setGoogleId(googleS.getID());
-                returnList.addSong(s);
-            }
-        } catch (java.io.IOException e){e.printStackTrace();}
+        List<Song> returnList = new ArrayList<>();
+
+        com.github.felixgail.gplaymusic.model.Playlist p = plist.getPlaylist(id);
+        List<PlaylistEntry> googleSongs = p.getContents(200);
+        for (PlaylistEntry googleSong : googleSongs) {
+            Song s = new Song();
+            Track googleS = googleSong.getTrack();
+            s.setAlbum(googleS.getAlbum());
+            s.setTitle(googleS.getTitle());
+            s.setArtist(googleS.getArtist());
+            s.setOrigin(Origin.GOOGLE);
+            s.setGoogleId(googleS.getID());
+            returnList.add(s);
+        }
         return returnList;
     }
 

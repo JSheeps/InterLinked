@@ -337,8 +337,13 @@ class WebAPI {
                 songList = Spotify.importPlaylist(currentUser.spotifyTokens, selectedPlaylist.Name);
             else if(selectedPlaylist.origin == Origin.YOUTUBE)
                 songList = Youtube.importPlaylist(currentUser.youtubeToken, selectedPlaylist.Name);
+            else if(selectedPlaylist.origin == Origin.GOOGLE)
+                songList = GoogleMusic.importPlaylist(currentUser.googleMusicToken, selectedPlaylist.googleId);
             else
                 throw new Exception("Failed to determine playlist origin");
+
+            if(songList.size() == 0)
+                throw new Exception("Playlist appears to be empty.");
 
             // Add songs to new playlist
             playlistToImport.clearSongs();

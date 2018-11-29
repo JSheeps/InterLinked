@@ -32,7 +32,7 @@ public class GoogleMusicTest {
 
       //import test
       Playlist importedList = new Playlist();
-      importedList = GoogleMusic.importPlaylist(auth, importedPlaylistsID.get(0));
+      importedList = (Playlist) GoogleMusic.importPlaylist(auth, importedPlaylistsID.get(0));
       System.out.println("\nImported playlist: " + importedList.Name + " - with id: " + importedPlaylistsID.get(0) + "\n");
 
       //export test

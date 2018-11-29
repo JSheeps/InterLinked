@@ -101,7 +101,7 @@ public class Spotify extends StreamingService {
         //Requesting users playlist information
         final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
                 .getListOfCurrentUsersPlaylists()
-                .limit(100)
+                .limit(10)
                 .offset(0)
                 .build();
         final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
@@ -112,7 +112,7 @@ public class Spotify extends StreamingService {
         for(PlaylistSimplified item : items){
             if(item.getName().equals(playlistName)){
                 GetPlaylistsTracksRequest getPlaylistTracks = spotifyApi.getPlaylistsTracks(userID,item.getId())
-                        .limit(500)
+                        .limit(200)
                         .offset(0)
                         .build();
                 final Paging<PlaylistTrack> trackQuery = getPlaylistTracks.execute();
@@ -266,7 +266,7 @@ public class Spotify extends StreamingService {
         //Requesting playlist information from api
         final GetListOfCurrentUsersPlaylistsRequest getPlaylistsRequest = spotifyApi
                 .getListOfCurrentUsersPlaylists()
-                .limit(100)
+                .limit(10)
                 .offset(0)
                 .build();
         final Paging<PlaylistSimplified> playlists = getPlaylistsRequest.execute();
