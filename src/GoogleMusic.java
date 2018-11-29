@@ -30,6 +30,7 @@ public class GoogleMusic {
         GPlayMusic gApi = build.setAuthToken(new AuthToken(auth)).build();
         PlaylistApi plist = gApi.getPlaylistApi();
         List<com.github.felixgail.gplaymusic.model.Playlist> googleLists = plist.listPlaylists();
+        //plist.deletePlaylists(googleLists.get(0)); used this to delete invisible playlist, keep for future reference
         for(int i = 0; i <googleLists.size(); i++){
             Playlist p = new Playlist();
             p.setName(googleLists.get(i).getName());
@@ -74,8 +75,7 @@ public class GoogleMusic {
                 else{
                     Song s = playlist.getSong(i);
                     String query = s.getTitle() + " " + s.getArtist();
-                    String songId = getSongId(query);
-                    trackids.add(songId);
+                    trackids.add(getSongId(query));
                 }
             }
             api.addTracksToPlaylistById(google_list,trackids);
