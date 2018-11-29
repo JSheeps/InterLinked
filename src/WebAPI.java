@@ -297,16 +297,23 @@ class WebAPI {
         ArrayList<Playlist> playlists = new ArrayList<>();
 
         // Get playlists from spotify
-        if(currentUser.spotifyTokens != null)
-            playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
+        try {
+            if (currentUser.spotifyTokens != null)
+                playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
+        } catch (Exception e){ throw new Exception("You have been logged out of Spotify, please log in again."); }
 
         // Get playlists from youtube
-        if(currentUser.youtubeToken != null)
-            playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
+        try {
+            if (currentUser.youtubeToken != null)
+                playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
+        } catch (Exception e){ throw new Exception("You have been logged out of Youtube, please log in again."); }
 
         // Get playlists from google play
-        if(currentUser.googleMusicToken != null)
-            playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
+        try {
+            if (currentUser.googleMusicToken != null)
+                playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
+        } catch (Exception e){ throw new Exception("You have been logged out of Google Play, please log in again."); }
+
 
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
