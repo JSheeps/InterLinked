@@ -76,7 +76,7 @@ public class GoogleMusic {
                     Song s = playlist.getSong(i);
                     String query = s.getTitle() + " " + s.getArtist();
                     if (getSongId(query) == null) {
-                        //song not found
+                        failedSongs.add(s);
                     } else {
                         trackids.add(getSongId(query));
                     }
@@ -99,7 +99,6 @@ public class GoogleMusic {
     public static Song findSong(String query) throws java.io.IOException {
         Song s = new Song();
         SearchResponse response = build.build().search(query,1,new SearchTypes(ResultType.TRACK));
-        System.out.println("Search Query: "+ query);
         if (response.getTracks().size() == 0){
             return null;
         }
