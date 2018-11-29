@@ -6,7 +6,7 @@ public class GoogleMusicTest {
       ArrayList<String> importedPlaylistsID = new ArrayList<String>();
       //required login info
       String username = "cs307acct@gmail.com";
-      String password = "p4S5WoR&d";
+      String password = "p4S5WoRd";
       String imeinumber = "352593081955740";
 
       //login
