@@ -154,7 +154,7 @@ class WebAPI {
                 else if (platformID.equals("Youtube"))
                     user.updateYoutubeToken(Youtube.GetToken(code));
 
-                debug.log("~~~Set user's tokens: " + ((platformID.equals("Spotify")) ? user.spotifyTokens.toString() : user.youtubeToken));
+                debug.log("~~~Set user's tokens.");
 
                 debug.log("~~~Finished Login");
 
@@ -249,6 +249,10 @@ class WebAPI {
             throw new ServerErrorException(e.getMessage());
         }
 
+        if(song == null){
+            throw new Exception("Song not found.");
+        }
+
         // Build Json response
 
         JSONObject jsonObject = new JSONObject();
@@ -274,17 +278,24 @@ class WebAPI {
 
         ArrayList<Playlist> playlists = new ArrayList<>();
 
+
         // Get playlists from spotify
-        if(currentUser.spotifyTokens != null)
-            playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
+        try {
+            if (currentUser.spotifyTokens != null)
+                playlists.addAll(Spotify.getPlaylists(currentUser.spotifyTokens));
+        } catch (Exception e){ throw new Exception("You have been logged out of Spotify, please log in again."); }
 
         // Get playlists from youtube
-        if(currentUser.youtubeToken != null)
-            playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
+        try {
+            if (currentUser.youtubeToken != null)
+                playlists.addAll(Youtube.getPlaylists(currentUser.youtubeToken));
+        } catch (Exception e){ throw new Exception("You have been logged out of Youtube, please log in again."); }
 
         // Get playlists from google play
-        if(currentUser.googleMusicToken != null)
-            playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
+        try {
+            if (currentUser.googleMusicToken != null)
+                playlists.addAll(GoogleMusic.getPlaylists(currentUser.googleMusicToken));
+        } catch (Exception e){ throw new Exception("You have been logged out of Google Play, please log in again."); }
 
         // If not importing a specific playlist, return a list of possible playlists to import
         if(!query.containsKey("playlist")){
@@ -776,14 +787,14 @@ class WebAPI {
         try {
             // Send email
             MimeMessage message = new MimeMessage(emailSession);
-            message.setFrom(new InternetAddress("localhost"));
+            message.setFrom(new InternetAddress(Server.domain));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
             message.setSubject("Interlinked - Reset Password");
 
             StringBuilder contents = new StringBuilder("Hello ");
             contents.append(username).append(",\n");
             String resetToken = userAuthTokens.generateResetToken(user);
-            URI redirectURI = new URI("http", "localhost", "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
+            URI redirectURI = new URI("http", Server.domain, "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
             contents.append("To reset your password, goto ").append(redirectURI).append('\n');
             contents.append("This link will be valid for 1 hour");
             message.setText(contents.toString());
