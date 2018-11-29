@@ -817,7 +817,7 @@ class WebAPI {
             StringBuilder contents = new StringBuilder("Hello ");
             contents.append(username).append(",\n");
             String resetToken = userAuthTokens.generateResetToken(user);
-            URI redirectURI = new URI("http", Server.domain, "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
+            URI redirectURI = new URI("https", Server.domain, "/Login Page/recoverPassword.html", "resetToken=" + resetToken, null);
             contents.append("To reset your password, goto ").append(redirectURI).append('\n');
             contents.append("This link will be valid for 1 hour");
             message.setText(contents.toString());
@@ -890,7 +890,7 @@ class WebAPI {
         if (user == null)
             throw new BadQueryException("User does not exist");
 
-        if (UserPassword.CreateUserPassword(user.ID, password)) {
+        if (user.changePassword(password)) {
             result.put("result", true);
             return true;
         } else {
