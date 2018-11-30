@@ -745,16 +745,25 @@ class WebAPI {
         if(currentUser == null)
             throw new UnauthenticatedException("User needs to log in to interLinked");
 
-        String add = query.get("add");
-        String[] s = add.split(" ");
-        if(s.length != 2){
-            throw new BadQueryException("Add expects <playlistid songid>, got: " + add);
-        }
-        int playlistId = Integer.parseInt(s[0]);
-        String songId = s[1];
+        int playlistId = Integer.parseInt(query.get("add"));
+        String songId = query.get("songQuery");
+        String origin = query.get("origin");
 
         Playlist playlist = Playlist.getPlaylistById(playlistId);
-        Song song = Spotify.getSongByID(songId);
+
+        Song song = null;
+
+        switch (origin) {
+            case "Spotify":
+                song = Spotify.findSong(songId);
+                break;
+            case "GooglePlayMusic":
+                song = GoogleMusic.findSong(songId);
+                break;
+            case "Youtube":
+                song = Youtube.findSong(songId);
+                break;
+        }
 
         if(playlist == null) throw new ServerErrorException("Couldn't find playlist with id: " + playlistId);
         if(song == null) throw new ServerErrorException("Couldn't find song with id: " + songId);

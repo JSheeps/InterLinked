@@ -76,12 +76,21 @@ public class GoogleMusic {
                 }
                 else {
                     Song s = playlist.getSong(i);
-                    String query = s.getTitle() + " " + (s.getArtist().equals("unknown")? "" : s.getArtist());
-                    System.out.println("Searching for: " + query);
-                    try {
-                        trackids.add(getSongId(query));
+                    String title = s.getTitle();
+
+                    // Remove text in brackets
+                    title = title.replaceAll("\\[.*]", "");
+                    title = title.replaceAll("\\(.*\\)", "");
+
+                    String query = title + " " + (s.getArtist().equals("unknown")? "" : s.getArtist());
+                    System.out.print("Searching for: " + query);
+                    String songId = getSongId(query);
+                    if(songId != null){
+                        trackids.add(songId);
+                        System.out.println(" - Found");
                     }
-                    catch (Exception e){
+                    else{
+                        System.out.println(" - Not Found");
                         failedSongs.add(s);
                     }
                 }
@@ -89,25 +98,31 @@ public class GoogleMusic {
 
             System.out.println("Found songs: " + trackids.size() + " Failed songs: " + failedSongs.size());
 
-            int endIndex = 0;
-            for(int i = 0; i < trackids.size() - 20; i += 20){
-                List<String> idList = new ArrayList<>(trackids.subList(i, i + 20));
-                System.out.println("Exporting tracks: " + i + " to " + (i+20));
-                api.addTracksToPlaylistById(google_list, idList);
+            if(trackids.size() == 0) throw new Exception("Couldn't export any songs");
 
-                endIndex = i + 20;
+            for(int i = 0; i < trackids.size(); i += 20){
+                int nextIndex = i + 20;
+                if(nextIndex > (trackids.size()))
+                    nextIndex = trackids.size();
+
+                List<String> idList = new ArrayList<>(trackids.subList(i, nextIndex));
+                System.out.println("Exporting tracks: " + i + " to " + nextIndex);
+                api.addTracksToPlaylistById(google_list, idList);
             }
-            System.out.println("Exporting tracks: " + endIndex + " to " + (trackids.size()-1));
-            List<String> idList = new ArrayList<>(trackids.subList(endIndex, trackids.size()));
-            api.addTracksToPlaylistById(google_list, idList);
         }
         else throw new Exception("Playlist to export is empty");
         return failedSongs;
     }
 
     //Used in export method when only the googleId is needed for a song
-    public static String getSongId(String query) throws Exception {
-        return findSong(query).googleId;
+    public static String getSongId(String query) {
+        try{
+            Song song = findSong(query);
+            return song.googleId;
+        }
+        catch(Exception e){
+            return null;
+        }
     }
 
     public static Song findSong(String query) throws Exception {

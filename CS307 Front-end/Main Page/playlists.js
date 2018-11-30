@@ -290,10 +290,11 @@ function search() {
 
 function addSearchedSong(playlistID) {
 	var addButton = table.tbody.find("#" + playlistID).children().eq(2);
-	var oldHtml = addButton.html();
+    var searchPlatform = $("input[name='platform']:checked").val();
+    var oldHtml = addButton.html();
 	addButton.html("<a class='black'>Adding song...</a>");
 	
-	serverAddSong(searchedSong, playlistID).done( (result) => {
+	serverAddSong(searchedSong, playlistID, searchPlatform).done( (result) => {
 		if (result.error) {
 			genericErrorHandlers(result.error);
 			alert(result.error);

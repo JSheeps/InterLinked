@@ -110,9 +110,11 @@ function mergeLists(ids, playlistName) {
 	});
 }
 
-function serverAddSong(songQuery, playlistID) {
+function serverAddSong(songQuery, playlistID, searchPlatform) {
 	return sendMessage({
-		add: playlistID + " " + songQuery,
+		add: playlistID,
+		songQuery: songQuery,
+		origin: searchPlatform
 	});
 }
 
