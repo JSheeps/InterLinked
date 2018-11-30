@@ -42,6 +42,7 @@ function importPlayList(id, platformID, playlistName, callback = null, force = f
 	
 	button.html("<a class='black'>Importing...</a>");
 	function restoreButton() {
+		if (callback) callback();
 		button.html(oldHtml);
 	}
 	
@@ -50,11 +51,7 @@ function importPlayList(id, platformID, playlistName, callback = null, force = f
 			if (result.error == "Server Error: Playlist already exists in database (to import anyway, send query: force)") {
 				var choice = confirm("This is already in the data base. Would you like to overwrite what is already imported?");
 				if (choice) {
-					function newCallback() {
-						if (callback) callback();
-						restoreButton();
-					}
-					importPlayList(id, platformID, playlistName, newCallback, true);
+					importPlayList(id, platformID, playlistName, restoreButton, true);
 					return;
 				} else
 					alert("Playlist already exists and user does not wish to overwrite it");
@@ -63,6 +60,6 @@ function importPlayList(id, platformID, playlistName, callback = null, force = f
 		} else
 			alert("Imported Successfully!");
 		
-		if (callback) callback();
+		restoreButton();
 	});
 }

@@ -280,7 +280,7 @@ function search() {
                     }
 				}
 			}
-			searchedSong = result.SpotifyID;
+			searchedSong = result.title;
 			viewPlaylists(false);
 		}
 		searchButton.removeAttr("disabled");
