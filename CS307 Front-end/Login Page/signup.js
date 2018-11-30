@@ -68,12 +68,22 @@ function signUp() {
 	
 	$("input").prop("readonly", true);
 	
+	function buttonRestore() {
+		$("input").prop("readonly", false);
+		for (var i = 0; i < buttons.length; i++) {
+			var button = buttons[i];
+			button.innerHTML = buttonTexts[i];
+			button.onclick = buttonClicks[i];
+		}
+	}
+	
 	serverSignup(userName, password, email).done( (result) => {
 		if (!result.result) {
 			if (result.error)
 				alert(result.error);
 			else				
 				alert("Invalid signup details");
+			buttonRestore();
 		} else {
 			serverLogin(userName, password).done( (result) => {
 				if (!result.result) {
@@ -82,19 +92,16 @@ function signUp() {
 					else
 						alert("Error: Invalid login");
 				} else {
+					console.log(result);
 					var token = result.authenticate;
-					setAuthData(token, userName);
+					setAuthData(userName, token);
 					playlistRedirect();
 				}
+				
+				buttonRestore();
 			});
 		}
 		
-		$("input").prop("readonly", false);
-		for (var i = 0; i < buttons.length; i++) {
-			var button = buttons[i];
-			button.innerHTML = buttonTexts[i];
-			button.onclick = buttonClicks[i];
-		}
 	});
 }
 
