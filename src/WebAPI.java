@@ -437,6 +437,7 @@ class WebAPI {
             else if(exportPlatform.equals("GooglePlayMusic"))
                 failedSongs = GoogleMusic.exportPlaylist(currentUser.googleMusicToken, playlist);
         } catch (Exception e){
+            debug.printStackTrace(e);
             throw new ServerErrorException(e.getMessage());
         }
 
