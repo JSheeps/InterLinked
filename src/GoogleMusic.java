@@ -89,7 +89,7 @@ public class GoogleMusic {
 
             System.out.println("Found songs: " + trackids.size() + " Failed songs: " + failedSongs.size());
 
-            int endIndex = trackids.size();
+            int endIndex = 0;
             for(int i = 0; i < trackids.size() - 20; i += 20){
                 List<String> idList = new ArrayList<>(trackids.subList(i, i + 20));
                 System.out.println("Exporting tracks: " + i + " to " + (i+20));
